@@ -19,7 +19,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          local-dir: ./
+          local-dir: ./public_html/
           exclude: |
             **/.git*
             **/.github/**
