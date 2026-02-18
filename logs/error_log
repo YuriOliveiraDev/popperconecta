@@ -1,0 +1,56 @@
+[Thu Feb 12 17:10:04.796868 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Feb 12 17:15:04.473796 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Feb 12 17:30:05.352004 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Feb 12 17:45:05.083753 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Feb 12 17:50:04.830033 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Thu Feb 12 17:55:10.429394 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 08:45:04.888446 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:05:04.318101 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:15:04.247026 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:30:05.551919 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:35:05.041052 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:45:04.867852 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:50:04.746449 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 09:55:04.957053 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:00:05.352794 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:05:05.039790 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:10:05.560050 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:25:05.384437 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:30:04.764042 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:45:04.835914 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 10:54:54.269409 2026] [proxy_fcgi:error] [pid 2583589:tid 140162122098432] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:54:56.920253 2026] [proxy_fcgi:error] [pid 2583589:tid 140161518118656] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:54:59.533849 2026] [proxy_fcgi:error] [pid 2583589:tid 140161526511360] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:29.809140 2026] [proxy_fcgi:error] [pid 2583589:tid 140161014818560] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:30.829972 2026] [proxy_fcgi:error] [pid 2583589:tid 140161534904064] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:31.231839 2026] [proxy_fcgi:error] [pid 2583589:tid 140161526511360] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:31.406613 2026] [proxy_fcgi:error] [pid 2583589:tid 140161543296768] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:31.534598 2026] [proxy_fcgi:error] [pid 2583589:tid 140162130491136] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:31.696201 2026] [proxy_fcgi:error] [pid 2583589:tid 140162164061952] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:32.034079 2026] [proxy_fcgi:error] [pid 2583589:tid 140162376836864] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:56:32.195955 2026] [proxy_fcgi:error] [pid 2583589:tid 140162402014976] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 10:57:13.629041 2026] [proxy_fcgi:error] [pid 2583589:tid 140162122098432] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown', referer: https://popperconecta.com.br/dashboard.php
+[Fri Feb 13 10:57:21.543576 2026] [proxy_fcgi:error] [pid 2583109:tid 140162138883840] [client 38.210.109.184:0] AH01071: Got error 'Primary script unknown'
+[Fri Feb 13 11:05:06.259944 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 11:20:04.914496 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 11:25:05.143516 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 11:50:04.831606 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 13:50:05.381364 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 14:15:08.035703 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 14:45:05.387356 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 15:00:16.983436 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 15:30:06.487654 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 15:55:04.777148 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 16:15:04.746359 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Feb 13 16:50:05.756374 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Sat Feb 14 03:35:25.071554 2026] [proxy_fcgi:error] [pid 4168098:tid 140162138883840] [client 195.178.110.132:0] AH01071: Got error 'Primary script unknown'
+[Sat Feb 14 03:35:26.762281 2026] [proxy_fcgi:error] [pid 4168098:tid 140162402014976] [client 195.178.110.132:0] AH01071: Got error 'Primary script unknown'
+[Sat Feb 14 03:35:26.991894 2026] [proxy_fcgi:error] [pid 4168098:tid 140162113705728] [client 195.178.110.132:0] AH01071: Got error 'Primary script unknown'
+[Sat Feb 14 03:35:27.227187 2026] [proxy_fcgi:error] [pid 4168098:tid 140161509725952] [client 195.178.110.132:0] AH01071: Got error 'Primary script unknown'
+[Sat Feb 14 10:45:05.923928 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Sat Feb 14 13:10:04.594212 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Sun Feb 15 10:11:24.082086 2026] [proxy_fcgi:error] [pid 756681:tid 140161744623360] [client 139.59.250.157:0] AH01071: Got error 'Primary script unknown'
+[Mon Feb 16 13:25:05.778658 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Tue Feb 17 00:55:04.840644 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Tue Feb 17 12:00:15.255496 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Feb 18 10:15:05.234485 2026] [ssl:warn] [pid 2845199:tid 140163007913664] AH01909: popperconecta1.hospedagemdesites.ws:443:0 server certificate does NOT include an ID which matches the server name

@@ -1,0 +1,250 @@
+/*//////////////////////////////////////////////////////////////////
+[ FONT ]
+//////////////////////////////////////////////////////////////////*/
+
+@font-face {
+  font-family: Poppins-Regular;
+  src: url('../fonts/poppins/Poppins-Regular.ttf');
+}
+@font-face {
+  font-family: Poppins-Bold;
+  src: url('../fonts/poppins/Poppins-Bold.ttf');
+}
+@font-face {
+  font-family: Poppins-Medium;
+  src: url('../fonts/poppins/Poppins-Medium.ttf');
+}
+@font-face {
+  font-family: Montserrat-Bold;
+  src: url('../fonts/montserrat/Montserrat-Bold.ttf');
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ RESET ]
+//////////////////////////////////////////////////////////////////*/
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  height: 100%;
+  font-family: Poppins-Regular, sans-serif;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ LOGIN BACKGROUND ]
+//////////////////////////////////////////////////////////////////*/
+
+.container-login100 {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+
+  background:
+    radial-gradient(1200px circle at 20% 10%, rgba(255,255,255,0.08), transparent 60%),
+    linear-gradient(-135deg, #7a46b8, #4b2ca1);
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ CARD ]
+//////////////////////////////////////////////////////////////////*/
+
+.wrap-login100 {
+  width: min(520px, 94vw);
+  background: #fff;
+  border-radius: 18px;
+  padding: 70px 60px;
+  box-shadow: 0 30px 70px rgba(0,0,0,.20);
+  border: 1px solid rgba(92,44,140,.08);
+  display: flex;
+  justify-content: center;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ FORM ]
+//////////////////////////////////////////////////////////////////*/
+
+.login100-form {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+}
+
+/* LOGO */
+.logoOutside {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 34px; /* mais respiro depois da logo */
+}
+
+.logoOutside img {
+  width: 280px;       /* desktop */
+  max-width: 280px;
+  height: auto;
+}
+
+/* (Opcional) Se ainda existir no HTML, esconda o título */
+.login100-form-title {
+  display: none;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ INPUTS ]
+//////////////////////////////////////////////////////////////////*/
+
+.wrap-input100 {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.input100 {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  background: #f3f3f6;
+  border: 1px solid rgba(0,0,0,.05);
+  padding: 0 18px 0 54px;
+  font-size: 14px;
+  transition: all .2s ease;
+}
+
+.input100:focus {
+  background: #fff;
+  border-color: rgba(92,44,140,.45);
+  box-shadow: 0 0 0 4px rgba(92,44,140,.12);
+  outline: none;
+}
+
+/* ICONS */
+.symbol-input100 {
+  position: absolute;
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(0,0,0,.45);
+  transition: .2s;
+}
+
+.wrap-input100:focus-within .symbol-input100 {
+  color: #5c2c8c;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ BUTTON ]
+//////////////////////////////////////////////////////////////////*/
+
+.container-login100-form-btn {
+  margin-top: 38px; /* botão mais pra baixo (antes 28px) */
+}
+
+.login100-form-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: none;
+  background: #5c2c8c;
+  color: #fff;
+  font-family: Montserrat-Bold;
+  font-size: 14px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .2s ease;
+  box-shadow: 0 14px 30px rgba(92,44,140,.25);
+}
+
+.login100-form-btn:hover {
+  background: #4a2371;
+  transform: translateY(-2px);
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ FOOTER TEXT ]
+//////////////////////////////////////////////////////////////////*/
+
+.footer-text {
+  margin-top: 42px;
+  font-size: 13px;
+  opacity: .75;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*//////////////////////////////////////////////////////////////////
+[ RESPONSIVE ]
+//////////////////////////////////////////////////////////////////*/
+
+@media (max-width: 576px) {
+
+  .wrap-login100 {
+    padding: 50px 25px;
+  }
+
+  .logoOutside {
+    margin-bottom: 30px;
+  }
+
+  .logoOutside img {
+    width: 180px;       /* mobile */
+    max-width: 180px;
+  }
+
+}
+
+/* ===== ERRO DE LOGIN ESTILIZADO ===== */
+.error-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 15px 0;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(185, 28, 28, 0.15));
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeInError 0.5s ease-in-out;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.error-icon {
+  font-size: 18px;
+  color: #dc2626;
+}
+
+.error-text {
+  flex: 1;
+}
+
+@keyframes fadeInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== FOOTER TEXT ===== */
+.footer-text {
+  margin-top: 20px;
+}
+
+.footer-text .txt2 {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+  text-align: center;
+}
+

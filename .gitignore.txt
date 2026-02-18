@@ -1,0 +1,16 @@
+# Segredos
+.env
+.env.*
+config.local.php
+
+# Logs e cache
+*.log
+tmp/
+cache/
+
+# Uploads (se existir)
+uploads/
+
+# Dependências (se usar composer/node)
+vendor/
+node_modules/
