@@ -31,7 +31,7 @@ jobs:
           dangerous-clean-slate: false
 
           # evita deletar arquivos do servidor
-          state-name: .ftp-deploy-sync-state.json
+          state-name: .ftp-state-v2.json
 
           log-level: verbose
 
