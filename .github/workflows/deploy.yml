@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,9 +20,21 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
+
+          # destino correto do site
           server-dir: /public_html/
+
+          # somente arquivos do site
           local-dir: ./public_html/
+
+          # 🔥 IMPORTANTE — evita erro 550 da Locaweb
+          dangerous-clean-slate: false
+
+          # evita deletar arquivos do servidor
+          state-name: .ftp-deploy-sync-state.json
+
           log-level: verbose
+
           exclude: |
             **/.git*
             **/.github/**
@@ -33,3 +46,4 @@ jobs:
             **/node_modules/**
             **/vendor/**
             **/assets/**
+            logs/**
