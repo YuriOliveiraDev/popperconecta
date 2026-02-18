@@ -14,13 +14,14 @@ jobs:
       - name: Deploy to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          protocol: ftps
+          protocol: ftp
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT }}
           server-dir: /public_html/
           local-dir: ./public_html/
+          log-level: verbose
           exclude: |
             **/.git*
             **/.github/**
