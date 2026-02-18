@@ -1,9 +1,17 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/app/auth.php';
+require_once __DIR__ . '/app/db.php';
 require_login();
 
 $u = current_user();
+
+// Dashboards ativos (para o dropdown "Dashboards")
+$dashboards = db()
+  ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
+  ->fetchAll(PDO::FETCH_ASSOC);
+
+$current_dash = $_GET['dash'] ?? 'executivo';
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -20,10 +28,47 @@ $u = current_user();
     <div class="topbar__left">
       <strong class="brand"><?= htmlspecialchars(APP_NAME) ?></strong>
       <span class="muted">Bem-vindo, <?= htmlspecialchars($u['name']) ?></span>
+
       <?php if (($u['role'] ?? '') === 'admin'): ?>
-        <a class="link" href="/admin/users.php" style="margin-left:12px;">Usuários</a>
-        <a class="link" href="/admin/metrics.php" style="margin-left:12px;">Métricas</a>
+        <!-- Administração (dropdown) -->
+        <div class="topbar__dropdown" style="margin-left:12px;">
+          <a class="topbar__dropdown-trigger" href="#" id="adminTrigger">Administração</a>
+          <div class="topbar__dropdown-menu" id="adminMenu">
+            <a class="topbar__dropdown-item" href="/admin/users.php">
+              <span class="topbar__dropdown-icon">👥</span>
+              <span class="topbar__dropdown-label">Usuários</span>
+            </a>
+            <a class="topbar__dropdown-item" href="/admin/metrics.php?dash=<?= htmlspecialchars($current_dash) ?>">
+              <span class="topbar__dropdown-icon">🧮</span>
+              <span class="topbar__dropdown-label">Métricas</span>
+            </a>
+          </div>
+        </div>
       <?php endif; ?>
+
+      <!-- Dashboards (dropdown com links para páginas separadas) -->
+      <div class="topbar__dropdown" style="margin-left:8px;">
+        <a class="topbar__dropdown-trigger" href="#" id="dashTrigger">Dashboards</a>
+        <div class="topbar__dropdown-menu" id="dashMenu">
+          <a class="topbar__dropdown-item" href="/dashboard.php">
+            <span class="topbar__dropdown-icon">📊</span>
+            <span class="topbar__dropdown-label">Faturamento</span>
+          </a>
+          <a class="topbar__dropdown-item" href="/financeiro.php">
+            <span class="topbar__dropdown-icon">💰</span>
+            <span class="topbar__dropdown-label">Financeiro</span>
+          </a>
+          <?php foreach ($dashboards as $dash): ?>
+            <?php if ($dash['slug'] !== 'executivo' && $dash['slug'] !== 'financeiro'): ?>
+              <a class="topbar__dropdown-item" href="/<?= htmlspecialchars($dash['slug']) ?>.php">
+                <span class="topbar__dropdown-icon"><?= htmlspecialchars($dash['icon'] ?? '📊') ?></span>
+                <span class="topbar__dropdown-label"><?= htmlspecialchars($dash['name']) ?></span>
+              </a>
+            <?php endif; ?>
+          <?php endforeach; ?>
+        </div>
+      </div>
+
     </div>
     <a class="link" href="/logout.php">Sair</a>
   </header>
@@ -86,16 +131,12 @@ $u = current_user();
       <!-- Gráficos -->
       <div class="chart-card grid-col-span-2">
         <h3 class="chart-title" id="titleProgress">Progresso (Mês e Ano)</h3>
-        <div class="chart-box">
-          <canvas id="salesExpensesChart"></canvas>
-        </div>
+        <div class="chart-box"><canvas id="salesExpensesChart"></canvas></div>
       </div>
 
       <div class="chart-card">
         <h3 class="chart-title" id="titlePace">Ritmo (Dia útil)</h3>
-        <div class="chart-box">
-          <canvas id="salesBySectorChart"></canvas>
-        </div>
+        <div class="chart-box"><canvas id="salesBySectorChart"></canvas></div>
       </div>
 
       <!-- Tabela -->
@@ -114,24 +155,59 @@ $u = current_user();
         </div>
       </div>
     </section>
-
-    <section class="expandable-section">
-      <h2 class="page-title">Relatórios Detalhados</h2>
-      <div class="card card--mt">
-        <h3 class="card__title">Relatório de RH</h3>
-        <p class="card__subtitle">Dados de funcionários, turnover, etc.</p>
-        <button class="btn btn--primary btn--small">Ver Detalhes</button>
-      </div>
-      <div class="card card--mt">
-        <h3 class="card__title">Relatório Financeiro</h3>
-        <p class="card__subtitle">Fluxo de caixa, balanço, DRE.</p>
-        <button class="btn btn--primary btn--small">Ver Detalhes</button>
-      </div>
-    </section>
   </main>
 
   <script src="/assets/js/carousel.js"></script>
 
+  <script>
+    // Utilitário: dropdown (hover + click)
+    function attachDropdown(triggerId, menuId){
+      const trigger = document.getElementById(triggerId);
+      const menu = document.getElementById(menuId);
+      let t = null;
+
+      if (!trigger || !menu) return;
+
+      trigger.addEventListener('mouseenter', () => {
+        clearTimeout(t);
+        trigger.classList.add('is-open');
+        menu.classList.add('is-open');
+      });
+
+      trigger.addEventListener('mouseleave', () => {
+        t = setTimeout(() => {
+          trigger.classList.remove('is-open');
+          menu.classList.remove('is-open');
+        }, 150);
+      });
+
+      menu.addEventListener('mouseenter', () => clearTimeout(t));
+      menu.addEventListener('mouseleave', () => {
+        t = setTimeout(() => {
+          trigger.classList.remove('is-open');
+          menu.classList.remove('is-open');
+        }, 150);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!trigger.contains(e.target) && !menu.contains(e.target)) {
+          trigger.classList.remove('is-open');
+          menu.classList.remove('is-open');
+        }
+      });
+
+      trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        trigger.classList.toggle('is-open');
+        menu.classList.toggle('is-open');
+      });
+    }
+
+    attachDropdown('adminTrigger', 'adminMenu');
+    attachDropdown('dashTrigger', 'dashMenu');
+  </script>
+
+  <!-- O seu JS do dashboard (o que já está funcionando) fica aqui embaixo, sem mudanças -->
   <script>
     const brl = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
     const pct0 = new Intl.NumberFormat('pt-BR', { style:'percent', maximumFractionDigits: 0 });
@@ -144,8 +220,6 @@ $u = current_user();
     function num(v){ return (typeof v === 'number' && isFinite(v)) ? v : 0; }
 
     function refMesAnoFromUpdatedAt(updatedAt){
-      // updatedAt vem como "dd/mm/YYYY, HH:MM" (do seu endpoint)
-      // se não vier, usa data do navegador
       try{
         if (typeof updatedAt === 'string' && updatedAt.includes('/')) {
           const [dPart] = updatedAt.split(',');
@@ -170,7 +244,6 @@ $u = current_user();
       };
     }
 
-    // Charts (cria 1x e atualiza)
     let chartProgress = null;
     let chartPace = null;
 
@@ -192,11 +265,8 @@ $u = current_user();
               if (val == null) return;
 
               const label = brl.format(val);
-              const x = bar.x;
-              const y = bar.y - 8;
-
               ctx.textAlign = 'center';
-              ctx.fillText(label, x, y);
+              ctx.fillText(label, bar.x, bar.y - 8);
             });
           });
 
@@ -224,11 +294,7 @@ $u = current_user();
             maintainAspectRatio:false,
             animation:false,
             plugins: {
-              legend: {
-                display: true,
-                position: 'bottom',
-                labels: { usePointStyle: true }
-              },
+              legend: { display:true, position:'bottom', labels:{ usePointStyle:true } },
               tooltip: {
                 callbacks: {
                   title: (items) => {
@@ -239,9 +305,7 @@ $u = current_user();
                 }
               }
             },
-            scales: {
-              y: { ticks: { callback: (v)=> brl.format(v) } }
-            }
+            scales: { y: { ticks: { callback: (v)=> brl.format(v) } } }
           },
           plugins: [valueLabelPlugin]
         });
@@ -253,12 +317,7 @@ $u = current_user();
           data: {
             labels: ['Meta/dia útil', 'Realizado/dia útil'],
             datasets: [
-              {
-                label: `Ritmo (R$/dia) — ${ref.mesAno}`,
-                data: [0,0],
-                backgroundColor: ['rgba(245,158,11,.85)','rgba(22,163,74,.85)'],
-                borderRadius: 10
-              }
+              { label: `Ritmo (R$/dia) — ${ref.mesAno}`, data: [0,0], backgroundColor: ['rgba(245,158,11,.85)','rgba(22,163,74,.85)'], borderRadius: 10 }
             ]
           },
           options: {
@@ -266,11 +325,7 @@ $u = current_user();
             maintainAspectRatio:false,
             animation:false,
             plugins: {
-              legend: {
-                display: true,
-                position: 'bottom',
-                labels: { usePointStyle: true }
-              },
+              legend: { display:true, position:'bottom', labels:{ usePointStyle:true } },
               tooltip: {
                 callbacks: {
                   title: () => `Referência: ${ref.mesAno}`,
@@ -278,9 +333,7 @@ $u = current_user();
                 }
               }
             },
-            scales: {
-              y: { ticks: { callback: (v)=> brl.format(v) } }
-            }
+            scales: { y: { ticks: { callback: (v)=> brl.format(v) } } }
           },
           plugins: [valueLabelPlugin]
         });
@@ -292,11 +345,9 @@ $u = current_user();
       const updatedAt = payload.updated_at || '—';
       const ref = buildRefLabels(updatedAt);
 
-      // Títulos com referência
       setText('titleProgress', `Progresso (Mês e Ano) — ${ref.mesAno}`);
       setText('titlePace', `Ritmo (Dia útil) — ${ref.mesAno}`);
 
-      // KPIs (alinhado com as chaves da API)
       setText('kpi-meta-mes', brl.format(num(v.meta_mes)));
       setText('kpi-realizado-mes', brl.format(num(v.realizado_ate_hoje)));
       setText('kpi-falta-mes', brl.format(num(v.falta_meta_mes)));
@@ -315,27 +366,22 @@ $u = current_user();
       setText('kpi-dias', `${num(v.dias_uteis_trabalhados)} / ${num(v.dias_uteis_trabalhar)}`);
       setText('kpi-produtividade', pct0.format(num(v.realizado_dia_util_pct)));
 
-      // Trends
       setText('kpi-meta-trend', `Atualizado: ${updatedAt}`);
       setText('kpi-ano-trend', `Atualizado: ${updatedAt}`);
       setText('kpi-ritmo-trend', `Atualizado: ${updatedAt}`);
       setText('kpi-deveria-trend', `Atualizado: ${updatedAt}`);
       setText('kpi-dias-trend', `Atualizado: ${updatedAt}`);
 
-      // Charts
       ensureCharts(updatedAt);
 
-      // Atualiza dados (com as chaves corretas)
       chartProgress.data.datasets[0].data = [num(v.realizado_ate_hoje), num(v.realizado_ano_acum)];
       chartProgress.data.datasets[1].data = [num(v.meta_mes), num(v.meta_ano)];
       chartProgress.update('none');
 
-      // Atualiza label do dataset do ritmo com referência
       chartPace.data.datasets[0].label = `Ritmo (R$/dia) — ${ref.mesAno}`;
       chartPace.data.datasets[0].data = [num(v.meta_dia_util), num(v.realizado_dia_util)];
       chartPace.update('none');
 
-      // Tabela (Indicador → Valor)
       const tbody = document.getElementById('topProductsTable')?.querySelector('tbody');
       if (tbody){
         const rows = [
@@ -368,7 +414,7 @@ $u = current_user();
     }
 
     async function refresh(){
-      const res = await fetch('/api/dashboard-data.php', { cache: 'no-store' });
+      const res = await fetch('/api/dashboard-data.php?dash=<?= htmlspecialchars($current_dash) ?>', { cache: 'no-store' });
       const payload = await res.json();
       renderFromValues(payload);
     }
