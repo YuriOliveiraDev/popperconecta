@@ -30,3 +30,4 @@ jobs:
             **/uploads/**
             **/node_modules/**
             **/vendor/**
+            **/assets/**
