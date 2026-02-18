@@ -30,7 +30,7 @@ $u = current_user();
 
     <section class="carousel">
       <div class="carousel__track" id="track">
-        <article class="slide"><h3>Comunicado1</h3><p>Bem-vindo ao Popper Conecta.</p></article>
+        <article class="slide"><h3>Comunicado123</h3><p>Bem-vindo ao Popper Conecta.</p></article>
         <article class="slide"><h3>Indicador</h3><p>Card 2 (placeholder)</p></article>
         <article class="slide"><h3>Status</h3><p>TOTVS: futuro endpoint /api/kpis</p></article>
       </div>
