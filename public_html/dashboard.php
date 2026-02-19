@@ -3,8 +3,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
 require_login();
-
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
 $u = current_user();
+
+
 
 // Dashboards ativos (para o dropdown "Dashboards")
 $dashboards = db()
