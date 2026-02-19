@@ -85,7 +85,35 @@ $activePage = $activePage ?? ''; // padrão: nenhuma página ativa
         <?php endif; ?>
       </div>
     </div>
+
+    <!-- Popper Coins (link direto separado) -->
+    <a class="topbar__nav-trigger" href="/coins.php" style="margin-left:8px;">
+  <span aria-hidden="true">🪙</span>
+  Popper Coins
+</a>
   </div>
 
   <a class="link" href="/logout.php">Sair</a>
 </header>
+
+<style>
+/* Link direto na topbar (Popper Coins) */
+.topbar__navlink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  color: rgba(255, 255, 255, .92);
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .10);
+  transition: .15s ease;
+}
+.topbar__navlink:hover {
+  background: rgba(255, 255, 255, .16);
+  border-color: rgba(255, 255, 255, .20);
+}
+</style>

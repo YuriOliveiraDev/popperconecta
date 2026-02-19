@@ -1,6 +1,26 @@
 /* assets/css/dropdowns.css */
 .brand{color:inherit;text-decoration:none;font-weight:800}
 .brand:hover{text-decoration:underline}
+
+/* Link na topbar com a mesma "letra" do dropdown-trigger, mas sem seta */
+.topbar__nav-trigger{
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 12px;
+  border-radius:6px;
+  color:rgba(15,23,42,.85);
+  text-decoration:none;
+  transition:.15s ease;
+  font-weight:inherit; /* mantém a tipografia do topo */
+  font-size:inherit;
+  line-height:inherit;
+}
+
+.topbar__nav-trigger:hover{
+  background:rgba(15,23,42,.06);
+}
 /* ===== Dropdown Administração ===== */
 .topbar__dropdown{position:relative;display:inline-block}
 .topbar__dropdown-trigger{cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:6px;color:rgba(15,23,42,.85);text-decoration:none;transition:.15s ease}
