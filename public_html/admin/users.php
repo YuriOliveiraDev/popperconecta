@@ -1,7 +1,20 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/db.php';
 require_admin();
+
+// ✅ Adicionado: essencial para o header funcionar
+$u = current_user();
+
+// (Opcional) Para o dropdown "Dashboards" ter a lista completa
+try {
+  $dashboards = db()
+    ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
+    ->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  $dashboards = null;
+}
 
 $success = '';
 $error = '';
@@ -53,19 +66,17 @@ $users = db()->query(
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin: Usuários — <?= htmlspecialchars(APP_NAME) ?></title>
+  <title>Admin: Usuários — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
-  <link rel="stylesheet" href="/assets/css/users.css" />
+  <!-- ✅ CSS atualizados com cache-busting -->
+  <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 </head>
 <body class="page">
 
-  <header class="topbar">
-    <div class="topbar__left">
-      <strong class="brand"><?= htmlspecialchars(APP_NAME) ?></strong>
-      <span class="muted">Administração</span>
-    </div>
-    <a class="link" href="/dashboard.php">Voltar</a>
-  </header>
+  <!-- ✅ Header antigo substituído pelo template -->
+  <?php require_once __DIR__ . '/../app/header.php'; ?>
 
   <main class="container">
     <h2 class="page-title">Gerenciar Usuários</h2>
@@ -192,6 +203,9 @@ $users = db()->query(
       </div>
     </section>
   </main>
+
+  <!-- ✅ Adicionado: script para os dropdowns do header funcionarem -->
+  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 
 </body>
 </html>

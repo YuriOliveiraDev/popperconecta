@@ -4,9 +4,27 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 require_admin();
 
+// ✅ Essencial para o header.php funcionar
+$u = current_user();
+
+// ✅ Dropdown "Dashboards" no header
+try {
+  $dashboards = db()
+    ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
+    ->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  $dashboards = null;
+}
+
 $allowedDash = ['executivo', 'financeiro'];
 $dashboard_slug = $_GET['dash'] ?? 'executivo';
 if (!in_array($dashboard_slug, $allowedDash, true)) $dashboard_slug = 'executivo';
+
+// Para o header.php montar o link correto de /admin/metrics.php?dash=...
+$current_dash = $dashboard_slug;
+
+// (Opcional) destaca o menu Início no header (se você estiver usando $activePage)
+$activePage = ''; // ex.: 'home' na index
 
 $success = '';
 $error = '';
@@ -162,15 +180,21 @@ foreach ($groups as $gName => $keys) {
     if (isset($byKey[$k])) $ordered[$gName][] = $byKey[$k];
   }
 }
+
+// ✅ Nome do dashboard para o título (com primeira letra maiúscula)
+$dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
 ?>
 <!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Métricas — <?= htmlspecialchars(APP_NAME) ?></title>
-  <link rel="stylesheet" href="/assets/css/users.css" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css" />
+  <title>Métricas de <?= htmlspecialchars($dashboardName, ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
+
+  <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+
   <style>
     .tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid rgba(15,23,42,.1);padding-bottom:12px}
     .tab{padding:8px 16px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:700;font-size:13px;border:1px solid transparent;transition:.15s}
@@ -185,47 +209,10 @@ foreach ($groups as $gName => $keys) {
 </head>
 <body class="page">
 
-<header class="topbar">
-  <div class="topbar__left">
-    <strong class="brand"><?= htmlspecialchars(APP_NAME) ?></strong>
-    <span class="muted">Admin · Métricas</span>
-
-    <!-- Administração (dropdown) -->
-    <div class="topbar__dropdown" style="margin-left:12px;">
-      <a class="topbar__dropdown-trigger" href="#" id="adminTrigger">Administração</a>
-      <div class="topbar__dropdown-menu" id="adminMenu">
-        <a class="topbar__dropdown-item" href="/admin/users.php">
-          <span class="topbar__dropdown-icon">👥</span>
-          <span class="topbar__dropdown-label">Usuários</span>
-        </a>
-        <a class="topbar__dropdown-item" href="/admin/metrics.php?dash=<?= htmlspecialchars($dashboard_slug) ?>">
-          <span class="topbar__dropdown-icon">🧮</span>
-          <span class="topbar__dropdown-label">Métricas</span>
-        </a>
-      </div>
-    </div>
-
-    <!-- Dashboards (dropdown) -->
-    <div class="topbar__dropdown" style="margin-left:8px;">
-      <a class="topbar__dropdown-trigger" href="#" id="dashTrigger">Dashboards</a>
-      <div class="topbar__dropdown-menu" id="dashMenu">
-        <a class="topbar__dropdown-item" href="/dashboard.php">
-          <span class="topbar__dropdown-icon">📊</span>
-          <span class="topbar__dropdown-label">Faturamento</span>
-        </a>
-        <a class="topbar__dropdown-item" href="/financeiro.php">
-          <span class="topbar__dropdown-icon">💰</span>
-          <span class="topbar__dropdown-label">Financeiro</span>
-        </a>
-      </div>
-    </div>
-  </div>
-
-  <a class="link" href="/index.php">← Início</a>
-</header>
+<?php require_once __DIR__ . '/../app/header.php'; ?>
 
 <main class="container">
-  <h2 class="page-title">Configuração de Métricas</h2>
+  <h2 class="page-title">Configuração de Métricas de <?= htmlspecialchars($dashboardName, ENT_QUOTES, 'UTF-8') ?></h2>
 
   <nav class="tabs">
     <a class="tab <?= $dashboard_slug==='executivo'?'is-active':'' ?>" href="/admin/metrics.php?dash=executivo">Faturamento</a>
@@ -288,52 +275,7 @@ foreach ($groups as $gName => $keys) {
   </div>
 </main>
 
-<script>
-  // Dropdown (hover + click)
-  function attachDropdown(triggerId, menuId){
-    const trigger = document.getElementById(triggerId);
-    const menu = document.getElementById(menuId);
-    let t = null;
-    if (!trigger || !menu) return;
-
-    trigger.addEventListener('mouseenter', () => {
-      clearTimeout(t);
-      trigger.classList.add('is-open');
-      menu.classList.add('is-open');
-    });
-
-    trigger.addEventListener('mouseleave', () => {
-      t = setTimeout(() => {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
-      }, 150);
-    });
-
-    menu.addEventListener('mouseenter', () => clearTimeout(t));
-    menu.addEventListener('mouseleave', () => {
-      t = setTimeout(() => {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
-      }, 150);
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!trigger.contains(e.target) && !menu.contains(e.target)) {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
-      }
-    });
-
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      trigger.classList.toggle('is-open');
-      menu.classList.toggle('is-open');
-    });
-  }
-
-  attachDropdown('adminTrigger', 'adminMenu');
-  attachDropdown('dashTrigger', 'dashMenu');
-</script>
+<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 
 <script>
   const fmtBRL = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
@@ -401,7 +343,6 @@ foreach ($groups as $gName => $keys) {
     input.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
-  // ✅ Tab sempre formata (mais confiável do que só blur)
   document.querySelectorAll('.metric-input').forEach((input) => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Tab') formatInputValue(input);
@@ -410,8 +351,7 @@ foreach ($groups as $gName => $keys) {
     input.addEventListener('focus', () => unformatForEditing(input));
   });
 
-  // Cálculos em tempo real (somente no executivo)
-  const DASH = "<?= htmlspecialchars($dashboard_slug) ?>";
+  const DASH = "<?= htmlspecialchars($dashboard_slug, ENT_QUOTES, 'UTF-8') ?>";
   if (DASH === 'executivo') {
     function recalculate(){
       const metaAno = parsePtBrToNumber(document.getElementById('m_meta_ano')?.value) || 0;

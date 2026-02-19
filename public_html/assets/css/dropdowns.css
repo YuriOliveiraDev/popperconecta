@@ -1,0 +1,17 @@
+/* assets/css/dropdowns.css */
+.brand{color:inherit;text-decoration:none;font-weight:800}
+.brand:hover{text-decoration:underline}
+/* ===== Dropdown Administração ===== */
+.topbar__dropdown{position:relative;display:inline-block}
+.topbar__dropdown-trigger{cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:6px;color:rgba(15,23,42,.85);text-decoration:none;transition:.15s ease}
+.topbar__dropdown-trigger:hover{background:rgba(15,23,42,.06)}
+.topbar__dropdown-trigger::after{content:"▼";font-size:10px;margin-top:2px;transition:.2s ease}
+.topbar__dropdown-trigger.is-open::after{transform:rotate(180deg)}
+.topbar__dropdown-menu{position:absolute;top:100%;left:0;min-width:200px;background:#fff;border:1px solid rgba(15,23,42,.12);border-radius:8px;box-shadow:0 10px 25px rgba(15,23,42,.15);padding:8px 0;opacity:0;visibility:hidden;transform:translateY(-8px);transition:.2s ease;z-index:100}
+.topbar__dropdown-menu.is-open{opacity:1;visibility:visible;transform:translateY(0)}
+.topbar__dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 16px;color:rgba(15,23,42,.85);text-decoration:none;transition:.15s ease}
+.topbar__dropdown-item:hover{background:rgba(92,44,140,.08);color:rgba(92,44,140,1)}
+.topbar__dropdown-icon{font-size:16px;line-height:1}
+.topbar__dropdown-label{font-weight:600;font-size:14px}
+.topbar__dropdown-divider{height:1px;background:rgba(15,23,42,.08);margin:8px 0}
+.topbar__dropdown-header{padding:8px 16px 4px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:rgba(15,23,42,.5)}
