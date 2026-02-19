@@ -27,7 +27,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $info['has_user_session_after'] = isset($_SESSION['user']) ? 'yes' : 'no';
 
     if ($ok) {
-      header('Location: /dashboard.php');
+      header('Location: /index.php');
       exit;
     }
     $error = 'E-mail ou senha inválidos.';

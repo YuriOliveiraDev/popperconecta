@@ -74,21 +74,6 @@ $current_dash = $_GET['dash'] ?? 'executivo';
   </header>
 
   <main class="container">
-    <h2>Início</h2>
-
-    <section class="carousel">
-      <div class="carousel__track" id="track">
-        <article class="slide"><h3>Comunicado123</h3><p>Bem-vindo ao Popper Conecta.</p></article>
-        <article class="slide"><h3>Indicador</h3><p>Card 2 (placeholder)</p></article>
-        <article class="slide"><h3>Status</h3><p>TOTVS: futuro endpoint /api/kpis</p></article>
-      </div>
-
-      <div class="carousel__controls">
-        <button type="button" id="prev">Anterior</button>
-        <button type="button" id="next">Próximo</button>
-      </div>
-    </section>
-
     <h2 class="page-title">Métricas de Desempenho</h2>
 
     <section class="dashboard-grid">

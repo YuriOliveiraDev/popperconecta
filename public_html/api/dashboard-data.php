@@ -6,17 +6,46 @@ require_login();
 
 header('Content-Type: application/json; charset=utf-8');
 
-$dashboard_slug = 'executivo';
-$stmt = db()->prepare('SELECT metric_key, metric_value_num, metric_value_text FROM metrics WHERE dashboard_slug = ?');
+$dashboard_slug = $_GET['dash'] ?? 'executivo';
+
+$stmt = db()->prepare('SELECT metric_key, metric_value_num, metric_value_text, updated_at FROM metrics WHERE dashboard_slug = ?');
 $stmt->execute([$dashboard_slug]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $m = [];
+$latestUpdatedAt = null;
+
 foreach ($rows as $r) {
-    $m[$r['metric_key']] = $r['metric_value_text'] ?? (float)$r['metric_value_num'];
+  if ($latestUpdatedAt === null && isset($r['updated_at'])) {
+    $latestUpdatedAt = (string)$r['updated_at'];
+  }
+
+  $key = (string)$r['metric_key'];
+
+  // Se tiver texto (ex.: SIM/NÃO), usa texto; senão usa número
+  if ($r['metric_value_text'] !== null && $r['metric_value_text'] !== '') {
+    $m[$key] = $r['metric_value_text'];
+  } else {
+    $m[$key] = (float)($r['metric_value_num'] ?? 0);
+  }
 }
 
-// --- LÓGICA DE CÁLCULOS AUTOMÁTICOS ---
+/**
+ * Se for FINANCEIRO: apenas devolve as métricas "cruas" do banco
+ * (sem cálculos automáticos do executivo)
+ */
+if ($dashboard_slug === 'financeiro') {
+  echo json_encode([
+    'updated_at' => $latestUpdatedAt ? date('d/m/Y, H:i', strtotime($latestUpdatedAt)) : date('d/m/Y, H:i'),
+    'values' => [
+      'faturado_dia' => (float)($m['faturado_dia'] ?? 0),
+      'contas_pagar_dia' => (float)($m['contas_pagar_dia'] ?? 0),
+    ]
+  ]);
+  exit;
+}
+
+// --- LÓGICA DE CÁLCULOS AUTOMÁTICOS (EXECUTIVO/FATURAMENTO) ---
 
 // 1. Ano
 $meta_ano = (float)($m['meta_ano'] ?? 0);
@@ -54,35 +83,35 @@ $vai_bater = ($projecao_fechamento >= $meta_mes) ? "SIM" : "NÃO";
 
 // --- MONTAGEM DO JSON FINAL ---
 $data = [
-    'updated_at' => date('d/m/Y, H:i'),
-    'values' => [
-        // Ano
-        'meta_ano' => $meta_ano,
-        'realizado_ano_acum' => $realizado_ano,
-        'falta_meta_ano' => $falta_ano,
-        
-        // Mês
-        'meta_mes' => $meta_mes,
-        'realizado_ate_hoje' => $realizado_mes,
-        'falta_meta_mes' => $falta_mes,
-        'atingimento_mes_pct' => $atingimento_mes_pct,
-        'deveria_ate_hoje' => $deveria_ter_hoje,
-        
-        // Ritmo
-        'meta_dia_util' => $meta_dia_util,
-        'realizado_dia_util' => $realizado_dia_util,
-        'realizado_dia_util_pct' => $produtividade_pct,
-        'a_faturar_dia_util' => $a_faturar_por_dia,
-        
-        // Dias
-        'dias_uteis_trabalhar' => $dias_totais,
-        'dias_uteis_trabalhados' => $dias_passados,
-        
-        // Projeções
-        'vai_bater_meta' => $vai_bater,
-        'fechar_em' => $projecao_fechamento,
-        'equivale_pct' => $equivale_pct
-    ]
+  'updated_at' => $latestUpdatedAt ? date('d/m/Y, H:i', strtotime($latestUpdatedAt)) : date('d/m/Y, H:i'),
+  'values' => [
+    // Ano
+    'meta_ano' => $meta_ano,
+    'realizado_ano_acum' => $realizado_ano,
+    'falta_meta_ano' => $falta_ano,
+
+    // Mês
+    'meta_mes' => $meta_mes,
+    'realizado_ate_hoje' => $realizado_mes,
+    'falta_meta_mes' => $falta_mes,
+    'atingimento_mes_pct' => $atingimento_mes_pct,
+    'deveria_ate_hoje' => $deveria_ter_hoje,
+
+    // Ritmo
+    'meta_dia_util' => $meta_dia_util,
+    'realizado_dia_util' => $realizado_dia_util,
+    'realizado_dia_util_pct' => $produtividade_pct,
+    'a_faturar_dia_util' => $a_faturar_por_dia,
+
+    // Dias
+    'dias_uteis_trabalhar' => $dias_totais,
+    'dias_uteis_trabalhados' => $dias_passados,
+
+    // Projeções
+    'vai_bater_meta' => $vai_bater,
+    'fechar_em' => $projecao_fechamento,
+    'equivale_pct' => $equivale_pct
+  ]
 ];
 
 echo json_encode($data);
