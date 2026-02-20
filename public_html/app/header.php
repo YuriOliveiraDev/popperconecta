@@ -22,10 +22,10 @@ $userHierarquia = is_array($u) && isset($u['hierarquia']) && is_string($u['hiera
 $current_dash = $current_dash ?? 'executivo';
 $activePage = $activePage ?? '';
 
-// Foto (opcional). Se não existir, cai no ícone.
+// Foto (profile_photo_path)
 $avatarUrl = '';
-if (is_array($u) && isset($u['avatar_url']) && is_string($u['avatar_url'])) {
-  $avatarUrl = trim($u['avatar_url']);
+if (is_array($u) && isset($u['profile_photo_path']) && is_string($u['profile_photo_path']) && $u['profile_photo_path'] !== '') {
+  $avatarUrl = trim($u['profile_photo_path']);
 }
 
 // Itens do Admin conforme permissões
@@ -42,15 +42,28 @@ if (is_array($u)) {
   }
 }
 
-// Iniciais para fallback (se quiser mostrar letra no círculo)
+// Iniciais para fallback
 $initials = 'U';
 if ($userName !== '') {
   $parts = preg_split('/\s+/', trim($userName));
   if (is_array($parts) && count($parts) > 0) {
-    $first = strtoupper(substr((string)$parts[0], 0, 1)); // Corrigido: sem mbstring
-    $last = (count($parts) > 1) ? strtoupper(substr((string)$parts[count($parts)-1], 0, 1)) : ''; // Corrigido: sem mbstring
+    $first = strtoupper(substr((string)$parts[0], 0, 1));
+    $last = (count($parts) > 1) ? strtoupper(substr((string)$parts[count($parts)-1], 0, 1)) : '';
     $initials = $first . $last;
   }
+}
+
+// Saudação dinâmica
+$h = (int)date('H');
+$min = (int)date('i');
+$minutes = ($h * 60) + $min;
+
+if ($minutes >= 0 && $minutes <= (12 * 60)) {
+  $greeting = 'Ótimo Dia';
+} elseif ($minutes >= (12 * 60 + 1) && $minutes <= (18 * 60)) {
+  $greeting = 'Ótima Tarde';
+} else {
+  $greeting = 'Ótima Noite';
 }
 ?>
 <header class="topbar topbar--site">
@@ -106,13 +119,18 @@ if ($userName !== '') {
       </div>
     </div>
 
-    <a class="topbar__navlink" href="/coins.php" style="margin-left:8px;">
+    <!-- ✅ Popper Coins agora igual aos outros links -->
+    <a class="link<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php" style="margin-left:8px;">
       <span aria-hidden="true">🪙</span>
       Popper Coins
     </a>
   </div>
 
   <div class="topbar__right">
+    <div class="topbar__greeting" aria-label="Saudação">
+      <?= htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') ?><span class="topbar__greeting-name">, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>!</span>
+    </div>
+
     <div class="profile" id="profileWrap">
       <button class="profile__btn" type="button" id="profileTrigger" aria-haspopup="true" aria-expanded="false">
         <?php if ($avatarUrl !== ''): ?>
@@ -140,24 +158,25 @@ if ($userName !== '') {
 </header>
 
 <style>
-/* Link coins */
-.topbar__navlink{
-  display:inline-flex;
+/* Saudação (mais fina / estilizada, sem negrito) */
+.topbar__right{
+  display:flex;
   align-items:center;
-  gap:8px;
-  padding:8px 12px;
-  border-radius:10px;
-  text-decoration:none;
-  font-weight:800;
-  font-size:13px;
-  color:rgba(255,255,255,.92);
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.10);
-  transition:.15s ease;
+  gap:12px;
 }
-.topbar__navlink:hover{
-  background:rgba(255,255,255,.16);
-  border-color:rgba(255,255,255,.20);
+.topbar__greeting{
+  color: rgba(255,255,255,.88);
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+.topbar__greeting-name{
+  color: rgba(255,255,255,.95);
+  font-weight: 400;
+}
+@media (max-width: 720px){
+  .topbar__greeting{ display:none; }
 }
 
 /* Perfil */
@@ -226,7 +245,6 @@ if ($userName !== '') {
   var menu = document.getElementById('profileMenu');
   if (!trigger || !menu) return;
 
-  // Fecha ao clicar fora
   document.addEventListener('click', function(e){
     if (!trigger.contains(e.target) && !menu.contains(e.target)) {
       menu.style.display = 'none';
@@ -234,7 +252,6 @@ if ($userName !== '') {
     }
   });
 
-  // Toggle no clique
   trigger.addEventListener('click', function(e){
     e.preventDefault();
     var isOpen = menu.style.display === 'block';

@@ -21,22 +21,18 @@ function ensure_wallet_int(int $userId): void {
   $stmt->execute([$userId]);
 }
 
-function apply_ledger(int $userId, int $amount, string $type, ?string $reason, int $adminId): void {
+/**
+ * ✅ Ledger SEM transação interna.
+ * A transação deve ser controlada por quem chama (approve/reject).
+ */
+function apply_ledger_no_tx(int $userId, int $amount, string $type, ?string $reason, int $actorId): void {
   ensure_wallet_int($userId);
 
-  db()->beginTransaction();
-  try {
-    $stmt = db()->prepare("INSERT INTO popper_coin_ledger (user_id, amount, action_type, reason, created_by) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$userId, $amount, $type, $reason, $adminId]);
+  $stmt = db()->prepare("INSERT INTO popper_coin_ledger (user_id, amount, action_type, reason, created_by) VALUES (?, ?, ?, ?, ?)");
+  $stmt->execute([$userId, $amount, $type, $reason, $actorId]);
 
-    $stmt = db()->prepare("UPDATE popper_coin_wallets SET balance = balance + ? WHERE user_id = ?");
-    $stmt->execute([$amount, $userId]);
-
-    db()->commit();
-  } catch (Throwable $e) {
-    db()->rollBack();
-    throw $e;
-  }
+  $stmt = db()->prepare("UPDATE popper_coin_wallets SET balance = balance + ? WHERE user_id = ?");
+  $stmt->execute([$amount, $userId]);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -48,11 +44,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($id <= 0) throw new Exception('Pedido inválido.');
     if (!in_array($action, ['approve','reject'], true)) throw new Exception('Ação inválida.');
 
-    db()->beginTransaction();
+    $db = db();
+    $db->beginTransaction();
     try {
       // Lock do pedido
-      $stmt = db()->prepare("
-        SELECT r.id, r.user_id, r.reward_id, r.cost, r.status, rw.title
+      $stmt = $db->prepare("
+        SELECT r.id, r.user_id, r.reward_id, r.cost, r.qty, r.status,
+               rw.title, rw.inventory
         FROM popper_coin_redemptions r
         JOIN popper_coin_rewards rw ON rw.id = r.reward_id
         WHERE r.id = ?
@@ -60,49 +58,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       ");
       $stmt->execute([$id]);
       $r = $stmt->fetch(PDO::FETCH_ASSOC);
+
       if (!$r) throw new Exception('Pedido não encontrado.');
       if ((string)$r['status'] !== 'pending') throw new Exception('Pedido já foi decidido.');
 
       $userId = (int)$r['user_id'];
+      $rewardId = (int)$r['reward_id'];
       $cost = (int)$r['cost'];
+      $qty = (int)($r['qty'] ?? 1);
+      if ($qty <= 0) $qty = 1;
+
       $rewardTitle = (string)$r['title'];
 
-      if ($action === 'reject') {
-        $stmt = db()->prepare("
-          UPDATE popper_coin_redemptions
-          SET status='rejected', admin_note=?, decided_by=?, decided_at=NOW()
-          WHERE id=?
-        ");
-        $stmt->execute([$adminNote !== '' ? $adminNote : null, (int)$u['id'], $id]);
-
-        db()->commit();
-        $success = 'Pedido negado.';
-      } else {
-        // approve: precisa ter saldo suficiente no momento da aprovação
-        ensure_wallet_int($userId);
-        $stmt = db()->prepare("SELECT balance FROM popper_coin_wallets WHERE user_id=? FOR UPDATE");
-        $stmt->execute([$userId]);
-        $balance = (int)($stmt->fetchColumn() ?? 0);
-
-        if ($balance < $cost) throw new Exception('Saldo insuficiente no momento da aprovação.');
-
-        // Marca aprovado
-        $stmt = db()->prepare("
+      if ($action === 'approve') {
+        // ✅ Aprovar: apenas marca aprovado. (saldo e inventário já foram “segurados” no pedido)
+        $stmt = $db->prepare("
           UPDATE popper_coin_redemptions
           SET status='approved', admin_note=?, decided_by=?, decided_at=NOW()
           WHERE id=?
         ");
         $stmt->execute([$adminNote !== '' ? $adminNote : null, (int)$u['id'], $id]);
 
-        // Debita no ledger como redeem (negativo)
-        $reason = 'Resgate aprovado: ' . $rewardTitle;
-        apply_ledger($userId, -abs($cost), 'redeem', $reason, (int)$u['id']);
+        $db->commit();
+        $success = 'Pedido aprovado.';
+      } else {
+        // ✅ Negar: devolve saldo e devolve inventário
+        // 1) devolve saldo (ledger +)
+        $reason = 'Reembolso (pedido negado): ' . $rewardTitle;
+        apply_ledger_no_tx($userId, abs($cost), 'refund', $reason, (int)$u['id']);
 
-        db()->commit();
-        $success = 'Pedido aprovado e coins debitadas.';
+        // 2) devolve inventário
+        $stmt = $db->prepare("UPDATE popper_coin_rewards SET inventory = inventory + ? WHERE id=?");
+        $stmt->execute([$qty, $rewardId]);
+
+        // 3) marca rejeitado
+        $stmt = $db->prepare("
+          UPDATE popper_coin_redemptions
+          SET status='rejected', admin_note=?, decided_by=?, decided_at=NOW()
+          WHERE id=?
+        ");
+        $stmt->execute([$adminNote !== '' ? $adminNote : null, (int)$u['id'], $id]);
+
+        $db->commit();
+        $success = 'Pedido negado e saldo/inventário devolvidos.';
       }
     } catch (Throwable $e) {
-      db()->rollBack();
+      $db->rollBack();
       throw $e;
     }
   } catch (Throwable $e) {
@@ -111,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pending = db()->query("
-  SELECT r.id, r.created_at, r.user_note, r.cost, r.status,
+  SELECT r.id, r.created_at, r.user_note, r.cost, r.qty, r.status,
          u.name AS user_name, u.email,
          rw.title AS reward_title
   FROM popper_coin_redemptions r
@@ -152,13 +153,14 @@ $pending = db()->query("
             <th>Usuário</th>
             <th>Recompensa</th>
             <th class="right">Custo</th>
+            <th class="right">Qtd</th>
             <th>Obs. usuário</th>
             <th class="right">Ações</th>
           </tr>
         </thead>
         <tbody>
           <?php if (!$pending): ?>
-            <tr><td colspan="6" class="muted">Sem pendências.</td></tr>
+            <tr><td colspan="7" class="muted">Sem pendências.</td></tr>
           <?php else: ?>
             <?php foreach ($pending as $p): ?>
               <tr>
@@ -169,13 +171,14 @@ $pending = db()->query("
                 </td>
                 <td><?= htmlspecialchars((string)$p['reward_title'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="right"><?= (int)$p['cost'] ?></td>
+                <td class="right"><?= (int)($p['qty'] ?? 1) ?></td>
                 <td><?= htmlspecialchars((string)($p['user_note'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="right">
-                  <form method="post" style="display:inline-block;min-width:320px">
+                  <form method="post" style="display:inline-block;min-width:340px">
                     <input type="hidden" name="id" value="<?= (int)$p['id'] ?>" />
-                    <input type="text" name="admin_note" placeholder="Obs. RH (opcional)" style="max-width:180px" />
-                    <button class="btn btn--primary" type="submit" name="action" value="approve" onclick="return confirm('Aprovar e debitar coins?');">Aprovar</button>
-                    <button class="btn btn--danger" type="submit" name="action" value="reject" onclick="return confirm('Negar pedido?');">Negar</button>
+                    <input type="text" name="admin_note" placeholder="Obs. RH (opcional)" style="max-width:190px" />
+                    <button class="btn btn--primary" type="submit" name="action" value="approve" onclick="return confirm('Aprovar pedido?');">Aprovar</button>
+                    <button class="btn btn--danger" type="submit" name="action" value="reject" onclick="return confirm('Negar e devolver saldo/inventário?');">Negar</button>
                   </form>
                 </td>
               </tr>

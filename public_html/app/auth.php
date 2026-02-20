@@ -32,8 +32,8 @@ function current_user(): ?array {
   $id = (int)$_SESSION['user']['id'];
 
   try {
-    // Recarrega do banco (fonte da verdade) para refletir mudanças instantaneamente
-    $stmt = db()->prepare('SELECT id, name, email, role, setor, hierarquia, is_active, permissions FROM users WHERE id = ? LIMIT 1');
+    // ✅ CORREÇÃO: Incluí profile_photo_path, phone, birth_date, gender no SELECT
+    $stmt = db()->prepare('SELECT id, name, email, role, setor, hierarquia, is_active, permissions, phone, birth_date, gender, profile_photo_path FROM users WHERE id = ? LIMIT 1');
     $stmt->execute([$id]);
     $u = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -49,7 +49,7 @@ function current_user(): ?array {
       return null;
     }
 
-    // Atualiza sessão com dados atuais
+    // ✅ CORREÇÃO: Incluí os campos novos na sessão
     $_SESSION['user'] = [
       'id' => (int)$u['id'],
       'name' => (string)$u['name'],
@@ -59,6 +59,10 @@ function current_user(): ?array {
       'hierarquia' => (string)($u['hierarquia'] ?? ''),
       'is_active' => (int)($u['is_active'] ?? 1),
       'permissions' => $u['permissions'] ?? null,
+      'phone' => (string)($u['phone'] ?? ''),
+      'birth_date' => (string)($u['birth_date'] ?? ''),
+      'gender' => (string)($u['gender'] ?? ''),
+      'profile_photo_path' => (string)($u['profile_photo_path'] ?? ''),
     ];
 
     return $_SESSION['user'];
@@ -88,8 +92,8 @@ function require_admin(): void {
 function login(string $email, string $pass): bool {
   start_session();
 
-  // ✅ Atualizado: inclui permissions no SELECT
-  $stmt = db()->prepare('SELECT id, name, email, password_hash, role, is_active, permissions FROM users WHERE email = ? LIMIT 1');
+  // ✅ CORREÇÃO: Incluí phone, birth_date, gender, profile_photo_path no SELECT
+  $stmt = db()->prepare('SELECT id, name, email, password_hash, role, is_active, permissions, phone, birth_date, gender, profile_photo_path FROM users WHERE email = ? LIMIT 1');
   $stmt->execute([$email]);
   $u = $stmt->fetch();
 
@@ -99,13 +103,17 @@ function login(string $email, string $pass): bool {
 
   session_regenerate_id(true);
 
-  // ✅ Atualizado: inclui permissions na sessão
+  // ✅ CORREÇÃO: Incluí os campos novos na sessão
   $_SESSION['user'] = [
     'id' => (int)$u['id'],
     'name' => $u['name'],
     'email' => $u['email'],
     'role' => $u['role'],
-    'permissions' => $u['permissions'] ?? null, // pode ser string JSON ou null
+    'permissions' => $u['permissions'] ?? null,
+    'phone' => (string)($u['phone'] ?? ''),
+    'birth_date' => (string)($u['birth_date'] ?? ''),
+    'gender' => (string)($u['gender'] ?? ''),
+    'profile_photo_path' => (string)($u['profile_photo_path'] ?? ''),
   ];
 
   db()->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([(int)$u['id']]);

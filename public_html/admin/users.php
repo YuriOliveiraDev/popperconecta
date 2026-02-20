@@ -19,14 +19,56 @@ try {
 $success = '';
 $errors = [];
 
-// Mensagem após excluir (redirect do user_edit)
 if (($_GET['deleted'] ?? '') === '1') {
   $success = 'Usuário excluído com sucesso.';
 }
 
 $allowedPerms = array_keys(PERMISSION_CATALOG);
 
-// --- CADASTRO (POST) ---
+function upload_profile_photo(int $userId, string $uploadBaseDirAbs, string $uploadBaseUrl): array {
+  if (!isset($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
+    return ['ok' => true, 'path' => null, 'error' => null];
+  }
+
+  $file = $_FILES['profile_photo'];
+  $err = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+
+  if ($err === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'path' => null, 'error' => null];
+  if ($err !== UPLOAD_ERR_OK) return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
+
+  $tmp = (string)($file['tmp_name'] ?? '');
+  $size = (int)($file['size'] ?? 0);
+
+  if ($size <= 0) return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
+  if ($size > 2 * 1024 * 1024) return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
+
+  $imgInfo = @getimagesize($tmp);
+  if ($imgInfo === false || empty($imgInfo['mime'])) {
+    return ['ok' => false, 'path' => null, 'error' => 'Arquivo não é uma imagem válida.'];
+  }
+  $mime = (string)$imgInfo['mime'];
+
+  $ext = null;
+  if ($mime === 'image/jpeg') $ext = 'jpg';
+  if ($mime === 'image/png')  $ext = 'png';
+  if ($mime === 'image/webp') $ext = 'webp';
+
+  if ($ext === null) return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
+
+  if (!is_dir($uploadBaseDirAbs)) {
+    @mkdir($uploadBaseDirAbs, 0775, true);
+  }
+
+  $fileName = 'u' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+  $destAbs = rtrim($uploadBaseDirAbs, '/') . '/' . $fileName;
+
+  if (!move_uploaded_file($tmp, $destAbs)) {
+    return ['ok' => false, 'path' => null, 'error' => 'Não foi possível salvar a foto.'];
+  }
+
+  return ['ok' => true, 'path' => rtrim($uploadBaseUrl, '/') . '/' . $fileName, 'error' => null];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $name       = trim($_POST['name'] ?? '');
   $email      = trim($_POST['adm_email'] ?? ($_POST['email'] ?? ''));
@@ -35,7 +77,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $setor      = trim($_POST['setor'] ?? '');
   $hierarquia = trim($_POST['hierarquia'] ?? 'Assistente');
 
-  // Permissões (checkbox)
+  $phone      = trim($_POST['phone'] ?? '');
+  $birth_date = trim($_POST['birth_date'] ?? '');
+  $gender     = trim($_POST['gender'] ?? '');
+
   $perms = $_POST['perms'] ?? [];
   if (!is_array($perms)) $perms = [];
   $perms = array_values(array_unique(array_intersect($perms, $allowedPerms)));
@@ -47,6 +92,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($setor === '') $errors[] = 'Setor é obrigatório.';
   if (!in_array($role, ['user','admin'], true)) $errors[] = 'Perfil inválido.';
   if (!in_array($hierarquia, ['Diretor','Gerente','Gestor','Supervisor','Analista','Assistente'], true)) $errors[] = 'Hierarquia inválida.';
+  if ($phone !== '' && strlen($phone) > 20) $errors[] = 'Telefone muito longo.';
+  if ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) $errors[] = 'Data de nascimento inválida.';
+  if ($gender !== '' && !in_array($gender, ['M','F','O','N'], true)) $errors[] = 'Gênero inválido.';
 
   if (!$errors) {
     try {
@@ -55,13 +103,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       if ($stmt->fetch()) {
         $errors[] = 'Este e-mail já está cadastrado.';
       } else {
-        $hash = password_hash($pass, PASSWORD_DEFAULT);
-        $stmt = db()->prepare(
-          'INSERT INTO users (name, email, password_hash, role, setor, hierarquia, is_active, permissions)
-           VALUES (?, ?, ?, ?, ?, ?, 1, ?)'
-        );
-        $stmt->execute([$name, $email, $hash, $role, $setor, $hierarquia, $permsJson]);
-        $success = "Usuário '" . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "' cadastrado com sucesso!";
+        db()->beginTransaction();
+        try {
+          $hash = password_hash($pass, PASSWORD_DEFAULT);
+
+          $stmt = db()->prepare(
+            'INSERT INTO users (name, email, phone, birth_date, gender, profile_photo_path, password_hash, role, setor, hierarquia, is_active, permissions)
+             VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 1, ?)'
+          );
+          $stmt->execute([
+            $name,
+            $email,
+            ($phone !== '' ? $phone : null),
+            ($birth_date !== '' ? $birth_date : null),
+            ($gender !== '' ? $gender : null),
+            $hash,
+            $role,
+            $setor,
+            $hierarquia,
+            $permsJson
+          ]);
+
+          $newUserId = (int)db()->lastInsertId();
+
+          $uploadDirAbs = __DIR__ . '/../uploads/profile_photos';
+          $uploadBaseUrl = '/uploads/profile_photos';
+          $up = upload_profile_photo($newUserId, $uploadDirAbs, $uploadBaseUrl);
+
+          if (!$up['ok']) throw new Exception((string)$up['error']);
+          if (!empty($up['path'])) {
+            $stmt = db()->prepare("UPDATE users SET profile_photo_path=? WHERE id=?");
+            $stmt->execute([$up['path'], $newUserId]);
+          }
+
+          db()->commit();
+          $success = "Usuário '" . htmlspecialchars($name, ENT_QUOTES, 'UTF-8') . "' cadastrado com sucesso!";
+        } catch (Throwable $e) {
+          db()->rollBack();
+          throw $e;
+        }
       }
     } catch (Throwable $e) {
       $errors[] = 'Erro ao cadastrar usuário: ' . $e->getMessage();
@@ -69,13 +149,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// --- LISTAGEM ---
 try {
   $users = db()->query(
-    'SELECT id, name, email, role, setor, hierarquia, is_active, last_login_at, permissions FROM users ORDER BY name ASC'
+    'SELECT id, name, email, phone, birth_date, gender, role, setor, hierarquia, is_active, last_login_at, permissions, profile_photo_path
+     FROM users
+     ORDER BY name ASC'
   )->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
   $users = [];
+}
+
+function gender_label(?string $g): string {
+  if ($g === 'M') return 'M';
+  if ($g === 'F') return 'F';
+  if ($g === 'O') return 'O';
+  if ($g === 'N') return 'N/I';
+  return '—';
 }
 ?>
 <!doctype html>
@@ -90,35 +179,14 @@ try {
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 
   <style>
-    .offscreen-bait {
-      position: absolute !important;
-      left: -9999px !important;
-      width: 1px !important;
-      height: 1px !important;
-      overflow: hidden !important;
-      opacity: 0 !important;
-    }
-    .perm-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 8px 14px;
-      padding-top: 6px;
-    }
-    .perm-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      user-select: none;
-    }
-    .perm-help {
-      margin-top: 8px;
-      font-size: 12px;
-      opacity: .8;
-    }
-    @media (max-width: 720px) {
-      .perm-grid { grid-template-columns: 1fr; }
-    }
+    .offscreen-bait{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;}
+    .perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding-top:6px;}
+    .perm-item{display:inline-flex;align-items:center;gap:8px;margin:0;user-select:none;}
+    .perm-help{margin-top:8px;font-size:12px;opacity:.8;}
+    @media (max-width: 720px){.perm-grid{grid-template-columns:1fr;}}
+
+    .avatar{width:34px;height:34px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);display:block;}
+    .file-control{padding-top:10px;height:auto;}
   </style>
 </head>
 <body class="page">
@@ -148,7 +216,7 @@ try {
         </div>
       <?php endif; ?>
 
-      <form method="post" class="form" action="/admin/users.php" autocomplete="off">
+      <form method="post" class="form" action="/admin/users.php" autocomplete="off" enctype="multipart/form-data">
         <input class="offscreen-bait" type="text" name="email" autocomplete="username email" aria-hidden="true" tabindex="-1">
         <input class="offscreen-bait" type="password" name="password" autocomplete="current-password" aria-hidden="true" tabindex="-1">
 
@@ -165,6 +233,33 @@ try {
         <label class="field" for="adm_pass">
           <span class="field__label">Senha</span>
           <input class="field__control" id="adm_pass" name="adm_pass" type="password" required autocomplete="off" readonly />
+        </label>
+
+        <label class="field" for="phone">
+          <span class="field__label">Telefone</span>
+          <input class="field__control" id="phone" name="phone" type="tel" placeholder="(11) 99999-9999" maxlength="20" autocomplete="off" />
+        </label>
+
+        <label class="field" for="birth_date">
+          <span class="field__label">Data de Nascimento</span>
+          <input class="field__control" id="birth_date" name="birth_date" type="date" autocomplete="off" />
+        </label>
+
+        <label class="field" for="gender">
+          <span class="field__label">Gênero</span>
+          <select class="field__control" id="gender" name="gender" autocomplete="off">
+            <option value="">Selecione...</option>
+            <option value="M">Masculino</option>
+            <option value="F">Feminino</option>
+            <option value="O">Outro</option>
+            <option value="N">Prefere não informar</option>
+          </select>
+        </label>
+
+        <label class="field" for="profile_photo">
+          <span class="field__label">Foto de Perfil</span>
+          <input class="field__control file-control" id="profile_photo" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
+          <div class="perm-help">PNG/JPG/WEBP. Máx: 2MB.</div>
         </label>
 
         <label class="field" for="setor">
@@ -203,7 +298,6 @@ try {
           </select>
         </label>
 
-        <!-- PERMISSÕES -->
         <div class="field" style="grid-column: 1 / -1;">
           <span class="field__label">Permissões (Administração)</span>
           <div class="perm-grid">
@@ -231,8 +325,12 @@ try {
         <table class="table">
           <thead>
             <tr>
+              <th>Foto</th>
               <th>Nome</th>
               <th>E-mail</th>
+              <th>Telefone</th>
+              <th>Nascimento</th>
+              <th>Gênero</th>
               <th>Setor</th>
               <th>Hierarquia</th>
               <th>Perfil</th>
@@ -244,8 +342,18 @@ try {
           <tbody>
             <?php foreach ($users as $row): ?>
               <tr>
+                <td>
+                  <?php if (!empty($row['profile_photo_path'])): ?>
+                    <img class="avatar" src="<?= htmlspecialchars((string)$row['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
+                  <?php else: ?>
+                    <span class="muted">—</span>
+                  <?php endif; ?>
+                </td>
                 <td><?= htmlspecialchars((string)$row['name'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars((string)$row['email'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($row['phone'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($row['birth_date'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars(gender_label($row['gender'] ?? null), ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars((string)$row['setor'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td><?= htmlspecialchars((string)$row['hierarquia'], ENT_QUOTES, 'UTF-8') ?></td>
                 <td>
@@ -268,6 +376,9 @@ try {
                 </td>
               </tr>
             <?php endforeach; ?>
+            <?php if (!$users): ?>
+              <tr><td colspan="12" class="muted">Nenhum usuário cadastrado.</td></tr>
+            <?php endif; ?>
           </tbody>
         </table>
       </div>

@@ -29,19 +29,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $title = trim((string)($_POST['title'] ?? ''));
       $description = trim((string)($_POST['description'] ?? ''));
       $cost = (int)($_POST['cost'] ?? 0);
+      $inventory = (int)($_POST['inventory'] ?? 0); // ✅ Novo campo
       $isActive = isset($_POST['is_active']) ? 1 : 0;
       $sortOrder = (int)($_POST['sort_order'] ?? 0);
 
       if ($title === '') throw new Exception('Título é obrigatório.');
       if ($cost <= 0) throw new Exception('Custo deve ser maior que zero.');
+      if ($inventory < 0) throw new Exception('Inventário deve ser maior ou igual a zero.'); // ✅ Validação
 
       if ($id > 0) {
-        $stmt = db()->prepare("UPDATE popper_coin_rewards SET title=?, description=?, cost=?, is_active=?, sort_order=? WHERE id=?");
-        $stmt->execute([$title, ($description !== '' ? $description : null), $cost, $isActive, $sortOrder, $id]);
+        $stmt = db()->prepare("UPDATE popper_coin_rewards SET title=?, description=?, cost=?, inventory=?, is_active=?, sort_order=? WHERE id=?");
+        $stmt->execute([$title, ($description !== '' ? $description : null), $cost, $inventory, $isActive, $sortOrder, $id]);
         $success = 'Recompensa atualizada.';
       } else {
-        $stmt = db()->prepare("INSERT INTO popper_coin_rewards (title, description, cost, is_active, sort_order) VALUES (?, ?, ?, ?, ?)");
-        $stmt->execute([$title, ($description !== '' ? $description : null), $cost, $isActive, $sortOrder]);
+        $stmt = db()->prepare("INSERT INTO popper_coin_rewards (title, description, cost, inventory, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$title, ($description !== '' ? $description : null), $cost, $inventory, $isActive, $sortOrder]);
         $success = 'Recompensa criada.';
       }
     }
@@ -50,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-$rewards = db()->query("SELECT id, title, description, cost, is_active, sort_order FROM popper_coin_rewards ORDER BY sort_order ASC, id ASC")->fetchAll(PDO::FETCH_ASSOC);
+$rewards = db()->query("SELECT id, title, description, cost, inventory, is_active, sort_order FROM popper_coin_rewards ORDER BY sort_order ASC, id ASC")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -95,6 +97,11 @@ $rewards = db()->query("SELECT id, title, description, cost, is_active, sort_ord
       </label>
 
       <label class="field">
+        <span class="field__label">Inventário (quantidade disponível)</span>
+        <input class="field__control" name="inventory" type="number" step="1" min="0" value="0" required />
+      </label>
+
+      <label class="field">
         <span class="field__label">Ordem</span>
         <input class="field__control" name="sort_order" type="number" step="1" value="0" />
       </label>
@@ -119,6 +126,7 @@ $rewards = db()->query("SELECT id, title, description, cost, is_active, sort_ord
           <tr>
             <th>Título</th>
             <th class="right">Custo</th>
+            <th class="right">Inventário</th>
             <th>Status</th>
             <th class="right">Ações</th>
           </tr>
@@ -128,10 +136,11 @@ $rewards = db()->query("SELECT id, title, description, cost, is_active, sort_ord
             <tr>
               <td><?= htmlspecialchars((string)$rw['title'], ENT_QUOTES, 'UTF-8') ?></td>
               <td class="right"><?= (int)$rw['cost'] ?></td>
+              <td class="right"><?= (int)$rw['inventory'] ?></td>
               <td><?= (int)$rw['is_active'] === 1 ? 'Ativa' : 'Inativa' ?></td>
               <td class="right">
                 <button class="btn btn--secondary" type="button"
-                  onclick="editReward(<?= (int)$rw['id'] ?>,'<?= htmlspecialchars(addslashes((string)$rw['title']), ENT_QUOTES, 'UTF-8') ?>','<?= htmlspecialchars(addslashes((string)($rw['description'] ?? '')), ENT_QUOTES, 'UTF-8') ?>',<?= (int)$rw['cost'] ?>,<?= (int)$rw['sort_order'] ?>,<?= (int)$rw['is_active'] ?>)">Editar</button>
+                  onclick="editReward(<?= (int)$rw['id'] ?>,'<?= htmlspecialchars(addslashes((string)$rw['title']), ENT_QUOTES, 'UTF-8') ?>','<?= htmlspecialchars(addslashes((string)($rw['description'] ?? '')), ENT_QUOTES, 'UTF-8') ?>',<?= (int)$rw['cost'] ?>,<?= (int)$rw['inventory'] ?>,<?= (int)$rw['sort_order'] ?>,<?= (int)$rw['is_active'] ?>)">Editar</button>
 
                 <form method="post" style="display:inline" onsubmit="return confirm('Remover recompensa?');">
                   <input type="hidden" name="delete_id" value="<?= (int)$rw['id'] ?>" />
@@ -141,7 +150,7 @@ $rewards = db()->query("SELECT id, title, description, cost, is_active, sort_ord
             </tr>
           <?php endforeach; ?>
           <?php if (!$rewards): ?>
-            <tr><td colspan="4" class="muted">Nenhuma recompensa cadastrada.</td></tr>
+            <tr><td colspan="5" class="muted">Nenhuma recompensa cadastrada.</td></tr>
           <?php endif; ?>
         </tbody>
       </table>
@@ -157,15 +166,17 @@ $rewards = db()->query("SELECT id, title, description, cost, is_active, sort_ord
     f.querySelector('input[name="title"]').value = '';
     f.querySelector('input[name="description"]').value = '';
     f.querySelector('input[name="cost"]').value = '';
+    f.querySelector('input[name="inventory"]').value = '0'; // ✅ Reset para 0
     f.querySelector('input[name="sort_order"]').value = '0';
     f.querySelector('input[name="is_active"]').checked = true;
   }
-  function editReward(id,title,description,cost,sort_order,is_active){
+  function editReward(id,title,description,cost,inventory,sort_order,is_active){ // ✅ Inclui inventory
     const f = document.getElementById('rewardForm');
     f.querySelector('input[name="id"]').value = id;
     f.querySelector('input[name="title"]').value = title;
     f.querySelector('input[name="description"]').value = description;
     f.querySelector('input[name="cost"]').value = cost;
+    f.querySelector('input[name="inventory"]').value = inventory; // ✅ Preenche inventory
     f.querySelector('input[name="sort_order"]').value = sort_order;
     f.querySelector('input[name="is_active"]').checked = (is_active === 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
