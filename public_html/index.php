@@ -2,9 +2,11 @@
 declare(strict_types=1);
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
+
 require_login();
 
 $u = current_user();
+$activePage = 'home'; // ✅ Define para destacar o menu "Início" no header
 
 // Buscar comunicados ativos
 $stmt = db()->prepare('SELECT titulo, conteudo FROM comunicados WHERE ativo = TRUE ORDER BY ordem ASC, id ASC');
