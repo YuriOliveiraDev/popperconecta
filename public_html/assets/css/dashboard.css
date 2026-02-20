@@ -8,8 +8,9 @@
     align-items: center;
     gap: 12px;
 }
+
 .topbar__right .muted {
-    color: rgba(255,255,255,.85);
+    color: rgba(255, 255, 255, 0.85); /* Mantenha a cor branca */
     font-size: 13px;
 }
 
@@ -54,8 +55,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0));
-    color: white;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+    color: white; /* Mantém o texto branco */
     padding: 1.5rem;
     text-align: left;
 }
@@ -90,7 +91,7 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     color: white;
     border: none;
     padding: 10px 15px;
@@ -102,7 +103,7 @@
 }
 
 .carousel-control:hover {
-    background: rgba(0,0,0,0.8);
+    background: rgba(0, 0, 0, 0.8);
 }
 
 .carousel-control.prev {
@@ -170,7 +171,7 @@
     font-size: 0.8rem;
     color: var(--muted);
     margin-top: 10px;
-    border-top: 1px solid rgba(15,23,42,.05);
+    border-top: 1px solid rgba(15, 23, 42, .05);
     padding-top: 8px;
 }
 
@@ -370,6 +371,7 @@
   color: #fff;
   border-color: rgba(92, 44, 140, 1);
 }
+
 /* ===== MÉTRICAS: Tabs (Faturamento/Financeiro) ===== */
 /* Força o texto branco mesmo quando NÃO está selecionado */
 .tabs .tab,
@@ -395,3 +397,9 @@
   border-color:rgba(92,44,140,1);
   color:#fff !important;
 }
+
+/* ✅ FORÇA TEXTO BRANCO NOS ALERTAS (sem mexer no resto) */
+.alert{color:#fff !important;}
+.alert *{color:#fff !important;}
+.alert--ok{color:#fff !important;}
+.alert--error{color:#fff !important;}

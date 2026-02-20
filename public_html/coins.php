@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
+
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
+require_once __DIR__ . '/app/notifications.php';
 require_login();
 
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
@@ -19,6 +21,7 @@ try {
 }
 
 $current_dash = $_GET['dash'] ?? 'executivo';
+$activePage = 'coins';
 
 $success = '';
 $error = '';
@@ -117,6 +120,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_reward_id'])) 
     ");
     $stmt->execute([$userId, $rewardId, $cost, $qty, ($userNote !== '' ? $userNote : null)]);
 
+    // ✅ NOTIFICA RH/ADMIN
+    $rhUsers = db()->query("SELECT id FROM users WHERE role IN ('rh','admin')")->fetchAll(PDO::FETCH_ASSOC);
+    if ($rhUsers) {
+      $stmtN = db()->prepare("
+        INSERT INTO notifications (user_id, type, title, message, link)
+        VALUES (?, 'coins_redeem_requested', 'Novo pedido de resgate', ?, '/rh_redemptions.php')
+      ");
+      $msg = (string)($u['name'] ?? 'Usuário') . ' solicitou "' . $title . '" (' . $cost . ' coins).';
+      foreach ($rhUsers as $rh) {
+        $stmtN->execute([(int)$rh['id'], $msg]);
+      }
+    }
+
     $db->commit();
 
     // novo token e redireciona (PRG)
@@ -182,47 +198,60 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
 
   <style>
-    .pc-container { display: grid; grid-template-columns: 1fr; gap: 24px; max-width: 1400px; margin: 0 auto; }
-    .pc-header { text-align: center; margin-bottom: 24px; }
-    .pc-title { font-size: 2.2rem; font-weight: 900; color: var(--ink); margin: 0; }
-    .pc-subtitle { font-size: 1.05rem; color: var(--muted); margin: 8px 0 0; }
+    .pc-container{display:grid;grid-template-columns:1fr;gap:24px;max-width:1400px;margin:0 auto;}
+    .pc-header{text-align:center;margin-bottom:24px;}
+    .pc-title{font-size:2.2rem;font-weight:900;color:var(--ink);margin:0;}
+    .pc-subtitle{font-size:1.05rem;color:var(--muted);margin:8px 0 0;}
 
-    .pc-card {
-      background: var(--card);
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-      padding: 24px;
+    .pc-card{
+      background:var(--card);
+      border:1px solid rgba(15,23,42,0.08);
+      border-radius:16px;
+      box-shadow:0 4px 20px rgba(15,23,42,0.06);
+      padding:24px;
     }
 
-    .pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    @media (max-width: 900px) { .pc-grid { grid-template-columns: 1fr; } }
+    .pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+    @media (max-width:900px){.pc-grid{grid-template-columns:1fr;}}
 
-    .pc-balance__num { font-size: 2.6rem; font-weight: 950; letter-spacing: -1px; color: var(--accent, #5c2d91); }
-    .pc-balance__meta { color: var(--muted); font-size: 0.9rem; }
+    .pc-card--balance{
+      min-height:200px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      text-align:center;
+      padding:32px 24px;
+    }
 
-    .table-wrap { overflow-x: auto; border-radius: 12px; }
-    .table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .table th, .table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid rgba(15, 23, 42, 0.06); }
-    .table thead th { font-weight: 800; text-transform: uppercase; font-size: 11px; color: var(--muted); background: rgba(15, 23, 42, 0.02); }
-    .table tbody tr:hover { background: rgba(92, 44, 140, 0.04); }
-    .table .right { text-align: right; }
+    .pc-balance{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;}
+    .pc-balance__icon{font-size:2.5rem;line-height:1;}
+    .pc-balance__num{font-size:2.6rem;font-weight:950;letter-spacing:-1px;color:var(--accent,#5c2d91);}
+    .pc-balance__meta{color:var(--muted);font-size:.9rem;}
 
-    .pc-form { display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
-    .pc-form input { flex: 1; min-width: 180px; padding: 8px 12px; border: 1px solid rgba(15, 23, 42, 0.12); border-radius: 8px; font-size: 14px; }
-    .pc-form button { padding: 8px 16px; border-radius: 8px; font-weight: 800; }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .table-wrap{overflow-x:auto;border-radius:12px;}
+    .table{width:100%;border-collapse:separate;border-spacing:0;}
+    .table th,.table td{padding:14px 16px;text-align:left;border-bottom:1px solid rgba(15,23,42,0.06);}
+    .table thead th{font-weight:800;text-transform:uppercase;font-size:11px;color:var(--muted);background:rgba(15,23,42,0.02);}
+    .table tbody tr:hover{background:rgba(92,44,140,0.04);}
+    .table .right{text-align:right;}
 
-    .pill { display: inline-flex; align-items: center; padding: 6px 12px; border-radius: 999px; font-weight: 800; font-size: 12px; border: 1px solid rgba(15, 23, 42, 0.1); }
-    .pill--pending { background: rgba(245, 158, 11, 0.12); color: #92400e; }
-    .pill--approved { background: rgba(22, 163, 74, 0.12); color: #166534; }
-    .pill--rejected { background: rgba(220, 38, 38, 0.12); color: #991b1b; }
+    .pc-form{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
+    .pc-form input{flex:1;min-width:180px;padding:8px 12px;border:1px solid rgba(15,23,42,0.12);border-radius:8px;font-size:14px;}
+    .pc-form button{padding:8px 16px;border-radius:8px;font-weight:800;}
+    .btn:disabled{opacity:.55;cursor:not-allowed;}
 
-    @media (max-width: 768px) {
-      .pc-title { font-size: 1.8rem; }
-      .pc-balance__num { font-size: 2.2rem; }
-      .pc-form { flex-direction: column; align-items: stretch; }
-      .pc-form input { min-width: auto; }
+    .pill{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;border:1px solid rgba(15,23,42,0.1);}
+    .pill--pending{background:rgba(245,158,11,0.12);color:#92400e;}
+    .pill--approved{background:rgba(22,163,74,0.12);color:#166534;}
+    .pill--rejected{background:rgba(220,38,38,0.12);color:#991b1b;}
+
+    @media (max-width:768px){
+      .pc-title{font-size:1.8rem;}
+      .pc-card--balance{min-height:170px;}
+      .pc-balance__icon{font-size:2rem;}
+      .pc-balance__num{font-size:2.2rem;}
+      .pc-form{flex-direction:column;align-items:stretch;}
+      .pc-form input{min-width:auto;}
     }
   </style>
 </head>
@@ -241,9 +270,12 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <div class="pc-container">
     <div class="pc-grid">
-      <div class="pc-card">
+      <div class="pc-card pc-card--balance">
         <h3 style="margin:0 0 8px 0;">Seu saldo</h3>
-        <div class="pc-balance__num"><?= (int)$balance ?> coins</div>
+        <div class="pc-balance">
+          <span class="pc-balance__icon" aria-hidden="true">🪙</span>
+          <div class="pc-balance__num"><?= (int)$balance ?> coins</div>
+        </div>
         <div class="pc-balance__meta">Usuário: <?= htmlspecialchars((string)($u['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
       </div>
 
@@ -366,11 +398,11 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
 <script>
-  // Bloqueio de duplo clique
+  // Bloqueio de duplo clique (somente formulários desta página)
   document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('form[method="post"]').forEach(function(form){
+    document.querySelectorAll('.pc-container form[method="post"]').forEach(function(form){
       form.addEventListener('submit', function(){
-        const btn = form.querySelector('button[type="submit"]');
+        var btn = form.querySelector('button[type="submit"]');
         if (btn) {
           btn.disabled = true;
           btn.textContent = 'Enviando...';

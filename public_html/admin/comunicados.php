@@ -22,7 +22,6 @@ function save_uploaded_image(array $file): ?string {
   if ($file['error'] === UPLOAD_ERR_NO_FILE) return null;
   if ($file['error'] !== UPLOAD_ERR_OK) throw new Exception('Falha no upload (código ' . (int)$file['error'] . ').');
 
-  // Limite: 5 MB
   $maxBytes = 5 * 1024 * 1024;
   if (!isset($file['size']) || (int)$file['size'] > $maxBytes) {
     throw new Exception('A imagem deve ter no máximo 5MB.');
@@ -33,7 +32,6 @@ function save_uploaded_image(array $file): ?string {
     throw new Exception('Upload inválido.');
   }
 
-  // Valida extensão
   $origName = (string)($file['name'] ?? '');
   $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
@@ -42,17 +40,14 @@ function save_uploaded_image(array $file): ?string {
     throw new Exception('Formato inválido. Use JPG, PNG ou WEBP.');
   }
 
-  // Valida MIME enviado pelo navegador (não é 100% confiável, mas ajuda)
   $mime = strtolower((string)($file['type'] ?? ''));
   $allowedMime = ['image/jpeg', 'image/png', 'image/webp'];
   if ($mime !== '' && !in_array($mime, $allowedMime, true)) {
     throw new Exception('Tipo de arquivo inválido.');
   }
 
-  // Normaliza extensão jpeg -> jpg
   if ($ext === 'jpeg') $ext = 'jpg';
 
-  // Pasta destino (dentro do public_html)
   $dir = __DIR__ . '/../uploads/comunicados';
   if (!is_dir($dir)) {
     if (!mkdir($dir, 0755, true)) {
@@ -60,7 +55,6 @@ function save_uploaded_image(array $file): ?string {
     }
   }
 
-  // Nome único (evita colisão e evita usar nome do usuário)
   $name = bin2hex(random_bytes(16)) . '.' . $ext;
   $dest = $dir . '/' . $name;
 
@@ -68,7 +62,6 @@ function save_uploaded_image(array $file): ?string {
     throw new Exception('Não foi possível salvar a imagem.');
   }
 
-  // Caminho público que será salvo no banco
   return '/uploads/comunicados/' . $name;
 }
 
@@ -77,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete'])) {
       $idDel = (int)$_POST['delete'];
 
-      // (Opcional) apagar arquivo antigo
       $stmt = db()->prepare('SELECT imagem_path FROM comunicados WHERE id=? LIMIT 1');
       $stmt->execute([$idDel]);
       $old = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -90,43 +82,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->execute([$idDel]);
       $success = 'Comunicado removido.';
     } elseif (isset($_POST['save'])) {
-      $id = $_POST['id'] !== '' ? (int)$_POST['id'] : null;
+      $id = ($_POST['id'] ?? '') !== '' ? (int)$_POST['id'] : null;
 
-      $titulo = trim($_POST['titulo'] ?? '');
-      $conteudo = trim($_POST['conteudo'] ?? '');
-      $ativo = isset($_POST['ativo']) ? 1 : 0;
+      $titulo = trim((string)($_POST['titulo'] ?? ''));
+      $conteudo = trim((string)($_POST['conteudo'] ?? ''));
       $ordem = (int)($_POST['ordem'] ?? 0);
 
-      // Remover imagem?
-      $removeImagem = isset($_POST['remove_imagem']) ? 1 : 0;
+      // ✅ ativo SEM checkbox: default 1 para novos e mantém para edição
+      // (se existir no POST, usamos; se não, será tratado abaixo)
+      $ativo = isset($_POST['ativo']) ? (int)$_POST['ativo'] : null;
 
-      // Upload novo (opcional) - MOVER PARA ANTES DA VALIDAÇÃO
+      // ✅ remove_imagem SEM checkbox: vem como 1/0 hidden
+      $removeImagem = isset($_POST['remove_imagem']) ? (int)$_POST['remove_imagem'] : 0;
+
       $newPath = null;
       if (!empty($_FILES['imagem'])) {
         $newPath = save_uploaded_image($_FILES['imagem']);
       }
 
-      // Agora NÃO é obrigatório ter título e conteúdo.
-      // Permite imagem apenas, texto apenas, ou ambos.
-      // Se nada for fornecido, permite (comunicado vazio, mas ativo pode ser usado para pausar)
-
       if ($id) {
-        // Carrega imagem atual
-        $stmt = db()->prepare('SELECT imagem_path FROM comunicados WHERE id=? LIMIT 1');
+        $stmt = db()->prepare('SELECT imagem_path, ativo FROM comunicados WHERE id=? LIMIT 1');
         $stmt->execute([$id]);
         $current = $stmt->fetch(PDO::FETCH_ASSOC);
         $currentPath = (string)($current['imagem_path'] ?? '');
+        $currentAtivo = (int)($current['ativo'] ?? 1);
+
+        // se ativo não veio, mantém o atual
+        if ($ativo === null) $ativo = $currentAtivo;
 
         $finalPath = $currentPath;
 
-        // Se marcou remover, remove e apaga arquivo
-        if ($removeImagem && $currentPath !== '') {
+        if ($removeImagem === 1 && $currentPath !== '') {
           $full = __DIR__ . '/..' . $currentPath;
           if (is_file($full)) @unlink($full);
           $finalPath = '';
         }
 
-        // Se enviou nova, substitui e apaga antiga
         if ($newPath !== null && $newPath !== '') {
           if ($currentPath !== '') {
             $full = __DIR__ . '/..' . $currentPath;
@@ -136,11 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $stmt = db()->prepare('UPDATE comunicados SET titulo=?, conteudo=?, imagem_path=?, ativo=?, ordem=? WHERE id=?');
-        $stmt->execute([$titulo, $conteudo, $finalPath !== '' ? $finalPath : null, $ativo, $ordem, $id]);
+        $stmt->execute([$titulo, $conteudo, $finalPath !== '' ? $finalPath : null, (int)$ativo, $ordem, $id]);
         $success = 'Comunicado atualizado.';
       } else {
+        // novo -> ativo padrão 1 se não veio
+        if ($ativo === null) $ativo = 1;
         $stmt = db()->prepare('INSERT INTO comunicados (titulo, conteudo, imagem_path, ativo, ordem) VALUES (?, ?, ?, ?, ?)');
-        $stmt->execute([$titulo, $conteudo, $newPath, $ativo, $ordem]);
+        $stmt->execute([$titulo, $conteudo, $newPath, (int)$ativo, $ordem]);
         $success = 'Comunicado criado.';
       }
     }
@@ -164,13 +157,46 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 
   <style>
-    .comunicado-item { margin-bottom: 20px; padding: 12px; border: 1px solid rgba(15,23,42,.1); border-radius: 8px; }
-    .comunicado-item.inativo { opacity: 0.6; }
-    .comunicado-img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 8px; margin: 8px 0 10px; border: 1px solid rgba(15,23,42,.08); }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; margin-bottom: 4px; font-weight: 600; }
-    .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid rgba(15,23,42,.2); border-radius: 4px; }
-    .form-group textarea { height: 80px; }
+    .com-form, .com-form *{box-sizing:border-box;}
+    .com-form{margin-top:10px;}
+    .com-form label{display:block;margin:0 0 6px 0;font-weight:700;font-size:13px;color:var(--ink);}
+    .com-form input[type="text"],
+    .com-form input[type="number"],
+    .com-form textarea,
+    .com-form input[type="file"]{width:100%;font:inherit;}
+    .com-form input[type="text"],
+    .com-form input[type="number"],
+    .com-form textarea{
+      border:1px solid rgba(15,23,42,.18);
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:14px;
+      line-height:1.2;
+      background:#fff;
+      outline:none;
+    }
+    .com-form input[type="text"],
+    .com-form input[type="number"]{height:42px;}
+    .com-form textarea{min-height:110px;resize:vertical;}
+    .com-form input[type="file"]{
+      border:1px dashed rgba(15,23,42,.25);
+      border-radius:10px;
+      padding:10px 12px;
+      background:rgba(15,23,42,.02);
+    }
+    .form-grid{display:grid;grid-template-columns:1fr 220px;gap:18px;align-items:end;}
+    @media(max-width:768px){.form-grid{grid-template-columns:1fr;}}
+    .form-row{margin-bottom:16px;}
+    .com-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
+    .comunicados-list{margin-top:26px;}
+    .comunicado-card{border:1px solid rgba(15,23,42,.1);border-radius:14px;padding:18px;margin-bottom:16px;background:var(--card,#fff);}
+    .comunicado-card.inativo{opacity:.72;background:rgba(15,23,42,.04);}
+    .comunicado-img{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin:10px 0 12px;border:1px solid rgba(15,23,42,.08);}
+    .comunicado-title{font-size:16px;font-weight:900;margin:0 0 6px;}
+    .comunicado-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+    .comunicado-content{line-height:1.45;margin:0 0 14px;}
+    .comunicado-actions{display:flex;gap:10px;flex-wrap:wrap;}
+    .btn{border-radius:10px !important;}
   </style>
 </head>
 <body class="page">
@@ -180,100 +206,173 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <main class="container">
     <h2 class="page-title">Gerenciar Comunicados</h2>
 
+    <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+
     <div class="card">
-      <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
-      <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+      <h3 id="formTitle">Adicionar Comunicado</h3>
 
-      <h3>Adicionar / Editar Comunicado</h3>
-      <form method="post" class="form" enctype="multipart/form-data">
+      <form method="post" class="com-form" enctype="multipart/form-data">
         <input type="hidden" name="id" value="">
+        <input type="hidden" name="ativo" value="1">
+        <input type="hidden" name="remove_imagem" value="0">
 
-        <div class="form-group">
-          <label>Título</label>
-          <input type="text" name="titulo"> <!-- ✅ REMOVIDO required -->
+        <div class="form-grid">
+          <div class="form-row">
+            <label for="titulo">Título</label>
+            <input id="titulo" type="text" name="titulo">
+          </div>
+
+          <div class="form-row">
+            <label for="ordem">Ordem (menor aparece primeiro)</label>
+            <input id="ordem" type="number" name="ordem" value="0">
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Conteúdo</label>
-          <textarea name="conteudo"></textarea> <!-- ✅ REMOVIDO required -->
+        <div class="form-row">
+          <label for="conteudo">Conteúdo</label>
+          <textarea id="conteudo" name="conteudo"></textarea>
         </div>
 
-        <div class="form-group">
-          <label>Imagem (opcional)</label>
-          <input type="file" name="imagem" accept="image/png,image/jpeg,image/webp">
-          <label style="margin-top:6px; font-weight:600;">
-            <input type="checkbox" name="remove_imagem"> Remover imagem atual
-          </label>
+        <div class="form-row">
+          <label for="imagem">Imagem (opcional)</label>
+          <input id="imagem" type="file" name="imagem" accept="image/png,image/jpeg,image/webp">
         </div>
 
-        <div class="form-group">
-          <label>Ordem (número menor aparece primeiro)</label>
-          <input type="number" name="ordem" value="0">
-        </div>
+        <div class="com-actions">
+          <button type="submit" name="save" class="btn btn--primary" id="saveBtn">Salvar</button>
+          <button type="button" class="btn btn--secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
 
-        <div class="form-group">
-          <label><input type="checkbox" name="ativo" checked> Ativo</label>
+          <!-- ✅ botão remover imagem só aparece no modo edição -->
+          <button type="button" class="btn btn--secondary" id="removeImgBtn" style="display:none;">Remover imagem atual</button>
         </div>
-
-        <button type="submit" name="save" class="btn btn--primary">Salvar</button>
       </form>
 
-      <h3 style="margin-top: 40px;">Comunicados Existentes</h3>
-      <?php if (empty($comunicados)): ?>
-        <p class="muted">Nenhum comunicado cadastrado.</p>
-      <?php else: ?>
-        <?php foreach ($comunicados as $c): ?>
-          <div class="comunicado-item <?= ((int)$c['ativo'] === 1) ? '' : 'inativo' ?>">
-            <?php if (!empty($c['imagem_path'])): ?>
-              <img class="comunicado-img" src="<?= htmlspecialchars((string)$c['imagem_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem do comunicado">
-            <?php endif; ?>
+      <div class="comunicados-list">
+        <h3>Comunicados Existentes</h3>
 
-            <h4>
-              <?= htmlspecialchars((string)$c['titulo'] !== '' ? $c['titulo'] : 'Comunicado sem título', ENT_QUOTES, 'UTF-8') ?> <!-- ✅ Fallback se título vazio -->
-              (Ordem: <?= (int)$c['ordem'] ?>)
-              <?= ((int)$c['ativo'] === 1) ? '' : '(Inativo)' ?>
-            </h4>
+        <?php if (empty($comunicados)): ?>
+          <p class="muted">Nenhum comunicado cadastrado.</p>
+        <?php else: ?>
+          <?php foreach ($comunicados as $c): ?>
+            <div class="comunicado-card <?= ((int)$c['ativo'] === 1) ? '' : 'inativo' ?>">
+              <?php if (!empty($c['imagem_path'])): ?>
+                <img class="comunicado-img" src="<?= htmlspecialchars((string)$c['imagem_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem do comunicado">
+              <?php endif; ?>
 
-            <p><?= htmlspecialchars((string)$c['conteudo'] !== '' ? $c['conteudo'] : 'Sem conteúdo.', ENT_QUOTES, 'UTF-8') ?></p> <!-- ✅ Fallback se conteúdo vazio -->
+              <h4 class="comunicado-title">
+                <?= htmlspecialchars((string)($c['titulo'] !== '' ? $c['titulo'] : 'Comunicado sem título'), ENT_QUOTES, 'UTF-8') ?>
+              </h4>
 
-            <form method="post" style="display:inline;">
-              <input type="hidden" name="delete" value="<?= (int)$c['id'] ?>">
-              <button type="submit" class="btn btn--danger" onclick="return confirm('Remover?')">Remover</button>
-            </form>
+              <div class="comunicado-meta">
+                Ordem: <?= (int)$c['ordem'] ?> · <?= ((int)$c['ativo'] === 1) ? 'Ativo' : 'Inativo' ?>
+              </div>
 
-            <button
-              class="btn btn--secondary"
-              type="button"
-              onclick="editComunicado(
-                <?= (int)$c['id'] ?>,
-                <?= json_encode((string)$c['titulo'], JSON_UNESCAPED_UNICODE) ?>,
-                <?= json_encode((string)$c['conteudo'], JSON_UNESCAPED_UNICODE) ?>,
-                <?= json_encode((string)$c['imagem_path'] ?? '', JSON_UNESCAPED_UNICODE) ?>, <!-- ✅ Inclui imagem_path no JS -->
-                <?= (int)$c['ordem'] ?>,
-                <?= ((int)$c['ativo'] === 1) ? 1 : 0 ?>
-              )"
-            >Editar</button>
-          </div>
-        <?php endforeach; ?>
-      <?php endif; ?>
+              <p class="comunicado-content">
+                <?= htmlspecialchars((string)($c['conteudo'] !== '' ? $c['conteudo'] : 'Sem conteúdo.'), ENT_QUOTES, 'UTF-8') ?>
+              </p>
+
+              <div class="comunicado-actions">
+                <form method="post" style="display:inline;">
+                  <input type="hidden" name="delete" value="<?= (int)$c['id'] ?>">
+                  <button type="submit" class="btn btn--danger" onclick="return confirm('Remover?')">Remover</button>
+                </form>
+
+                <button
+                  class="btn btn--secondary"
+                  type="button"
+                  data-id="<?= (int)$c['id'] ?>"
+                  data-titulo="<?= htmlspecialchars((string)$c['titulo'], ENT_QUOTES, 'UTF-8') ?>"
+                  data-conteudo="<?= htmlspecialchars((string)$c['conteudo'], ENT_QUOTES, 'UTF-8') ?>"
+                  data-imagem="<?= htmlspecialchars((string)($c['imagem_path'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                  data-ordem="<?= (int)$c['ordem'] ?>"
+                  data-ativo="<?= ((int)$c['ativo'] === 1) ? 1 : 0 ?>"
+                  onclick="editFromButton(this)"
+                >Editar</button>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
     </div>
   </main>
 
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 
   <script>
-    function editComunicado(id, titulo, conteudo, imagem_path, ordem, ativo) { // ✅ Inclui imagem_path
+    function editFromButton(btn){
+      var id = btn.getAttribute('data-id');
+      var titulo = btn.getAttribute('data-titulo') || '';
+      var conteudo = btn.getAttribute('data-conteudo') || '';
+      var imagem = btn.getAttribute('data-imagem') || '';
+      var ordem = btn.getAttribute('data-ordem') || '0';
+      var ativo = btn.getAttribute('data-ativo') || '1';
+
       document.querySelector('input[name="id"]').value = id;
       document.querySelector('input[name="titulo"]').value = titulo;
       document.querySelector('textarea[name="conteudo"]').value = conteudo;
       document.querySelector('input[name="ordem"]').value = ordem;
-      document.querySelector('input[name="ativo"]').checked = !!ativo;
-      document.querySelector('h3').textContent = 'Editar Comunicado';
-      document.querySelector('button[name="save"]').textContent = 'Atualizar';
-      // checkbox remover imagem volta sempre desmarcado
-      var rm = document.querySelector('input[name="remove_imagem"]');
-      if (rm) rm.checked = false;
+
+      // ativo agora é hidden (mantém o estado do comunicado)
+      document.querySelector('input[name="ativo"]').value = (ativo === '1' ? '1' : '0');
+
+      // remove_imagem hidden volta ao padrão 0
+      document.querySelector('input[name="remove_imagem"]').value = '0';
+
+      var formTitle = document.getElementById('formTitle');
+      if (formTitle) formTitle.textContent = 'Editar Comunicado';
+
+      var saveBtn = document.getElementById('saveBtn');
+      if (saveBtn) saveBtn.textContent = 'Atualizar';
+
+      var cancel = document.getElementById('cancelEditBtn');
+      if (cancel) cancel.style.display = 'inline-flex';
+
+      var removeBtn = document.getElementById('removeImgBtn');
+      if (removeBtn) {
+        // só mostra se existe imagem
+        removeBtn.style.display = (imagem !== '' ? 'inline-flex' : 'none');
+        removeBtn.dataset.hasImage = (imagem !== '' ? '1' : '0');
+      }
+
+      // rola até o formulário (melhor UX)
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    (function(){
+      var cancel = document.getElementById('cancelEditBtn');
+      var removeBtn = document.getElementById('removeImgBtn');
+      if (cancel) {
+        cancel.addEventListener('click', function(){
+          document.querySelector('input[name="id"]').value = '';
+          document.querySelector('input[name="titulo"]').value = '';
+          document.querySelector('textarea[name="conteudo"]').value = '';
+          document.querySelector('input[name="ordem"]').value = 0;
+
+          document.querySelector('input[name="ativo"]').value = '1';
+          document.querySelector('input[name="remove_imagem"]').value = '0';
+
+          var formTitle = document.getElementById('formTitle');
+          if (formTitle) formTitle.textContent = 'Adicionar Comunicado';
+
+          var saveBtn = document.getElementById('saveBtn');
+          if (saveBtn) saveBtn.textContent = 'Salvar';
+
+          cancel.style.display = 'none';
+
+          if (removeBtn) removeBtn.style.display = 'none';
+        });
+      }
+
+      if (removeBtn) {
+        removeBtn.addEventListener('click', function(){
+          // marca hidden para remover a imagem ao salvar
+          document.querySelector('input[name="remove_imagem"]').value = '1';
+          removeBtn.style.display = 'none';
+          alert('Imagem marcada para remoção. Clique em "Atualizar" para confirmar.');
+        });
+      }
+    })();
   </script>
 </body>
 </html>

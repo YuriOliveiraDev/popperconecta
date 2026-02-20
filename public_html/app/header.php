@@ -10,8 +10,17 @@ if (!function_exists('current_user')) {
   require_once __DIR__ . '/auth.php';
 }
 require_once __DIR__ . '/permissions.php';
-
+require_once __DIR__ . '/notifications.php';
 $u = $u ?? current_user();
+
+$notifUnread = 0;
+$notifItems = [];
+
+if (is_array($u) && isset($u['id'])) {
+  $uid = (int)$u['id'];
+  $notifUnread = notifications_unread_count($uid);
+  $notifItems = notifications_latest($uid, 10);
+}
 
 $userName = is_array($u) && isset($u['name']) && is_string($u['name']) && $u['name'] !== '' ? $u['name'] : 'usuário';
 $userEmail = is_array($u) && isset($u['email']) && is_string($u['email']) ? $u['email'] : '';
@@ -127,6 +136,39 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
   </div>
 
   <div class="topbar__right">
+    <div class="notif" id="notifWrap">
+      <button class="notif__btn" type="button" id="notifTrigger" aria-haspopup="true" aria-expanded="false" title="Notificações">
+        <span class="notif__icon" aria-hidden="true">🔔</span>
+        <?php if ($notifUnread > 0): ?>
+          <span class="notif__badge"><?= $notifUnread > 99 ? '99+' : (int)$notifUnread ?></span>
+        <?php endif; ?>
+      </button>
+
+      <div class="notif__menu" id="notifMenu" role="menu" aria-label="Notificações">
+        <div class="notif__header">
+          <div class="notif__title">Notificações</div>
+          <button type="button" class="notif__markall" id="notifMarkAll">Marcar todas</button>
+        </div>
+
+        <?php if (!$notifItems): ?>
+          <div class="notif__empty">Sem notificações.</div>
+        <?php else: ?>
+          <?php foreach ($notifItems as $n): ?>
+            <?php $unread = ((int)$n['is_read'] === 0); ?>
+            <a class="notif__item<?= $unread ? ' is-unread' : '' ?>"
+               href="<?= htmlspecialchars((string)($n['link'] ?? '#'), ENT_QUOTES, 'UTF-8') ?>"
+               data-id="<?= (int)$n['id'] ?>">
+              <div class="notif__item-title"><?= htmlspecialchars((string)$n['title'], ENT_QUOTES, 'UTF-8') ?></div>
+              <?php if (!empty($n['message'])): ?>
+                <div class="notif__item-msg"><?= htmlspecialchars((string)$n['message'], ENT_QUOTES, 'UTF-8') ?></div>
+              <?php endif; ?>
+              <div class="notif__item-date"><?= htmlspecialchars((string)$n['created_at'], ENT_QUOTES, 'UTF-8') ?></div>
+            </a>
+          <?php endforeach; ?>
+        <?php endif; ?>
+      </div>
+    </div>
+
     <div class="topbar__greeting" aria-label="Saudação">
       <?= htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') ?><span class="topbar__greeting-name">, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>!</span>
     </div>
@@ -236,6 +278,27 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
 .profile:hover .profile__menu{display:block;}
 /* Abre no foco (teclado) */
 .profile:focus-within .profile__menu{display:block;}
+
+/* Notificações */
+.notif{position:relative;}
+.notif__btn{position:relative;border:0;background:transparent;padding:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;}
+.notif__btn:hover{background:rgba(255,255,255,.14);}
+.notif__icon{font-size:18px;line-height:1;color:rgba(255,255,255,.92);}
+.notif__badge{position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:2px 6px;border-radius:999px;border:2px solid rgba(255,255,255,.10);}
+.notif__menu{position:absolute;right:0;top:46px;width:360px;max-width:90vw;background:#0f172a;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.35);padding:8px;display:none;z-index:9999;}
+.notif__header{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
+.notif__title{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
+.notif__markall{border:0;background:transparent;color:rgba(255,255,255,.80);font-weight:800;cursor:pointer;font-size:12px;}
+.notif__markall:hover{text-decoration:underline;}
+.notif__empty{padding:12px 10px;color:rgba(255,255,255,.75);font-size:13px;}
+.notif__item{display:block;padding:10px;border-radius:12px;text-decoration:none;color:rgba(255,255,255,.92);}
+.notif__item:hover{background:rgba(255,255,255,.08);}
+.notif__item.is-unread{background:rgba(92,44,140,.14);}
+.notif__item-title{font-weight:900;font-size:13px;margin-bottom:2px;}
+.notif__item-msg{font-size:12px;opacity:.85;margin-bottom:4px;}
+.notif__item-date{font-size:11px;opacity:.7;}
+.notif:hover .notif__menu{display:block;}
+.notif:focus-within .notif__menu{display:block;}
 </style>
 
 <script>
@@ -257,6 +320,32 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
     var isOpen = menu.style.display === 'block';
     menu.style.display = isOpen ? 'none' : 'block';
     trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+  });
+})();
+
+// Notificações
+(function(){
+  var wrap = document.getElementById('notifWrap');
+  if (!wrap) return;
+
+  var markAll = document.getElementById('notifMarkAll');
+  if (markAll) {
+    markAll.addEventListener('click', function(e){
+      e.preventDefault();
+      fetch('/notifications_read.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'all=1'
+      }).then(function(){ location.reload(); });
+    });
+  }
+
+  wrap.querySelectorAll('.notif__item').forEach(function(a){
+    a.addEventListener('click', function(){
+      var id = a.getAttribute('data-id');
+      if (!id) return;
+      navigator.sendBeacon('/notifications_read.php', 'id=' + encodeURIComponent(id));
+    });
   });
 })();
 </script>
