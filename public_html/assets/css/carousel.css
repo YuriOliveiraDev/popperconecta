@@ -1,141 +1,109 @@
 /* assets/css/carousel.css */
 
-:root {
-    --primary-color: #5c2c8c; /* Roxo Popper */
-    --accent-color: #acc836;  /* Verde Popper */
-    --glass-bg: rgba(255, 255, 255, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.4);
-    --shadow-soft: 0 12px 40px rgba(0, 0, 0, 0.12);
+:root{
+  --primary-color:#5c2c8c; /* Roxo Popper */
+  --accent-color:#acc836;  /* Verde Popper */
+  --glass-bg: rgba(255,255,255,.85);
+  --glass-border: rgba(255,255,255,.4);
+  --shadow-soft: 0 12px 40px rgba(0,0,0,.12);
 }
 
 /* Container Principal */
-.carousel {
-    position: relative;
-    margin: 24px 0;
-    border-radius: 24px;
-    background: linear-gradient(135deg, rgba(92, 44, 140, 0.05) 0%, rgba(172, 200, 54, 0.05) 100%);
-    padding: 10px;
-    overflow: hidden;
+.carousel{
+  position: relative;
+  margin: 24px 0;
+  background: linear-gradient(135deg, rgba(92,44,140,.05) 0%, rgba(172,200,54,.05) 100%);
+  padding: 0;              /* edge-to-edge */
+  border-radius: 0;
+  overflow: visible;       /* não corta setas/dots */
 }
 
-.carousel__viewport {
-    overflow: hidden;
-    border-radius: 20px;
+.carousel__viewport{
+  overflow: hidden;        /* corta só o conteúdo */
+  border-radius: 0;
 }
 
-.carousel__track {
-    display: flex;
-    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+.carousel__track{
+  display: flex;
+  transition: transform .6s cubic-bezier(.23, 1, .32, 1);
 }
 
-/* Estilo do Slide (Efeito Glass) */
-.slide {
-    min-width: 100%;
-    padding: 40px 60px;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
+/* Slide base */
+.slide{
+  min-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  padding: 0;              /* o texto usa .slide__doc com margin; imagem é full */
 }
 
-.slide__inner {
-    width: 100%;
-    max-width: 800px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    padding: 32px;
-    box-shadow: var(--shadow-soft);
-    text-align: center;
-    transition: transform 0.3s ease;
+/* Mantém compatibilidade com .slide__inner (imagens) */
+.slide__inner{
+  width: 100%;
 }
 
-.slide__inner:hover {
-    transform: translateY(-5px);
+/* Setas */
+.carousel__arrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  color: var(--primary-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,.10);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .2s ease;
 }
 
-.slide h3 {
-    margin: 0 0 12px 0;
-    font-size: 24px;
-    font-weight: 800;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.carousel__arrow:hover{
+  background: var(--primary-color);
+  color: #fff;
+  transform: translateY(-50%) scale(1.06);
 }
 
-.slide p {
-    margin: 0;
-    font-size: 16px;
-    color: #475569;
-    line-height: 1.6;
-    font-weight: 400;
+.carousel__arrow--prev{ left: 12px; }
+.carousel__arrow--next{ right: 12px; }
+
+.carousel__arrow svg{
+  width: 24px;
+  height: 24px;
 }
 
-/* Setas Laterais Minimalistas */
-.carousel__arrow {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: white;
-    color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
+/* Dots */
+.carousel__dots{
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 11;
 }
 
-.carousel__arrow:hover {
-    background: var(--primary-color);
-    color: white;
-    transform: translateY(-50%) scale(1.1);
+.carousel__dot{
+  width: 10px;
+  height: 10px;
+  border-radius: 10px;
+  background: rgba(92,44,140,.2);
+  border: none;
+  cursor: pointer;
+  transition: all .3s ease;
+  padding: 0;
 }
 
-.carousel__arrow--prev { left: 20px; }
-.carousel__arrow--next { right: 20px; }
-
-.carousel__arrow svg {
-    width: 24px;
-    height: 24px;
+.carousel__dot.is-active{
+  width: 30px;
+  background: var(--primary-color);
 }
 
-/* Indicadores (Dots) Modernos */
-.carousel__dots {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 10px;
-}
-
-.carousel__dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 10px;
-    background: rgba(92, 44, 140, 0.2);
-    border: none;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 0;
-}
-
-.carousel__dot.is-active {
-    width: 30px;
-    background: var(--primary-color);
-}
-
-/* Ajustes Mobile */
-@media (max-width: 768px) {
-    .slide { padding: 30px 20px 50px; }
-    .carousel__arrow { display: none; } /* Esconde setas no mobile para focar no swipe */
-    .slide h3 { font-size: 20px; }
-    .slide p { font-size: 14px; }
+/* Mobile */
+@media (max-width: 768px){
+  .carousel__arrow{ display: none; }
 }
