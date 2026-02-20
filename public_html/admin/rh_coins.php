@@ -1,10 +1,14 @@
 <?php
 declare(strict_types=1);
+
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 require_admin();
 
 $u = current_user();
+
+// ✅ para o header marcar Popper Coins como ativo
+$activePage = 'coins';
 
 // Dashboards para o header
 try {
@@ -95,12 +99,41 @@ $ledger = db()->query("
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 
   <style>
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-    @media(max-width:900px){.grid2{grid-template-columns:1fr}}
+    /* ✅ Grid: não vaza, não quebra, e mantém os cards com boa largura */
+    .grid2{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr) !important;gap:20px !important;align-items:start !important;}
+    @media(max-width:900px){.grid2{grid-template-columns:1fr !important;}}
+    .grid2 > .card{min-width:0 !important;}
+
+    /* ✅ evita texto “vazar” do card (principalmente subtítulos) */
+    .card, .card *{min-width:0;}
+    .card__title, .card__subtitle{overflow-wrap:anywhere;word-break:break-word;}
+
     .small{font-size:12px;color:var(--muted)}
     .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:12px}
     .pill--pos{background:rgba(22,163,74,.12);color:#166534}
     .pill--neg{background:rgba(220,38,38,.12);color:#991b1b}
+    .right{text-align:right !important;}
+
+    /* ✅ sem rolagem horizontal: garante que tabela nunca exceda o card */
+    .table-wrap{width:100% !important;max-width:100% !important;overflow-x:hidden !important;}
+
+    /* ✅ tabela ajustada: colunas fixas e texto truncado para não gerar scroll */
+    .balances-table{width:100% !important;table-layout:fixed !important;}
+    .balances-table th,.balances-table td{vertical-align:top !important;}
+
+    /* Colunas: aproxima SETOR do usuário (sem “buraco”), mas sem causar scroll */
+    .balances-table th:nth-child(1), .balances-table td:nth-child(1){width:66% !important;}
+    .balances-table th:nth-child(2), .balances-table td:nth-child(2){width:22% !important;}
+    .balances-table th:nth-child(3), .balances-table td:nth-child(3){width:12% !important;}
+
+    /* Truncagem segura (sem empurrar layout) */
+    .truncate{display:block !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;max-width:100% !important;}
+
+    @media(max-width:520px){
+      .balances-table th:nth-child(1), .balances-table td:nth-child(1){width:62% !important;}
+      .balances-table th:nth-child(2), .balances-table td:nth-child(2){width:26% !important;}
+      .balances-table th:nth-child(3), .balances-table td:nth-child(3){width:12% !important;}
+    }
   </style>
 </head>
 <body class="page">
@@ -110,8 +143,8 @@ $ledger = db()->query("
 <main class="container">
   <h2 class="page-title">Popper Coins</h2>
 
-  <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success) ?></div><?php endif; ?>
-  <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+  <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 
   <section class="grid2">
     <div class="card">
@@ -165,7 +198,7 @@ $ledger = db()->query("
       </div>
 
       <div class="table-wrap">
-        <table class="table">
+        <table class="table balances-table">
           <thead>
             <tr>
               <th>Usuário</th>
@@ -178,10 +211,10 @@ $ledger = db()->query("
               <?php $bal = (int)$r['balance']; ?>
               <tr>
                 <td>
-                  <?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?>
-                  <div class="small"><?= htmlspecialchars((string)$r['email'], ENT_QUOTES, 'UTF-8') ?></div>
+                  <span class="truncate"><?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="small truncate"><?= htmlspecialchars((string)$r['email'], ENT_QUOTES, 'UTF-8') ?></span>
                 </td>
-                <td><?= htmlspecialchars((string)($r['setor'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><span class="truncate"><?= htmlspecialchars((string)($r['setor'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></span></td>
                 <td class="right">
                   <span class="pill <?= $bal >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $bal ?></span>
                 </td>
@@ -218,7 +251,9 @@ $ledger = db()->query("
               <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars((string)$l['user_name'], ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars((string)$l['action_type'], ENT_QUOTES, 'UTF-8') ?></td>
-              <td class="right"><?= $amt ?></td>
+              <td class="right">
+                <span class="pill <?= $amt >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $amt ?></span>
+              </td>
               <td><?= htmlspecialchars((string)($l['reason'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
               <td><?= htmlspecialchars((string)$l['admin_name'], ENT_QUOTES, 'UTF-8') ?></td>
             </tr>
