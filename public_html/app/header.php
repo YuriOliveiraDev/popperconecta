@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * /app/header.php
- * Header padrão com perfil (foto/ícone + dropdown).
+ * Header padrão com perfil (foto/ícone + dropdown) + notificações com animação drop.
  */
 
 if (!function_exists('current_user')) {
@@ -24,9 +24,6 @@ if (is_array($u) && isset($u['id'])) {
 
 $userName = is_array($u) && isset($u['name']) && is_string($u['name']) && $u['name'] !== '' ? $u['name'] : 'usuário';
 $userEmail = is_array($u) && isset($u['email']) && is_string($u['email']) ? $u['email'] : '';
-$userRole = is_array($u) && isset($u['role']) && is_string($u['role']) ? $u['role'] : '';
-$userSetor = is_array($u) && isset($u['setor']) && is_string($u['setor']) ? $u['setor'] : '';
-$userHierarquia = is_array($u) && isset($u['hierarquia']) && is_string($u['hierarquia']) ? $u['hierarquia'] : '';
 
 $current_dash = $current_dash ?? 'executivo';
 $activePage = $activePage ?? '';
@@ -128,7 +125,6 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
       </div>
     </div>
 
-    <!-- ✅ Popper Coins agora igual aos outros links -->
     <a class="link<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php" style="margin-left:8px;">
       <span aria-hidden="true">🪙</span>
       Popper Coins
@@ -174,7 +170,7 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
     </div>
 
     <div class="profile" id="profileWrap">
-      <button class="profile__btn" type="button" id="profileTrigger" aria-haspopup="true" aria-expanded="false">
+      <button class="profile__btn" type="button" id="profileTrigger" aria-haspopup="true" aria-expanded="false" title="Perfil">
         <?php if ($avatarUrl !== ''): ?>
           <img class="profile__avatar" src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Foto de perfil" />
         <?php else: ?>
@@ -200,92 +196,89 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
 </header>
 
 <style>
-/* Saudação (mais fina / estilizada, sem negrito) */
-.topbar__right{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.topbar__greeting{
-  color: rgba(255,255,255,.88);
-  font-weight: 500;
-  font-size: 13px;
-  letter-spacing: .2px;
-  white-space: nowrap;
-}
-.topbar__greeting-name{
-  color: rgba(255,255,255,.95);
-  font-weight: 400;
-}
-@media (max-width: 720px){
-  .topbar__greeting{ display:none; }
-}
+/* Saudação */
+.topbar__right{display:flex;align-items:center;gap:12px;}
+.topbar__greeting{color:rgba(255,255,255,.88);font-weight:500;font-size:13px;letter-spacing:.2px;white-space:nowrap;}
+.topbar__greeting-name{color:rgba(255,255,255,.95);font-weight:400;}
+@media (max-width:720px){.topbar__greeting{display:none;}}
 
 /* Perfil */
 .profile{position:relative;margin-left:10px;}
 .profile__btn{
+  position:relative;
   border:0;
   background:transparent;
   padding:0;
   cursor:pointer;
   display:inline-flex;
   align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:999px;
 }
+.profile__btn:hover{background:rgba(255,255,255,.14);}
 .profile__avatar{
-  width:38px;height:38px;border-radius:999px;object-fit:cover;
+  width:30px;height:30px;border-radius:999px;object-fit:cover;
   border:1px solid rgba(255,255,255,.22);
 }
 .profile__fallback{
-  width:38px;height:38px;border-radius:999px;
+  width:30px;height:30px;border-radius:999px;
   display:inline-flex;align-items:center;justify-content:center;
   font-weight:900;font-size:12px;letter-spacing:.5px;
   color:rgba(255,255,255,.92);
   border:1px solid rgba(255,255,255,.22);
   background:rgba(255,255,255,.10);
 }
-.profile__menu{
+
+/* Notificações */
+.notif{position:relative;}
+.notif__btn{
+  position:relative;border:0;background:transparent;padding:0;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:999px;
+}
+.notif__btn:hover{background:rgba(255,255,255,.14);}
+.notif__icon{font-size:18px;line-height:1;color:rgba(255,255,255,.92);}
+.notif__badge{position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:2px 6px;border-radius:999px;border:2px solid rgba(255,255,255,.10);}
+
+/* ===== MENUS: não usar display:none (para animar igual dropdown) ===== */
+.profile__menu,
+.notif__menu{
   position:absolute;right:0;top:46px;
-  min-width:240px;
   background:#0f172a;
   border:1px solid rgba(255,255,255,.14);
   border-radius:14px;
   box-shadow:0 12px 28px rgba(0,0,0,.35);
   padding:8px;
-  display:none;
   z-index:9999;
+
+  /* mantém no layout, mas "fechado" */
+  visibility:hidden;
+  pointer-events:none;
+
+  transform-origin:top right;
+  transform:translateY(-10px) scale(.985);
+  opacity:0;
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s; /* espera a animação terminar pra esconder */
+  will-change:transform, opacity;
 }
-.profile__header{
-  padding:10px 10px 8px 10px;
-  border-bottom:1px solid rgba(255,255,255,.12);
-  margin-bottom:6px;
-}
+
+.profile__menu{min-width:240px;}
+.notif__menu{width:360px;max-width:90vw;}
+
+.profile__header{padding:10px 10px 8px 10px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
 .profile__name{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
 .profile__email{opacity:.8;font-size:12px;margin-top:2px;color:rgba(255,255,255,.85);}
-.profile__item{
-  display:flex;
-  padding:10px 10px;
-  border-radius:10px;
-  text-decoration:none;
-  color:rgba(255,255,255,.92);
-  font-weight:700;
-  font-size:13px;
-}
+.profile__item{display:flex;padding:10px 10px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,.92);font-weight:700;font-size:13px;}
 .profile__item:hover{background:rgba(255,255,255,.10);}
 .profile__item--danger{color:#ffb4b4;}
 .profile__item--danger:hover{background:rgba(255,80,80,.14);}
 
-/* Abre no hover (desktop) */
-.profile:hover .profile__menu{display:block;}
-/* Abre no foco (teclado) */
-.profile:focus-within .profile__menu{display:block;}
-
-/* Notificações */
-.notif{position:relative;}
-.notif__btn{position:relative;border:0;background:transparent;padding:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:999px;}
-.notif__btn:hover{background:rgba(255,255,255,.14);}
-.notif__icon{font-size:18px;line-height:1;color:rgba(255,255,255,.92);}
-.notif__badge{position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:2px 6px;border-radius:999px;border:2px solid rgba(255,255,255,.10);}
-.notif__menu{position:absolute;right:0;top:46px;width:360px;max-width:90vw;background:#0f172a;border:1px solid rgba(255,255,255,.14);border-radius:14px;box-shadow:0 12px 28px rgba(0,0,0,.35);padding:8px;display:none;z-index:9999;}
 .notif__header{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
 .notif__title{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
 .notif__markall{border:0;background:transparent;color:rgba(255,255,255,.80);font-weight:800;cursor:pointer;font-size:12px;}
@@ -297,36 +290,100 @@ if ($minutes >= 0 && $minutes <= (12 * 60)) {
 .notif__item-title{font-weight:900;font-size:13px;margin-bottom:2px;}
 .notif__item-msg{font-size:12px;opacity:.85;margin-bottom:4px;}
 .notif__item-date{font-size:11px;opacity:.7;}
-.notif:hover .notif__menu{display:block;}
-.notif:focus-within .notif__menu{display:block;}
+
+/* ABRE: hover/focus (desktop) + is-open (mobile) */
+.profile:hover .profile__menu,
+.profile:focus-within .profile__menu,
+.profile.is-open .profile__menu,
+.notif:hover .notif__menu,
+.notif:focus-within .notif__menu,
+.notif.is-open .notif__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s; /* abre imediatamente */
+}
+
+/* Ring quando aberto */
+.profile.is-open .profile__btn,
+.notif.is-open .notif__btn{
+  background:rgba(255,255,255,.14);
+  box-shadow:0 0 0 2px rgba(255,255,255,.12);
+}
+
+/* Pop do sino quando tiver não lidas */
+@keyframes bell-pop{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.12)}
+  60%{transform:scale(.98)}
+  100%{transform:scale(1)}
+}
+.notif__btn:has(.notif__badge) .notif__icon{
+  animation:bell-pop .6s ease;
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce){
+  .profile__menu,.notif__menu{transition:none;transform:none;opacity:1;visibility:visible;}
+}
 </style>
 
 <script>
-// Dropdown do perfil (abre/fecha no toque mobile)
+// PERFIL: abre/fecha no clique (mobile) sem quebrar hover do desktop
 (function(){
+  var wrap = document.getElementById('profileWrap');
   var trigger = document.getElementById('profileTrigger');
-  var menu = document.getElementById('profileMenu');
-  if (!trigger || !menu) return;
+  if (!wrap || !trigger) return;
 
-  document.addEventListener('click', function(e){
-    if (!trigger.contains(e.target) && !menu.contains(e.target)) {
-      menu.style.display = 'none';
-      trigger.setAttribute('aria-expanded', 'false');
-    }
-  });
+  function close(){
+    wrap.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
 
   trigger.addEventListener('click', function(e){
     e.preventDefault();
-    var isOpen = menu.style.display === 'block';
-    menu.style.display = isOpen ? 'none' : 'block';
-    trigger.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+    var isOpen = wrap.classList.contains('is-open');
+    if (isOpen) close();
+    else {
+      wrap.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    if (!wrap.contains(e.target)) close();
   });
 })();
 
-// Notificações
+// NOTIF: abre/fecha no clique (mobile) + mantém mark all e beacon
 (function(){
   var wrap = document.getElementById('notifWrap');
-  if (!wrap) return;
+  var trigger = document.getElementById('notifTrigger');
+  if (!wrap || !trigger) return;
+
+  function close(){
+    wrap.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+
+  trigger.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    var isOpen = wrap.classList.contains('is-open');
+    if (isOpen) close();
+    else {
+      wrap.classList.add('is-open');
+      trigger.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    if (!wrap.contains(e.target)) close();
+  });
 
   var markAll = document.getElementById('notifMarkAll');
   if (markAll) {

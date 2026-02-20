@@ -185,12 +185,6 @@ try {
 
     <div class="carousel__dots" id="dots" aria-label="Indicadores do carrossel"></div>
   </section>
-
-  <div class="container">
-    <div class="card" style="margin-top:16px;">
-      <p class="muted" style="margin:0;">Página inicial.</p>
-    </div>
-  </div>
 </main>
 
 <script>
