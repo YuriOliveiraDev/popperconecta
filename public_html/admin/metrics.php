@@ -196,15 +196,140 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 
   <style>
-    .tabs{display:flex;gap:10px;margin-bottom:20px;border-bottom:1px solid rgba(15,23,42,.1);padding-bottom:12px}
-    .tab{padding:8px 16px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:700;font-size:13px;border:1px solid transparent;transition:.15s}
-    .tab:hover{background:rgba(15,23,42,.05)}
-    .tab.is-active{background:rgba(92,44,140,1);color:#fff;border-color:rgba(92,44,140,1)}
-    .group{margin-top:14px}
-    .group__title{margin:24px 0 12px;font-size:12px;font-weight:800;text-transform:uppercase;color:var(--muted);letter-spacing:.5px}
-    .hint{color:var(--muted);font-size:12px;margin-top:6px}
-    .field__control.is-computed{background:rgba(15,23,42,.04);color:rgba(15,23,42,.6);cursor:not-allowed}
-    .field__hint{font-size:12px;color:var(--muted);margin-top:6px}
+    /* Base */
+    .page-title{
+      margin: 18px 0 14px;
+      font-size: 22px;
+      font-weight: 800;
+      color: rgba(15,23,42,.92);
+    }
+
+    /* Tabs (texto preto em métricas) */
+    .tabs{
+      display:flex;
+      gap:10px;
+      margin-bottom:16px;
+      border-bottom:1px solid rgba(15,23,42,.10);
+      padding-bottom:12px;
+    }
+    .tab{
+      padding:9px 16px;
+      border-radius:999px;
+      text-decoration:none;
+      color: rgba(15,23,42,.82);
+      font-weight:700;
+      font-size:14px;
+      border:1px solid rgba(15,23,42,.10);
+      background: rgba(15,23,42,.03);
+      transition:.15s;
+    }
+    .tab:hover{background:rgba(15,23,42,.06)}
+    .tab.is-active{
+      background:#fff;
+      color:rgba(15,23,42,.92);
+      border-color: rgba(15,23,42,.16);
+      box-shadow: 0 8px 18px rgba(15,23,42,.06);
+    }
+
+    /* ===== CARD MAIS LARGO (principal pedido) ===== */
+    main.container{max-width: 1200px;}               /* aumenta a largura do container */
+    .card{
+      max-width: 1100px;                             /* card bem mais largo */
+      margin: 0 auto;
+      padding: 22px 24px;
+      border: 1px solid rgba(15,23,42,.10);
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(15,23,42,.06);    /* sombra leve */
+    }
+
+    /* Grupos */
+    .group{margin-top: 14px}
+    .group__title{
+      margin: 18px 0 12px;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      color: rgba(15,23,42,.55);
+      letter-spacing: .6px;
+    }
+
+    /* ===== FORM MAIS “LISO” e organizado ===== */
+    .form{
+      display: grid;
+      grid-template-columns: 1fr 1fr;  /* 2 colunas no desktop */
+      gap: 14px 18px;
+    }
+
+    /* Faz cada grupo ocupar a largura toda, mas os campos ficam em 2 colunas */
+    .group{grid-column: 1 / -1;}
+
+    .field{
+      margin: 0;
+      padding: 12px 14px;
+      border: 1px solid rgba(15,23,42,.08);
+      border-radius: 12px;
+      background: rgba(15,23,42,.015);
+    }
+
+    .field__label{
+      display:block;
+      font-size: 13px;
+      font-weight: 800;
+      color: rgba(15,23,42,.85);
+      margin-bottom: 8px;
+    }
+
+    .field__control{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(15,23,42,.12);
+      background: #fff;
+      font-size: 15px;
+      color: rgba(15,23,42,.92);
+      transition: .15s;
+    }
+    .field__control:focus{
+      outline:none;
+      border-color: rgba(92,44,140,.55);
+      box-shadow: 0 0 0 3px rgba(92,44,140,.12);
+    }
+
+    .field__control.is-computed{
+      background: rgba(15,23,42,.04);
+      color: rgba(15,23,42,.55);
+      cursor: not-allowed;
+    }
+
+    .field__hint{
+      font-size: 12px;
+      color: rgba(15,23,42,.55);
+      margin-top: 6px;
+    }
+
+    .hint{
+      grid-column: 1 / -1;
+      color: rgba(15,23,42,.60);
+      font-size: 13px;
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(15,23,42,.08);
+    }
+
+    .btn--primary{
+      grid-column: 1 / -1;
+      margin-top: 8px;
+      width: 220px;
+    }
+
+    /* Responsivo */
+    @media (max-width: 900px){
+      main.container{max-width: 100%;}
+      .card{max-width: 100%; margin: 0 12px; padding: 18px;}
+      .form{grid-template-columns: 1fr;} /* 1 coluna no mobile */
+      .btn--primary{width: 100%;}
+    }
   </style>
 </head>
 <body class="page">
@@ -220,12 +345,12 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
   </nav>
 
   <div class="card">
-    <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error) ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="alert alert--error">❌ <?= htmlspecialchars($error) ?></div><?php endif; ?>
 
     <form method="post" class="form">
       <?php foreach ($ordered as $groupName => $items): ?>
         <div class="group">
-          <div class="group__title"><?= htmlspecialchars($groupName) ?></div>
+          <div class="group__title"><?= htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8') ?></div>
 
           <?php foreach ($items as $r): ?>
             <?php
@@ -233,6 +358,12 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
               $isComputed = isset($computedKeys[$key]);
               $type = (string)$r['metric_type'];
               $isVaiBater = ($key === 'vai_bater_meta');
+              $placeholder = match($type) {
+                'money' => 'Ex: R$ 4.000.000,00',
+                'percent' => 'Ex: 59%',
+                'int' => 'Ex: 18',
+                default => ''
+              };
             ?>
             <div class="field">
               <label class="field__label" for="m_<?= htmlspecialchars($key) ?>">
@@ -245,6 +376,7 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
                        name="m[<?= htmlspecialchars($key) ?>][value]"
                        value="<?= htmlspecialchars((string)($r['metric_value_text'] ?? '')) ?>"
                        data-type="text"
+                       placeholder="<?= htmlspecialchars($placeholder) ?>"
                        readonly />
                 <input type="hidden" name="m[<?= htmlspecialchars($key) ?>][type]" value="text" />
                 <div class="field__hint">Calculado automaticamente</div>
@@ -253,6 +385,7 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
                        id="m_<?= htmlspecialchars($key) ?>"
                        name="m[<?= htmlspecialchars($key) ?>][value]"
                        value="<?= htmlspecialchars(format_for_input($r)) ?>"
+                       placeholder="<?= htmlspecialchars($placeholder) ?>"
                        autocomplete="off"
                        inputmode="<?= ($type === 'text') ? 'text' : 'decimal' ?>"
                        data-type="<?= htmlspecialchars($type) ?>"
@@ -270,7 +403,7 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
 
       <div class="hint">Dica: digite valores como <strong>R$ 4.000.000,00</strong> ou <strong>59%</strong>. Ao pressionar <strong>Tab</strong>, ele formata automaticamente.</div>
 
-      <button class="btn btn--primary" type="submit" style="margin-top:16px;">Salvar</button>
+      <button class="btn btn--primary" type="submit">Salvar Alterações</button>
     </form>
   </div>
 </main>
@@ -347,7 +480,7 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Tab') formatInputValue(input);
     });
-    input.addEventListener('blur', () => formatInputValue(input));
+    input.addEventListener('blur', () => formatInputValue(input);
     input.addEventListener('focus', () => unformatForEditing(input));
   });
 

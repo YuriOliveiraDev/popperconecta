@@ -113,8 +113,8 @@ $rewards = db()->query("SELECT id, title, description, cost, inventory, is_activ
         </span>
       </label>
 
-      <button class="btn btn--primary" type="submit">Salvar</button>
-      <button class="btn btn--secondary" type="button" onclick="resetRewardForm()">Novo</button>
+      <button class="btn btn--primary" type="submit" id="saveBtn" style="display: none;">Salvar</button>
+      <button class="btn btn--secondary" type="button" id="newBtn" onclick="resetRewardForm()">Novo</button>
     </form>
   </div>
 
@@ -160,6 +160,25 @@ $rewards = db()->query("SELECT id, title, description, cost, inventory, is_activ
 
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 <script>
+  function toggleSaveButton() {
+    const idField = document.querySelector('#rewardForm input[name="id"]');
+    const saveBtn = document.getElementById('saveBtn');
+    const newBtn = document.getElementById('newBtn');
+
+    if (!idField || !saveBtn || !newBtn) return;
+
+    const id = String(idField.value || '').trim();
+    const isEditing = (id !== '' && Number(id) > 0);
+
+    if (isEditing) {
+      saveBtn.style.setProperty('display', 'inline-flex', 'important');
+      newBtn.style.setProperty('display', 'none', 'important');
+    } else {
+      saveBtn.style.setProperty('display', 'none', 'important');
+      newBtn.style.setProperty('display', 'inline-flex', 'important');
+    }
+  }
+
   function resetRewardForm(){
     const f = document.getElementById('rewardForm');
     f.querySelector('input[name="id"]').value = '';
@@ -169,7 +188,9 @@ $rewards = db()->query("SELECT id, title, description, cost, inventory, is_activ
     f.querySelector('input[name="inventory"]').value = '0'; // ✅ Reset para 0
     f.querySelector('input[name="sort_order"]').value = '0';
     f.querySelector('input[name="is_active"]').checked = true;
+    toggleSaveButton(); // ✅ Oculta "Salvar" ao resetar
   }
+
   function editReward(id,title,description,cost,inventory,sort_order,is_active){ // ✅ Inclui inventory
     const f = document.getElementById('rewardForm');
     f.querySelector('input[name="id"]').value = id;
@@ -179,8 +200,12 @@ $rewards = db()->query("SELECT id, title, description, cost, inventory, is_activ
     f.querySelector('input[name="inventory"]').value = inventory; // ✅ Preenche inventory
     f.querySelector('input[name="sort_order"]').value = sort_order;
     f.querySelector('input[name="is_active"]').checked = (is_active === 1);
+    toggleSaveButton(); // ✅ Mostra "Salvar" ao editar
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
+  // ✅ Inicializa ao carregar a página
+  document.addEventListener('DOMContentLoaded', toggleSaveButton);
 </script>
 </body>
 </html>

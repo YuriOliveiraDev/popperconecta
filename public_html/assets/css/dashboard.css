@@ -403,3 +403,349 @@
 .alert *{color:#fff !important;}
 .alert--ok{color:#fff !important;}
 .alert--error{color:#fff !important;}
+
+/* =========================
+   AJUSTES NOVOS (FUNDO + HEADER + DROPDOWN + BRAND)
+   ========================= */
+
+/* ===== Fundo geral (off-white) para destacar os cards ===== */
+html, body{
+  background: #f6f7fb; /* branco suave (não estoura) */
+}
+
+/* Opcional: se existir algum wrapper que esteja pintando o fundo */
+.page,
+.main,
+.content,
+.dashboard,
+.container{
+  background: transparent;
+}
+
+/* ===== Mantém o header/topbar roxo ===== */
+.topbar{
+  background: rgba(92, 44, 140, 1);
+}
+
+/* ===== Header/Topbar: textos em branco off-white ===== */
+.topbar,
+.topbar *{
+  color: #f5f5f7 !important; /* off-white */
+}
+
+/* Links do header */
+.topbar a,
+.topbar a:link,
+.topbar a:visited{
+  color: #f5f5f7 !important;
+}
+
+/* Hover do header */
+.topbar a:hover{
+  color: #ffffff !important;
+}
+
+/* Trigger do dropdown (fica branco no header) */
+.topbar__dropdown-trigger{
+  color: #f5f5f7 !important;
+}
+
+/* Se tiver ícones em SVG no header */
+.topbar svg{
+  fill: #f5f5f7 !important;
+  stroke: #f5f5f7 !important;
+}
+
+/* ===== Dropdown: texto preto (não herdar branco do header) ===== */
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  color: rgba(15,23,42,.92) !important; /* preto/cinza bem escuro */
+}
+
+/* Links do dropdown */
+.topbar__dropdown-menu a,
+.topbar__dropdown-item{
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* Header/divisor do dropdown */
+.topbar__dropdown-header{
+  color: rgba(15,23,42,.55) !important;
+}
+
+/* Hover do item do dropdown: mantém texto legível (não roxo) */
+.topbar__dropdown-item:hover{
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* ===== Brand (Popper Coins) sem negrito ===== */
+.topbar .brand{
+  font-weight: 500; /* 400 = normal | 500 = semi */
+}
+/* ===== Popper Coins: remover negrito de vez ===== */
+.topbar .brand{
+  font-weight: 400 !important; /* normal */
+}
+
+/* Se tiver <strong> ou <b> dentro do brand */
+.topbar .brand strong,
+.topbar .brand b{
+  font-weight: 400 !important;
+}
+
+/* ===== Popper Coins (link): deixar peso normal ===== */
+.topbar a[href="/coins.php"]{
+  font-weight: 400 !important; /* normal */
+}
+
+/* Se o texto ainda parecer grosso por causa do antialias/fonte */
+.topbar a[href="/coins.php"]{
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== Nome do app (brand): mais leve ===== */
+.topbar .brand{
+  font-weight: 400 !important;
+}
+
+/* ===== Popper Coins: mesmo tamanho/peso dos outros links do header ===== */
+.topbar a[href="/coins.php"]{
+  font-size: inherit !important;  /* igual aos outros links */
+  font-weight: inherit !important; /* igual aos outros links */
+  letter-spacing: inherit !important;
+  line-height: inherit !important;
+}
+
+/* Se o seu .link estiver bold por padrão e você quer igual ao "Início",
+   então garanta que TODOS os links do header tenham o mesmo peso: */
+.topbar .link{
+  font-weight: 500; /* ajuste aqui: 400 normal | 500 padrão bonito */
+}
+
+/* E o Popper Coins segue a mesma regra do .link */
+.topbar a[href="/coins.php"]{
+  font-weight: 500 !important;
+}
+
+/* ===== PADRÃO TIPOGRAFIA: links/textos do header (lado esquerdo) ===== */
+.topbar__left a,
+.topbar__left .topbar__dropdown-trigger{
+  font-size: 14px !important;     /* mesmo tamanho pra todos */
+  font-weight: 500 !important;    /* 400 normal | 500 padrão | 600 mais forte */
+  line-height: 1.1 !important;
+  letter-spacing: .2px !important;
+}
+
+/* Brand (APP_NAME) pode ser um pouco mais forte, mas sem exagero */
+.topbar__left .brand{
+  font-size: 14px !important;
+  font-weight: 600 !important; /* antes era 800 */
+}
+
+/* Popper Coins: garante que não fique diferente */
+.topbar__left a[href="/coins.php"]{
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+/* ===== DROPDOWN MENUS: texto preto e tamanho consistente ===== */
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  color: rgba(15,23,42,.92) !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+}
+
+/* Cabeçalho do dropdown pode ser menor */
+.topbar__dropdown-header{
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: rgba(15,23,42,.55) !important;
+}
+
+/* ===== PADRÃO TIPOGRAFIA: links/textos do header (lado esquerdo) ===== */
+.topbar__left a,
+.topbar__left .topbar__dropdown-trigger{
+  font-size: 15px !important;     /* aumentei aqui */
+  font-weight: 500 !important;
+  line-height: 1.1 !important;
+  letter-spacing: .2px !important;
+}
+
+/* Brand (APP_NAME) um pouquinho mais forte */
+.topbar__left .brand{
+  font-size: 15px !important;     /* aumentei aqui */
+  font-weight: 600 !important;
+}
+
+/* Dropdown menus: mantém consistente */
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  font-size: 15px !important;     /* aumentei aqui */
+  font-weight: 500 !important;
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* Cabeçalho do dropdown permanece menor */
+.topbar__dropdown-header{
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: rgba(15,23,42,.55) !important;
+}
+/* ===== Títulos/links em áreas claras: força preto (não herdar branco do header) ===== */
+.kpi-card, .kpi-card *,
+.chart-card, .chart-card *,
+.data-table-card, .data-table-card *,
+.card, .card *,
+main, main *{
+  color: rgba(15,23,42,.92);
+}
+
+/* ===== Títulos em páginas/cards: preto ===== */
+h1, h2, h3,
+.card__title, .card__subtitle,
+.section-title, .page-title{
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* ===== Remove a linha/divisão no topo entre header e conteúdo ===== */
+.topbar{
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Caso a linha esteja no header tag */
+header.topbar{
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Se a linha estiver no container logo abaixo do header */
+main,
+.main,
+.content,
+.page,
+.container{
+  border-top: none !important;
+  box-shadow: none !important;
+}
+
+.carousel{
+  box-shadow: none !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+}
+
+/* ===== Carousel sem “linha”: mesma cor do fundo da página ===== */
+.carousel{
+  background: #f6f7fb !important; /* mesma cor do body */
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* ===== Tabs em fundo claro: texto preto ===== */
+.tabs .tab,
+.tabs .tab:link,
+.tabs .tab:visited{
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* fundo claro para combinar com a página off-white */
+.tabs .tab{
+  background: rgba(15,23,42,.04) !important;
+  border: 1px solid rgba(15,23,42,.10) !important;
+}
+
+.tabs .tab:hover{
+  background: rgba(15,23,42,.07) !important;
+}
+
+.tabs .tab.is-active{
+  background: #ffffff !important;
+  border-color: rgba(15,23,42,.14) !important;
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* ===== Botões ===== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 20px; /* Ajustado para um padding mais clean */
+  border: none;
+  border-radius: 8px; /* Bordas mais suaves */
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff; /* Cor do texto */
+  background: var(--primary); /* Cor principal */
+  transition: background 0.3s ease, transform 0.2s ease; /* Efeito suave */
+  cursor: pointer;
+}
+
+/* Hover do botão */
+.btn:hover {
+  background: #4a2370; /* Cor ao passar o mouse */
+  transform: translateY(-2px); /* Levanta o botão levemente */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra leve ao hover */
+}
+
+/* Botão secundário (se houver) */
+.btn--secondary {
+  background: rgba(92, 44, 140, 0.1); /* Cor de fundo secundária */
+  color: rgba(15, 23, 42, 0.92); /* Cor do texto */
+}
+
+.btn--secondary:hover {
+  background: rgba(92, 44, 140, 0.2); /* Efeito hover secundário */
+}
+
+/* ===== Botões (clean) - corrige botão branco ===== */
+.btn,
+button.btn,
+a.btn{
+  background: rgba(92,44,140,1) !important;
+  color: #fff !important;
+  border: 1px solid rgba(92,44,140,1) !important;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+  cursor: pointer;
+}
+
+.btn:hover,
+button.btn:hover,
+a.btn:hover{
+  background: rgba(74,35,112,1) !important; /* roxo mais escuro */
+  border-color: rgba(74,35,112,1) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(15,23,42,.12);
+}
+
+/* Estado ativo (clique) */
+.btn:active,
+button.btn:active,
+a.btn:active{
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Variante primária (se você usa btn--primary) */
+.btn--primary{
+  background: rgba(92,44,140,1) !important;
+  color:#fff !important;
+  border-color: rgba(92,44,140,1) !important;
+}
+.btn--primary:hover{
+  background: rgba(74,35,112,1) !important;
+  border-color: rgba(74,35,112,1) !important;
+}
