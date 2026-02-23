@@ -1,55 +1,107 @@
-/* assets/js/dropdowns.js */
-(function () {
-  function attachDropdown(triggerId, menuId) {
-    const trigger = document.getElementById(triggerId);
-    const menu = document.getElementById(menuId);
-    let t = null;
+document.addEventListener('DOMContentLoaded', function () {
+  function bindPinnedDropdown(wrapId, triggerId, menuId) {
+    var wrap = document.getElementById(wrapId);
+    var trigger = document.getElementById(triggerId);
+    var menu = document.getElementById(menuId);
+    if (!wrap || !trigger || !menu) return null;
 
-    if (!trigger || !menu) return;
+    var pinned = false;
+    var closeT = null;
 
-    trigger.addEventListener('mouseenter', () => {
-      clearTimeout(t);
-      trigger.classList.add('is-open');
-      menu.classList.add('is-open');
+    function setOpen(state) {
+      if (state) {
+        wrap.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+      } else {
+        wrap.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+      }
+    }
+
+    function open() {
+      if (closeT) { clearTimeout(closeT); closeT = null; }
+      setOpen(true);
+    }
+
+    function scheduleClose() {
+      if (pinned) return;
+      if (closeT) clearTimeout(closeT);
+      closeT = setTimeout(function () { setOpen(false); }, 220);
+    }
+
+    // Hover no desktop (igual perfil)
+    var isDesktop = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+    if (isDesktop) {
+      wrap.addEventListener('mouseenter', open);
+      wrap.addEventListener('mouseleave', scheduleClose);
+      menu.addEventListener('mouseenter', open);
+      menu.addEventListener('mouseleave', scheduleClose);
+    }
+
+    // Clique fixa/solta
+    trigger.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      pinned = !pinned;
+      if (pinned) open();
+      else scheduleClose();
     });
 
-    trigger.addEventListener('mouseleave', () => {
-      t = setTimeout(() => {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
-      }, 150);
-    });
-
-    menu.addEventListener('mouseenter', () => clearTimeout(t));
-    menu.addEventListener('mouseleave', () => {
-      t = setTimeout(() => {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
-      }, 150);
-    });
-
-    document.addEventListener('click', (e) => {
-      if (!trigger.contains(e.target) && !menu.contains(e.target)) {
-        trigger.classList.remove('is-open');
-        menu.classList.remove('is-open');
+    // Clique fora fecha
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) {
+        pinned = false;
+        setOpen(false);
       }
     });
 
-    trigger.addEventListener('click', (e) => {
-      e.preventDefault();
-      trigger.classList.toggle('is-open');
-      menu.classList.toggle('is-open');
+    // ESC fecha
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        pinned = false;
+        setOpen(false);
+      }
     });
+
+    return { wrap: wrap, menu: menu };
   }
 
-  // expõe uma função global para caso você queira usar em outros lugares
-  window.initTopbarDropdowns = function () {
-    attachDropdown('adminTrigger', 'adminMenu');
-    attachDropdown('dashTrigger', 'dashMenu');
-  };
+  // PERFIL
+  bindPinnedDropdown('profileWrap', 'profileTrigger', 'profileMenu');
 
-  // auto-init quando o DOM estiver pronto
-  document.addEventListener('DOMContentLoaded', function () {
-    window.initTopbarDropdowns();
-  });
-})();
+  // NOTIF
+  var notif = bindPinnedDropdown('notifWrap', 'notifTrigger', 'notifMenu');
+
+  // NOTIF: marcar lidas
+  if (notif) {
+    var wrap = notif.wrap;
+
+    var markAll = document.getElementById('notifMarkAll');
+    if (markAll) {
+      markAll.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        fetch('/notifications_read.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: 'all=1'
+        }).then(function () {
+          var badge = wrap.querySelector('.notif__badge');
+          if (badge) badge.remove();
+          wrap.querySelectorAll('.notif__item.is-unread').forEach(function (item) {
+            item.classList.remove('is-unread');
+          });
+        });
+      });
+    }
+
+    wrap.querySelectorAll('.notif__item[data-id]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        var id = a.getAttribute('data-id');
+        if (!id) return;
+        navigator.sendBeacon('/notifications_read.php', 'id=' + encodeURIComponent(id));
+      });
+    });
+  }
+});

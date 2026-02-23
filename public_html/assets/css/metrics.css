@@ -1,0 +1,144 @@
+/* =========================
+   metrics.css (Admin / Métricas) - FULL WIDTH + 2 COLUNAS
+   ========================= */
+
+/* ===== OVERRIDE FORTE: full width ===== */
+main.metrics.metrics--fullwidth.container{
+  max-width: none !important;
+  width: 100% !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+main.metrics.metrics--fullwidth .metrics-card{
+  max-width: none !important;
+}
+
+/* ===== 2 COLUNAS POR GRUPO ===== */
+main.metrics.metrics--two-col .metrics-form{
+  display: block !important;
+}
+
+main.metrics.metrics--two-col .group{
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 14px 18px !important;
+  margin-bottom: 22px !important;
+  padding-bottom: 18px !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+}
+
+main.metrics.metrics--two-col .group__title{
+  grid-column: 1 / -1 !important;
+  font-size: 16px !important;
+  font-weight: 900 !important;
+  color: var(--primary1) !important;
+  margin: 0 0 6px !important;
+  padding-bottom: 8px !important;
+  border-bottom: 1px solid rgba(92,44,140,.20) !important;
+}
+
+main.metrics.metrics--two-col .hint,
+main.metrics.metrics--two-col .btn.btn--primary{
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+/* ===== ESTILOS GERAIS ===== */
+.metrics .page-title{
+  margin: 18px 0 14px;
+  font-size: 22px;
+  font-weight: 800;
+  color: rgba(15,23,42,.92);
+}
+
+.metrics .tabs{
+  display: flex;
+  gap: 8px;
+  margin: 10px 0 16px;
+}
+
+.metrics .tab{
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(15,23,42,.06);
+  color: rgba(15,23,42,.75);
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.metrics .tab:hover{ background: rgba(15,23,42,.10); }
+
+.metrics .tab.is-active{
+  background: var(--primary1);
+  color: #fff;
+}
+
+.metrics .metrics-card{
+  padding: 22px;
+}
+
+.metrics .field{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.metrics .field__label{
+  font-size: 13px;
+  color: #334155;
+  font-weight: 800;
+}
+
+.metrics .field__control{
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.14);
+  background: #fff;
+  outline: none;
+}
+
+.metrics .field__control:focus{
+  border-color: rgba(92,44,140,.55);
+  box-shadow: 0 0 0 4px rgba(92,44,140,.12);
+}
+
+.metrics .field__control.is-computed{
+  background: rgba(15,23,42,.04);
+  color: rgba(15,23,42,.65);
+}
+
+.metrics .field__hint{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+}
+
+.metrics .hint{
+  margin: 12px 0 18px;
+  padding: 12px 16px;
+  background: rgba(92,44,140,.08);
+  border-radius: 10px;
+  color: rgba(15,23,42,.75);
+}
+
+.metrics .hint strong{
+  color: var(--primary1);
+}
+
+.metrics .btn.btn--primary{
+  height: 50px;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 900px){
+  main.metrics.metrics--fullwidth.container{
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  main.metrics.metrics--two-col .group{
+    grid-template-columns: 1fr !important;
+  }
+}

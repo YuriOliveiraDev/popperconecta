@@ -125,3 +125,6 @@ function logout(): void {
   $_SESSION = [];
   session_destroy();
 }
+
+// ✅ REMOVIDO: user_can() e require_permission() duplicados (já existem em permissions.php)
+?>

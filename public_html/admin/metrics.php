@@ -6,6 +6,7 @@ require_admin();
 
 // ✅ Essencial para o header.php funcionar
 $u = current_user();
+$activePage = 'admin';
 
 // ✅ Dropdown "Dashboards" no header
 try {
@@ -23,12 +24,12 @@ if (!in_array($dashboard_slug, $allowedDash, true)) $dashboard_slug = 'executivo
 // Para o header.php montar o link correto de /admin/metrics.php?dash=...
 $current_dash = $dashboard_slug;
 
-// (Opcional) destaca o menu Início no header (se você estiver usando $activePage)
-$activePage = ''; // ex.: 'home' na index
-
 $success = '';
 $error = '';
 
+// ------------------------------
+// Helpers existentes
+// ------------------------------
 function parse_ptbr_number(string $s): ?float {
   $s = trim($s);
   if ($s === '') return null;
@@ -85,7 +86,33 @@ function format_for_input(array $r): string {
   return 'R$ ' . number_format($n, 2, ',', '.');
 }
 
+// ------------------------------
+// NOVO: Diário (tabela dashboard_daily)
+// ------------------------------
+$daily_date = (string)($_POST['daily_date'] ?? date('Y-m-d'));
+$daily_faturado_raw = (string)($_POST['daily_faturado'] ?? '');
+$daily_agendado_raw = (string)($_POST['daily_agendado'] ?? '');
+
+$dailyRow = null;
+$dailyOk = false;
+$dailyMsg = '';
+
+if ($dashboard_slug === 'executivo') {
+  // Carrega o registro do dia (para preencher o form)
+  try {
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $daily_date)) {
+      $stmtD = db()->prepare('SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at FROM dashboard_daily WHERE dash_slug=? AND ref_date=? LIMIT 1');
+      $stmtD->execute([$dashboard_slug, $daily_date]);
+      $dailyRow = $stmtD->fetch(PDO::FETCH_ASSOC);
+    }
+  } catch (Throwable $e) {
+    // silencioso: não derruba a página de métricas
+  }
+}
+
+// ------------------------------
 // Campos calculados: somente no executivo
+// ------------------------------
 $computedKeysExecutivo = [
   'falta_meta_ano' => true,
   'falta_meta_mes' => true,
@@ -101,7 +128,52 @@ $computedKeysExecutivo = [
 ];
 $computedKeys = ($dashboard_slug === 'executivo') ? $computedKeysExecutivo : [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+// ------------------------------
+// POST: pode salvar 2 coisas:
+// 1) daily_action = 'save_daily'  -> salva histórico diário
+// 2) normal (sem daily_action)    -> salva tabela metrics (como já é hoje)
+// ------------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($dashboard_slug === 'executivo') && (($_POST['daily_action'] ?? '') === 'save_daily')) {
+  // Salvar diário
+  try {
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $daily_date)) {
+      throw new Exception('Data inválida.');
+    }
+
+    $fat = parse_ptbr_number($daily_faturado_raw);
+    $agd = parse_ptbr_number($daily_agendado_raw);
+
+    if ($fat === null) $fat = 0.0;
+    if ($agd === null) $agd = 0.0;
+
+    $uid = (int)($u['id'] ?? 0);
+
+    $stmtS = db()->prepare('
+      INSERT INTO dashboard_daily (dash_slug, ref_date, faturado_dia, agendado_hoje, updated_by)
+      VALUES (?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        faturado_dia=VALUES(faturado_dia),
+        agendado_hoje=VALUES(agendado_hoje),
+        updated_by=VALUES(updated_by),
+        updated_at=CURRENT_TIMESTAMP
+    ');
+    $stmtS->execute([$dashboard_slug, $daily_date, $fat, $agd, $uid]);
+
+    // Recarrega para mostrar valores salvos
+    $stmtD = db()->prepare('SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at FROM dashboard_daily WHERE dash_slug=? AND ref_date=? LIMIT 1');
+    $stmtD->execute([$dashboard_slug, $daily_date]);
+    $dailyRow = $stmtD->fetch(PDO::FETCH_ASSOC);
+
+    $dailyOk = true;
+    $dailyMsg = 'Dia salvo com sucesso.';
+  } catch (Throwable $e) {
+    $dailyOk = false;
+    $dailyMsg = 'Erro ao salvar dia: ' . $e->getMessage();
+  }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['daily_action'] ?? '') !== 'save_daily')) {
+  // Salvar métricas (seu comportamento atual)
   try {
     $stmt = db()->prepare('UPDATE metrics SET metric_value_num=?, metric_value_text=? WHERE dashboard_slug=? AND metric_key=?');
 
@@ -116,7 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $stmt->execute([$num, $txt, $dashboard_slug, $keyStr]);
     }
 
-    // ✅ volta para página inicial após salvar
     header('Location: /index.php');
     exit;
 
@@ -125,6 +196,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
+// ------------------------------
+// Carrega métricas
+// ------------------------------
 $stmt = db()->prepare('SELECT id, metric_key, metric_label, metric_type, metric_value_num, metric_value_text FROM metrics WHERE dashboard_slug=? ORDER BY id ASC');
 $stmt->execute([$dashboard_slug]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -181,8 +255,18 @@ foreach ($groups as $gName => $keys) {
   }
 }
 
-// ✅ Nome do dashboard para o título (com primeira letra maiúscula)
 $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
+
+// Formata valores do diário para input
+$dailyFatInput = '';
+$dailyAgInput = '';
+$dailyUpdatedAt = '';
+
+if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
+  $dailyFatInput = 'R$ ' . number_format((float)($dailyRow['faturado_dia'] ?? 0), 2, ',', '.');
+  $dailyAgInput = 'R$ ' . number_format((float)($dailyRow['agendado_hoje'] ?? 0), 2, ',', '.');
+  $dailyUpdatedAt = (string)($dailyRow['updated_at'] ?? '');
+}
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -191,152 +275,17 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Métricas de <?= htmlspecialchars($dashboardName, ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
-
-  <style>
-    /* Base */
-    .page-title{
-      margin: 18px 0 14px;
-      font-size: 22px;
-      font-weight: 800;
-      color: rgba(15,23,42,.92);
-    }
-
-    /* Tabs (texto preto em métricas) */
-    .tabs{
-      display:flex;
-      gap:10px;
-      margin-bottom:16px;
-      border-bottom:1px solid rgba(15,23,42,.10);
-      padding-bottom:12px;
-    }
-    .tab{
-      padding:9px 16px;
-      border-radius:999px;
-      text-decoration:none;
-      color: rgba(15,23,42,.82);
-      font-weight:700;
-      font-size:14px;
-      border:1px solid rgba(15,23,42,.10);
-      background: rgba(15,23,42,.03);
-      transition:.15s;
-    }
-    .tab:hover{background:rgba(15,23,42,.06)}
-    .tab.is-active{
-      background:#fff;
-      color:rgba(15,23,42,.92);
-      border-color: rgba(15,23,42,.16);
-      box-shadow: 0 8px 18px rgba(15,23,42,.06);
-    }
-
-    /* ===== CARD MAIS LARGO (principal pedido) ===== */
-    main.container{max-width: 1200px;}               /* aumenta a largura do container */
-    .card{
-      max-width: 1100px;                             /* card bem mais largo */
-      margin: 0 auto;
-      padding: 22px 24px;
-      border: 1px solid rgba(15,23,42,.10);
-      border-radius: 14px;
-      background: #fff;
-      box-shadow: 0 10px 24px rgba(15,23,42,.06);    /* sombra leve */
-    }
-
-    /* Grupos */
-    .group{margin-top: 14px}
-    .group__title{
-      margin: 18px 0 12px;
-      font-size: 12px;
-      font-weight: 900;
-      text-transform: uppercase;
-      color: rgba(15,23,42,.55);
-      letter-spacing: .6px;
-    }
-
-    /* ===== FORM MAIS “LISO” e organizado ===== */
-    .form{
-      display: grid;
-      grid-template-columns: 1fr 1fr;  /* 2 colunas no desktop */
-      gap: 14px 18px;
-    }
-
-    /* Faz cada grupo ocupar a largura toda, mas os campos ficam em 2 colunas */
-    .group{grid-column: 1 / -1;}
-
-    .field{
-      margin: 0;
-      padding: 12px 14px;
-      border: 1px solid rgba(15,23,42,.08);
-      border-radius: 12px;
-      background: rgba(15,23,42,.015);
-    }
-
-    .field__label{
-      display:block;
-      font-size: 13px;
-      font-weight: 800;
-      color: rgba(15,23,42,.85);
-      margin-bottom: 8px;
-    }
-
-    .field__control{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 10px;
-      border: 1px solid rgba(15,23,42,.12);
-      background: #fff;
-      font-size: 15px;
-      color: rgba(15,23,42,.92);
-      transition: .15s;
-    }
-    .field__control:focus{
-      outline:none;
-      border-color: rgba(92,44,140,.55);
-      box-shadow: 0 0 0 3px rgba(92,44,140,.12);
-    }
-
-    .field__control.is-computed{
-      background: rgba(15,23,42,.04);
-      color: rgba(15,23,42,.55);
-      cursor: not-allowed;
-    }
-
-    .field__hint{
-      font-size: 12px;
-      color: rgba(15,23,42,.55);
-      margin-top: 6px;
-    }
-
-    .hint{
-      grid-column: 1 / -1;
-      color: rgba(15,23,42,.60);
-      font-size: 13px;
-      margin-top: 6px;
-      padding-top: 10px;
-      border-top: 1px solid rgba(15,23,42,.08);
-    }
-
-    .btn--primary{
-      grid-column: 1 / -1;
-      margin-top: 8px;
-      width: 220px;
-    }
-
-    /* Responsivo */
-    @media (max-width: 900px){
-      main.container{max-width: 100%;}
-      .card{max-width: 100%; margin: 0 12px; padding: 18px;}
-      .form{grid-template-columns: 1fr;} /* 1 coluna no mobile */
-      .btn--primary{width: 100%;}
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/css/metrics.css?v=<?= filemtime(__DIR__ . '/../assets/css/metrics.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 </head>
 <body class="page">
 
 <?php require_once __DIR__ . '/../app/header.php'; ?>
 
-<main class="container">
+<main class="container metrics metrics--fullwidth metrics--two-col">
   <h2 class="page-title">Configuração de Métricas de <?= htmlspecialchars($dashboardName, ENT_QUOTES, 'UTF-8') ?></h2>
 
   <nav class="tabs">
@@ -344,10 +293,59 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
     <a class="tab <?= $dashboard_slug==='financeiro'?'is-active':'' ?>" href="/admin/metrics.php?dash=financeiro">Financeiro</a>
   </nav>
 
-  <div class="card">
-    <?php if ($error): ?><div class="alert alert--error">❌ <?= htmlspecialchars($error) ?></div><?php endif; ?>
+  <div class="card metrics-card">
+    <?php if ($error): ?>
+      <div class="alert alert--error">❌ <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+    <?php endif; ?>
 
-    <form method="post" class="form">
+    <?php if ($dashboard_slug === 'executivo'): ?>
+      <!-- ✅ NOVO BLOCO: Histórico diário (não existia no seu HTML) -->
+      <div class="group" style="margin-bottom:18px;">
+        <div class="group__title">Histórico diário (manual)</div>
+
+        <?php if ($dailyMsg !== ''): ?>
+          <div class="alert <?= $dailyOk ? 'alert--ok' : 'alert--error' ?>">
+            <?= htmlspecialchars($dailyMsg, ENT_QUOTES, 'UTF-8') ?>
+          </div>
+        <?php endif; ?>
+
+        <form method="post" class="form" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end;">
+          <input type="hidden" name="daily_action" value="save_daily">
+
+          <div class="field" style="grid-column:1 / -1;">
+            <label class="field__label" for="daily_date">Data</label>
+            <input class="field__control" id="daily_date" name="daily_date" type="date"
+                   value="<?= htmlspecialchars($daily_date, ENT_QUOTES, 'UTF-8') ?>" />
+            <?php if ($dailyUpdatedAt !== ''): ?>
+              <div class="field__hint">Última atualização: <?= htmlspecialchars($dailyUpdatedAt, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php endif; ?>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="daily_faturado">Faturado do dia</label>
+            <input class="field__control" id="daily_faturado" name="daily_faturado" type="text"
+                   placeholder="R$ 0,00"
+                   value="<?= htmlspecialchars($dailyFatInput, ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="daily_agendado">Agendado para faturar hoje</label>
+            <input class="field__control" id="daily_agendado" name="daily_agendado" type="text"
+                   placeholder="R$ 0,00"
+                   value="<?= htmlspecialchars($dailyAgInput, ENT_QUOTES, 'UTF-8') ?>" />
+          </div>
+
+          <button class="btn btn--secondary" type="submit" style="grid-column:1 / -1;">Salvar dia</button>
+
+          <div class="hint" style="grid-column:1 / -1;margin:0;">
+            Dica: você pode preencher só um dos campos. Se deixar vazio, considera <strong>0</strong>.
+          </div>
+        </form>
+      </div>
+    <?php endif; ?>
+
+    <!-- ✅ Seu formulário original (permanece) -->
+    <form method="post" class="form metrics-form">
       <?php foreach ($ordered as $groupName => $items): ?>
         <div class="group">
           <div class="group__title"><?= htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8') ?></div>
@@ -358,40 +356,41 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
               $isComputed = isset($computedKeys[$key]);
               $type = (string)$r['metric_type'];
               $isVaiBater = ($key === 'vai_bater_meta');
+
               $placeholder = match($type) {
                 'money' => 'Ex: R$ 4.000.000,00',
                 'percent' => 'Ex: 59%',
                 'int' => 'Ex: 18',
+                'text' => '',
                 default => ''
               };
             ?>
             <div class="field">
-              <label class="field__label" for="m_<?= htmlspecialchars($key) ?>">
-                <?= htmlspecialchars((string)$r['metric_label']) ?>
+              <label class="field__label" for="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>">
+                <?= htmlspecialchars((string)$r['metric_label'], ENT_QUOTES, 'UTF-8') ?>
               </label>
 
               <?php if ($isVaiBater): ?>
                 <input class="field__control is-computed metric-input"
-                       id="m_<?= htmlspecialchars($key) ?>"
-                       name="m[<?= htmlspecialchars($key) ?>][value]"
-                       value="<?= htmlspecialchars((string)($r['metric_value_text'] ?? '')) ?>"
+                       id="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>"
+                       name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][value]"
+                       value="<?= htmlspecialchars((string)($r['metric_value_text'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
                        data-type="text"
-                       placeholder="<?= htmlspecialchars($placeholder) ?>"
+                       placeholder="<?= htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') ?>"
                        readonly />
-                <input type="hidden" name="m[<?= htmlspecialchars($key) ?>][type]" value="text" />
+                <input type="hidden" name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][type]" value="text" />
                 <div class="field__hint">Calculado automaticamente</div>
               <?php else: ?>
                 <input class="field__control metric-input <?= $isComputed ? 'is-computed' : '' ?>"
-                       id="m_<?= htmlspecialchars($key) ?>"
-                       name="m[<?= htmlspecialchars($key) ?>][value]"
-                       value="<?= htmlspecialchars(format_for_input($r)) ?>"
-                       placeholder="<?= htmlspecialchars($placeholder) ?>"
+                       id="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>"
+                       name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][value]"
+                       value="<?= htmlspecialchars(format_for_input($r), ENT_QUOTES, 'UTF-8') ?>"
+                       placeholder="<?= htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') ?>"
                        autocomplete="off"
                        inputmode="<?= ($type === 'text') ? 'text' : 'decimal' ?>"
-                       data-type="<?= htmlspecialchars($type) ?>"
-                       data-key="<?= htmlspecialchars($key) ?>"
+                       data-type="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>"
                        <?= $isComputed ? 'readonly' : '' ?> />
-                <input type="hidden" name="m[<?= htmlspecialchars($key) ?>][type]" value="<?= htmlspecialchars($type) ?>" />
+                <input type="hidden" name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][type]" value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>" />
                 <?php if ($isComputed): ?>
                   <div class="field__hint">Calculado automaticamente</div>
                 <?php endif; ?>
@@ -408,139 +407,14 @@ $dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
   </div>
 </main>
 
-<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<?php require_once __DIR__ . '/../app/footer.php'; ?>
 
 <script>
-  const fmtBRL = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
-  const fmtINT = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
-
-  function parsePtBrToNumber(raw){
-    if (raw == null) return null;
-    let s = String(raw).trim();
-    if (!s) return null;
-
-    s = s.replace(/\s/g, '');
-    s = s.replace('R$', '');
-    s = s.replace(/%/g, '');
-    s = s.replace(/\./g, '');
-    s = s.replace(/,/g, '.');
-
-    const n = Number(s);
-    return Number.isFinite(n) ? n : null;
-  }
-
-  function formatPercent(n){
-    const frac = (n > 1.5) ? (n / 100) : n;
-    const pct = frac * 100;
-    const hasDecimal = Math.abs(pct - Math.round(pct)) > 1e-9;
-    const out = pct.toLocaleString('pt-BR', {
-      minimumFractionDigits: hasDecimal ? 2 : 0,
-      maximumFractionDigits: hasDecimal ? 2 : 0
-    });
-    return out + '%';
-  }
-
-  function formatInputValue(input){
-    const type = input.dataset.type || 'money';
-    if (type === 'text') return;
-
-    const n = parsePtBrToNumber(input.value);
-    if (n === null) { input.value = ''; return; }
-
-    if (type === 'int') { input.value = fmtINT.format(Math.round(n)); return; }
-    if (type === 'percent') { input.value = formatPercent(n); return; }
-
-    input.value = fmtBRL.format(n);
-  }
-
-  function unformatForEditing(input){
-    const type = input.dataset.type || 'money';
-    if (type === 'text') return;
-
-    const n = parsePtBrToNumber(input.value);
-    if (n === null) return;
-
-    if (type === 'int') { input.value = String(Math.round(n)); return; }
-
-    if (type === 'percent') {
-      const frac = (n > 1.5) ? (n / 100) : n;
-      const pct = frac * 100;
-      const hasDecimal = Math.abs(pct - Math.round(pct)) > 1e-9;
-      input.value = pct.toLocaleString('pt-BR', {
-        minimumFractionDigits: hasDecimal ? 2 : 0,
-        maximumFractionDigits: hasDecimal ? 2 : 0
-      });
-      return;
-    }
-
-    input.value = n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
-
-  document.querySelectorAll('.metric-input').forEach((input) => {
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Tab') formatInputValue(input);
-    });
-    input.addEventListener('blur', () => formatInputValue(input);
-    input.addEventListener('focus', () => unformatForEditing(input));
-  });
-
-  const DASH = "<?= htmlspecialchars($dashboard_slug, ENT_QUOTES, 'UTF-8') ?>";
-  if (DASH === 'executivo') {
-    function recalculate(){
-      const metaAno = parsePtBrToNumber(document.getElementById('m_meta_ano')?.value) || 0;
-      const realAno = parsePtBrToNumber(document.getElementById('m_realizado_ano_acum')?.value) || 0;
-      const metaMes = parsePtBrToNumber(document.getElementById('m_meta_mes')?.value) || 0;
-      const realMes = parsePtBrToNumber(document.getElementById('m_realizado_ate_hoje')?.value) || 0;
-      const dTotal = parsePtBrToNumber(document.getElementById('m_dias_uteis_trabalhar')?.value) || 1;
-      const dPass = parsePtBrToNumber(document.getElementById('m_dias_uteis_trabalhados')?.value) || 0;
-
-      const faltaAno = Math.max(0, metaAno - realAno);
-      const faltaMes = Math.max(0, metaMes - realMes);
-      const ating = metaMes > 0 ? (realMes / metaMes) : 0;
-
-      const metaDia = metaMes / Math.max(1, dTotal);
-      const deveria = metaDia * dPass;
-
-      const realDia = dPass > 0 ? (realMes / dPass) : 0;
-      const prod = metaDia > 0 ? (realDia / metaDia) : 0;
-
-      const diasRest = Math.max(1, dTotal - dPass);
-      const aFaturar = faltaMes / diasRest;
-
-      const proj = realDia * dTotal;
-      const equiv = metaMes > 0 ? (proj / metaMes) : 0;
-      const vaiBater = proj >= metaMes ? 'SIM' : 'NÃO';
-
-      const set = (id, val, type) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        if (type === 'money') el.value = fmtBRL.format(val);
-        else if (type === 'percent') el.value = formatPercent(val);
-        else el.value = String(val);
-      };
-
-      set('m_falta_meta_ano', faltaAno, 'money');
-      set('m_falta_meta_mes', faltaMes, 'money');
-      set('m_atingimento_mes_pct', ating, 'percent');
-      set('m_deveria_ate_hoje', deveria, 'money');
-      set('m_meta_dia_util', metaDia, 'money');
-      set('m_a_faturar_dia_util', aFaturar, 'money');
-      set('m_realizado_dia_util', realDia, 'money');
-      set('m_realizado_dia_util_pct', prod, 'percent');
-      set('m_fechar_em', proj, 'money');
-      set('m_equivale_pct', equiv, 'percent');
-
-      const vb = document.getElementById('m_vai_bater_meta');
-      if (vb) vb.value = vaiBater;
-    }
-
-    document.querySelectorAll('.metric-input:not(.is-computed)').forEach((input) => {
-      input.addEventListener('input', recalculate);
-    });
-
-    recalculate();
-  }
+  window.METRICS_DASH = <?= json_encode($dashboard_slug, JSON_UNESCAPED_UNICODE) ?>;
 </script>
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
+<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<script src="/assets/js/metrics.js?v=<?= filemtime(__DIR__ . '/../assets/js/metrics.js') ?>"></script>
 
 </body>
 </html>

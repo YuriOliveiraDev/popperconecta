@@ -2,9 +2,14 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
-require_admin();
+require_once __DIR__ . '/../app/approval_log.php'; // ✅ Adicionado para log
+require_once __DIR__ . '/../app/permissions.php';
+require_perm('admin.rh') ;
 
 $u = current_user();
+
+// ✅ para o header marcar Popper Coins como ativo
+$activePage = 'coins';
 
 // header dashboards
 try {
@@ -81,6 +86,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $db->commit();
         $success = 'Pedido aprovado.';
+
+        // ✅ Log da aprovação
+        log_approval_action('coins_redemption', $id, 'approve', 'approved', $adminNote);
       } else {
         // ✅ Negar: devolve saldo e devolve inventário
         // 1) devolve saldo (ledger +)
@@ -101,6 +109,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $db->commit();
         $success = 'Pedido negado e saldo/inventário devolvidos.';
+
+        // ✅ Log da rejeição
+        log_approval_action('coins_redemption', $id, 'reject', 'rejected', $adminNote);
       }
     } catch (Throwable $e) {
       $db->rollBack();
@@ -122,6 +133,18 @@ $pending = db()->query("
   ORDER BY r.id DESC
   LIMIT 100
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+// ✅ Buscar logs de aprovações (últimos 200)
+$logs = db()->query("
+  SELECT l.created_at, l.action, l.status, l.note, l.approved_by_name,
+         r.id AS redemption_id, u.name AS user_name, rw.title AS reward_title
+  FROM approval_logs l
+  LEFT JOIN popper_coin_redemptions r ON r.id = l.entity_id AND l.entity_type = 'coins_redemption'
+  LEFT JOIN users u ON u.id = r.user_id
+  LEFT JOIN popper_coin_rewards rw ON rw.id = r.reward_id
+  ORDER BY l.created_at DESC
+  LIMIT 200
+")->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -130,21 +153,30 @@ $pending = db()->query("
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RH · Aprovações (Coins) — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <!-- CSS global -->
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/rh_redemptions.css?v=<?= filemtime(__DIR__ . '/../assets/css/rh_redemptions.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 </head>
 <body class="page">
 
 <?php require_once __DIR__ . '/../app/header.php'; ?>
 
-<main class="container">
+<main class="container rh-redemptions">
   <h2 class="page-title">RH · Aprovações de Resgate (Popper Coins)</h2>
 
-  <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($success): ?>
+    <div class="alert alert--ok alert--purple">
+      <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
+    </div>
+  <?php endif; ?>
   <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 
   <div class="card">
+    <h3>Pendências</h3>
     <div class="table-wrap">
       <table class="table">
         <thead>
@@ -174,11 +206,12 @@ $pending = db()->query("
                 <td class="right"><?= (int)($p['qty'] ?? 1) ?></td>
                 <td><?= htmlspecialchars((string)($p['user_note'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
                 <td class="right">
-                  <form method="post" style="display:inline-block;min-width:340px">
+                  <form method="post" class="rx-actions">
                     <input type="hidden" name="id" value="<?= (int)$p['id'] ?>" />
-                    <input type="text" name="admin_note" placeholder="Obs. RH (opcional)" style="max-width:190px" />
-                    <button class="btn btn--primary" type="submit" name="action" value="approve" onclick="return confirm('Aprovar pedido?');">Aprovar</button>
-                    <button class="btn btn--danger" type="submit" name="action" value="reject" onclick="return confirm('Negar e devolver saldo/inventário?');">Negar</button>
+                    <div class="rx-buttons">
+                      <button class="btn btn--primary rx-btn" type="submit" name="action" value="approve" onclick="return confirm('Aprovar pedido?');">Aprovar</button>
+                      <button class="btn btn--danger rx-btn" type="submit" name="action" value="reject" onclick="return confirm('Negar e devolver saldo/inventário?');">Negar</button>
+                    </div>
                   </form>
                 </td>
               </tr>
@@ -188,8 +221,51 @@ $pending = db()->query("
       </table>
     </div>
   </div>
+
+  <!-- ✅ Log de Aprovações -->
+  <div class="card card--mt">
+    <h3>Log de Aprovações</h3>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Usuário</th>
+            <th>Recompensa</th>
+            <th>Ação</th>
+            <th>Status</th>
+            <th>Por</th>
+            <th>Obs</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($logs)): ?>
+            <tr><td colspan="7" class="muted">Sem ações registradas.</td></tr>
+          <?php else: ?>
+            <?php foreach ($logs as $l): ?>
+              <tr>
+                <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td>
+                  <?= htmlspecialchars((string)($l['user_name'] ?? '—'), ENT_QUOTES, 'UTF-8') ?>
+                </td>
+                <td><?= htmlspecialchars((string)($l['reward_title'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)$l['action'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)$l['status'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)$l['approved_by_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)($l['note'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
 </main>
 
+<?php require_once __DIR__ . '/../app/footer.php'; ?>
+
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<script src="/assets/js/rh_redemptions.js?v=<?= filemtime(__DIR__ . '/../assets/js/rh_redemptions.js') ?>"></script>
 </body>
 </html>

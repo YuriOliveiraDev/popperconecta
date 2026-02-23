@@ -1,0 +1,469 @@
+/* Saudação */
+.topbar__right{display:flex;align-items:center;gap:12px;}
+.topbar__greeting{color:rgba(255,255,255,.88);font-weight:500;font-size:13px;letter-spacing:.2px;white-space:nowrap;}
+.topbar__greeting-name{color:rgba(255,255,255,.95);font-weight:400;}
+@media (max-width:720px){.topbar__greeting{display:none;}}
+
+/* Perfil */
+.profile{position:relative;margin-left:10px;}
+.profile__btn{
+  position:relative;
+  border:0;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:999px;
+}
+.profile__btn:hover{background:rgba(255,255,255,.14);}
+.profile__avatar{
+  width:30px;height:30px;border-radius:999px;object-fit:cover;
+  border:1px solid rgba(255,255,255,.22);
+}
+.profile__fallback{
+  width:30px;height:30px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:12px;letter-spacing:.5px;
+  color:rgba(255,255,255,.92);
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(255,255,255,.10);
+}
+
+/* Notificações */
+.notif{position:relative;}
+.notif__btn{
+  position:relative;border:0;background:transparent;padding:0;cursor:pointer;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:38px;height:38px;border-radius:999px;
+}
+.notif__btn:hover{background:rgba(255,255,255,.14);}
+/* NOTIF: ícone SVG consistente */
+.notif__icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:20px;
+  height:20px;
+  color: rgba(255,255,255,.92);
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.25));
+}
+.notif__icon svg{display:block;}
+.notif__badge{position:absolute;top:2px;right:2px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:2px 6px;border-radius:999px;border:2px solid rgba(255,255,255,.10);}
+
+/* ===== MENUS: não usar display:none (para animar igual dropdown) ===== */
+.profile__menu,
+.notif__menu{
+  position:absolute;right:0;top:46px;
+  background:#0f172a;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:14px;
+  box-shadow:0 12px 28px rgba(0,0,0,.35);
+  padding:8px;
+  z-index:9999;
+
+  /* mantém no layout, mas "fechado" */
+  visibility:hidden;
+  pointer-events:none;
+
+  transform-origin:top right;
+  transform:translateY(-10px) scale(.985);
+  opacity:0;
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s; /* espera a animação terminar pra esconder */
+  will-change:transform, opacity;
+}
+
+.profile__menu{min-width:240px;}
+.notif__menu{width:360px;max-width:90vw;}
+
+.profile__header{padding:10px 10px 8px 10px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
+.profile__name{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
+.profile__email{opacity:.8;font-size:12px;margin-top:2px;color:rgba(255,255,255,.85);}
+.profile__item{display:flex;padding:10px 10px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,.92);font-weight:700;font-size:13px;}
+.profile__item:hover{background:rgba(255,255,255,.10);}
+.profile__item--danger{color:#ffb4b4;}
+.profile__item--danger:hover{background:rgba(255,80,80,.14);}
+
+.notif__header{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
+.notif__title{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
+.notif__markall{border:0;background:transparent;color:rgba(255,255,255,.80);font-weight:800;cursor:pointer;font-size:12px;}
+.notif__markall:hover{text-decoration:underline;}
+.notif__empty{padding:12px 10px;color:rgba(255,255,255,.75);font-size:13px;}
+.notif__item{display:block;padding:10px;border-radius:12px;text-decoration:none;color:rgba(255,255,255,.92);}
+.notif__item:hover{background:rgba(255,255,255,.08);}
+.notif__item.is-unread{background:rgba(92,44,140,.14);}
+.notif__item-title{font-weight:900;font-size:13px;margin-bottom:2px;}
+.notif__item-msg{font-size:12px;opacity:.85;margin-bottom:4px;}
+.notif__item-date{font-size:11px;opacity:.7;}
+
+/* ABRE PERFIL: hover/focus (desktop) + is-open (clique) */
+.profile:hover .profile__menu,
+.profile:focus-within .profile__menu,
+.profile.is-open .profile__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s;
+}
+
+/* ABRE NOTIF: só is-open (clique) + focus-within (teclado) - hover controlado por JS */
+.notif:focus-within .notif__menu,
+.notif.is-open .notif__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s;
+}
+
+/* Ring quando aberto */
+.profile.is-open .profile__btn,
+.notif.is-open .notif__btn{
+  background:rgba(255,255,255,.14);
+  box-shadow:0 0 0 2px rgba(255,255,255,.12);
+}
+
+/* Pop do sino quando tiver não lidas */
+@keyframes bell-pop{
+  0%{transform:scale(1)}
+  30%{transform:scale(1.12)}
+  60%{transform:scale(.98)}
+  100%{transform:scale(1)}
+}
+.notif__btn:has(.notif__badge) .notif__icon{
+  animation:bell-pop .6s ease;
+}
+
+/* Acessibilidade */
+@media (prefers-reduced-motion: reduce){
+  .profile__menu,.notif__menu{transition:none;transform:none;opacity:1;visibility:visible;}
+}
+/* ===== FORÇA HEADER ROXO (prioridade máxima) ===== */
+header.topbar,
+.topbar,
+.topbar.topbar--site{
+  background: rgba(92, 44, 140, 1) !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Texto branco no header */
+.topbar,
+.topbar *{
+  color: #f5f5f7 !important;
+}
+
+.topbar a,
+.topbar a:link,
+.topbar a:visited{
+  color: #f5f5f7 !important;
+}
+.topbar a:hover{
+  color:#ffffff !important;
+}
+
+/* SVGs no header */
+.topbar svg{
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+/* Dropdown NÃO herdar branco */
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  color: rgba(15,23,42,.92) !important;
+}
+
+/* ===== HEADER (cor padrão do site) ===== */
+header.topbar,
+.topbar,
+.topbar.topbar--site{
+  background: var(--brand) !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+.topbar,
+.topbar *{
+  color: #f5f5f7 !important;
+}
+
+.topbar a,
+.topbar a:link,
+.topbar a:visited{
+  color: #f5f5f7 !important;
+}
+.topbar a:hover{
+  color: #ffffff !important;
+}
+
+/* Dropdown não herdar branco */
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  color: rgba(15,23,42,.92) !important;
+}
+
+:root{ --brand:#5c2c84; }
+
+/* Mata qualquer CSS que esteja pintando a topbar de branco */
+body .topbar.topbar--site,
+body header.topbar.topbar--site,
+body header.topbar,
+body .topbar{
+  background-color: var(--brand) !important;
+  background: var(--brand) !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* Texto do header sempre branco */
+body .topbar,
+body .topbar *{
+  color: #f5f5f7 !important;
+}
+
+/* Links do header */
+body .topbar a,
+body .topbar a:link,
+body .topbar a:visited{
+  color: #f5f5f7 !important;
+}
+body .topbar a:hover{
+  color:#ffffff !important;
+}
+
+/* Dropdown com texto escuro */
+body .topbar__dropdown-menu,
+body .topbar__dropdown-menu *{
+  color: rgba(15,23,42,.92) !important;
+}
+/* Submenus (dropdown) - tipografia mais fina */
+.topbar__dropdown-label{
+  font-weight: 500; /* antes estava 600 */
+}
+
+.topbar__dropdown-item{
+  font-weight: 500; /* garante que o link todo não fique "pesado" */
+}
+
+/* (Opcional) cabeçalho do dropdown um pouco menos forte */
+.topbar__dropdown-header{
+  font-weight: 700; /* antes 800 */
+}
+
+/* Deixa o ícone/botão de usuário com cara de "clicável" */
+.user-menu-trigger,
+.header-user,
+.header-user__btn,
+[data-user-menu-trigger]{
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background .15s ease, box-shadow .15s ease, transform .12s ease;
+}
+
+/* hover: "seleciona" */
+.user-menu-trigger:hover,
+.header-user:hover,
+.header-user__btn:hover,
+[data-user-menu-trigger]:hover{
+  background: rgba(92, 44, 132, .08);
+  box-shadow: 0 0 0 3px rgba(92, 44, 132, .10);
+}
+
+/* focus: acessível via teclado */
+.user-menu-trigger:focus-visible,
+.header-user__btn:focus-visible,
+[data-user-menu-trigger]:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(92, 44, 132, .28);
+}
+
+/* quando aberto (classe padrão que seu JS provavelmente já coloca) */
+.is-open > .user-menu-trigger,
+.is-open > .header-user__btn,
+.user-menu.is-open .header-user__btn{
+  background: rgba(92, 44, 132, .10);
+  box-shadow: 0 0 0 3px rgba(92, 44, 132, .14);
+}
+.user-menu .dropdown-menu{display:none}
+.user-menu.is-open .dropdown-menu{display:block}
+
+/* Deixa o ícone/botão de usuário com cara de "clicável" */
+.profile__btn {
+  position: relative;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  transition: background .15s ease, box-shadow .15s ease; /* Adicionando transição */
+}
+
+/* Hover: "seleciona" */
+.profile__btn:hover {
+  background: rgba(255, 255, 255, .14);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .12); /* Efeito de sombra ao passar o mouse */
+}
+
+/* Focus: acessível via teclado */
+.profile__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .28);
+}
+
+/* Quando aberto (classe padrão que seu JS provavelmente já coloca) */
+.profile.is-open .profile__btn {
+  background: rgba(255, 255, 255, .10);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .14);
+}
+
+/* NOTIF: abre só por is-open (JS) ou foco (teclado) */
+.notif .notif__menu{
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-10px) scale(.985);
+  opacity:0;
+  transition: transform .18s ease, opacity .18s ease, visibility 0s linear .18s;
+}
+
+.notif:focus-within .notif__menu,
+.notif.is-open .notif__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}
+
+
+/* PERFIL abre no hover/focus/is-open */
+.profile:hover .profile__menu,
+.profile:focus-within .profile__menu,
+.profile.is-open .profile__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}
+
+/* NOTIF abre só com is-open/focus-within (JS controla hover) */
+.notif:focus-within .notif__menu,
+.notif.is-open .notif__menu{
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0) scale(1);
+  opacity:1;
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}
+/* Badge menor e bem redondo */
+.notif__badge{
+  position:absolute;
+  top:3px;
+  right:3px;
+
+  min-width:16px;
+  height:16px;
+  padding:0 4px;
+
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+
+  background:#ef4444;
+  color:#fff;
+
+  font-size:10px;
+  font-weight:900;
+  line-height:1;
+
+  border-radius:999px;
+  border:2px solid rgba(92,44,140,1); /* recorte no roxo do header */
+  box-shadow:0 6px 14px rgba(239,68,68,.28);
+}
+
+.notif__item.is-disabled{
+  opacity:.75;
+  cursor: default;
+}
+.notif__item.is-disabled:hover{
+  background: transparent;
+}
+/* Base do item */
+.notif__item{
+  display:block;
+  padding:10px 12px;
+  border-radius:10px;
+  text-decoration:none;
+  color:inherit;
+  transition: background .12s ease, transform .08s ease;
+}
+
+.notif__item:hover{
+  background: rgba(255,255,255,.08);
+}
+
+/* ✅ NOVAS: destaque */
+.notif__item.is-unread{
+  background: rgba(99,102,241,.14); /* indigo suave */
+  box-shadow: inset 0 0 0 1px rgba(99,102,241,.20);
+}
+
+/* bolinha de “novo” */
+.notif__item.is-unread::before{
+  content:"";
+  width:8px;
+  height:8px;
+  border-radius:999px;
+  background: #60a5fa; /* azul */
+  display:inline-block;
+  margin-right:8px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 2px rgba(96,165,250,.18);
+}
+
+/* LIDAS: mais discretas */
+.notif__item:not(.is-unread){
+  opacity:.72;
+}
+
+.notif__item:not(.is-unread) .notif__item-title{
+  font-weight:600;
+}
+
+/* Título e mensagem */
+.notif__item-title{
+  font-weight:800;
+  margin-bottom:2px;
+}
+
+.notif__item-msg{
+  opacity:.9;
+  font-size:12px;
+  margin-top:2px;
+}
+
+.notif__item-date{
+  opacity:.7;
+  font-size:11px;
+  margin-top:6px;
+}

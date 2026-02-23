@@ -295,3 +295,403 @@ body{
   .table{ min-width: 880px; }
   .page-title{ font-size: 22px; }
 }
+
+/* =========================
+   users.css (Admin / Usuários - estilos específicos)
+   ========================= */
+
+/* Form */
+.form{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.field{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label{
+  font-size: 13px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.field__control{
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.14);
+  background: #fff;
+  color: #0f172a;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.field__control:focus{
+  border-color: rgba(92,44,140,.55);
+  box-shadow: 0 0 0 4px rgba(92,44,140,.12);
+}
+
+/* Responsivo */
+@media (max-width: 900px){
+  .form{ grid-template-columns: 1fr; }
+}
+
+/* =========================
+   admin-users.css (Admin / Usuários)
+   ========================= */
+
+.admin-users .avatar{
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(15,23,42,.12);
+  display: block;
+}
+
+/* Placeholder padrão quando não há foto */
+.admin-users .avatar--placeholder{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(92,44,140,.10);
+  border: 1px solid rgba(92,44,140,.22);
+  color: #5c2c84;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Inputs isca para autocomplete (ficam invisíveis) */
+.admin-users .offscreen-bait{
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ===== Upload de foto (input file custom) ===== */
+.admin-users .file-input{
+  position:absolute;
+  left:-9999px;
+  width:1px;
+  height:1px;
+  overflow:hidden;
+  opacity:0;
+  pointer-events:none;
+}
+
+.admin-users .file-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+
+  height:44px;
+  padding:0 14px;
+
+  border-radius:12px;
+  border:1px solid rgba(92,44,132,.35);
+  background: rgba(92,44,132,.10);
+
+  color:#5c2c84;
+  font-weight:800;
+  cursor:pointer;
+  user-select:none;
+
+  transition: background .15s ease, transform .08s ease, box-shadow .15s ease;
+}
+
+.admin-users .file-btn:hover{
+  background: rgba(92,44,132,.14);
+  box-shadow: 0 10px 18px rgba(15,23,42,.08);
+}
+
+.admin-users .file-btn:active{
+  transform: translateY(1px);
+  box-shadow:none;
+}
+
+.admin-users .file-meta{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.admin-users .file-name{
+  font-size:13px;
+  color: rgba(15,23,42,.72);
+  font-weight:700;
+}
+
+.admin-users .file-hint{
+  font-size:12px;
+  color: rgba(15,23,42,.55);
+}
+
+/* ===== Tabela de usuários (6 visíveis + scroll) ===== */
+.admin-users .table-wrap{
+  max-height: 380px; /* Altura para ~6 linhas */
+  overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: #fff;
+}
+
+.admin-users .table{
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 0; /* Remove largura mínima forçada */
+}
+
+.admin-users .table thead th{
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .55px;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15,23,42,.10);
+  white-space: nowrap;
+}
+
+.admin-users .table tbody td{
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  color: #111827;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.admin-users .table tbody tr:last-child td{
+  border-bottom: none;
+}
+
+.admin-users .table tbody tr:hover{
+  background: rgba(92,44,140,.06);
+}
+
+/* Indicador "mais usuários" */
+.admin-users .more-users{
+  margin-top: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(15,23,42,.04);
+  border: 1px solid rgba(15,23,42,.08);
+  text-align: center;
+}
+
+.admin-users .more-users__text{
+  margin: 0;
+  font-size: 13px;
+  color: rgba(15,23,42,.75);
+}
+
+.admin-users .more-users__link{
+  color: #5c2c84;
+  font-weight: 800;
+  text-decoration: none;
+  margin-left: 6px;
+}
+
+.admin-users .more-users__link:hover{
+  text-decoration: underline;
+}
+/* ===== Larguras por coluna (sem scroll horizontal) ===== */
+.admin-users .table{
+  table-layout: fixed;  /* faz as larguras obedecerem */
+  width: 100%;
+}
+
+/* compactas */
+.admin-users .col-photo{ width: 56px; }
+.admin-users .col-role{ width: 92px; }
+.admin-users .col-active{ width: 72px; }
+.admin-users .col-last{ width: 140px; }
+.admin-users .col-actions{ width: 110px; }
+
+/* centrais ganham espaço */
+.admin-users .col-name{ width: 22%; }
+.admin-users .col-email{ width: 28%; }
+
+/* médias (podem “encolher”) */
+.admin-users .col-setor{ width: 12%; }
+.admin-users .col-hier{ width: 12%; }
+
+/* Permite quebra em Nome/E-mail (mais conteúdo visível) */
+.admin-users td.col-name,
+.admin-users td.col-email{
+  white-space: normal;         /* deixa quebrar linha */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+/* Ações: não quebra, pra garantir que o Editar apareça */
+.admin-users td.col-actions{
+  white-space: nowrap;
+}
+
+/* Setor/Hierarquia: mantém compacto */
+.admin-users td.col-setor,
+.admin-users td.col-hier,
+.admin-users td.col-last{
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-users .table{
+  width: 100%;
+  table-layout: fixed;     /* ESSENCIAL: impede uma coluna invadir a outra */
+  border-collapse: collapse;
+}
+
+.admin-users .table thead th,
+.admin-users .table tbody td{
+  overflow: hidden;        /* corta o excesso dentro da célula */
+  text-overflow: ellipsis; /* "..." */
+}
+/* =========================
+   Ações do formulário (Cancelar / Salvar)
+   ========================= */
+
+.user-edit .form-actions{
+  grid-column: 1 / -1;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(15,23,42,.08);
+}
+
+/* Botões com tamanho consistente */
+.user-edit .form-actions .btn,
+.user-edit .form-actions .link{
+  height: 44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  text-decoration:none;
+  cursor:pointer;
+  transition: transform .08s ease, filter .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+}
+
+/* Cancelar (ghost) */
+.user-edit .form-actions .link.link--pill{
+  color: rgba(15,23,42,.78);
+  background: rgba(15,23,42,.04);
+  border: 1px solid rgba(15,23,42,.12);
+}
+
+.user-edit .form-actions .link.link--pill:hover{
+  background: rgba(15,23,42,.07);
+  box-shadow: 0 10px 18px rgba(15,23,42,.08);
+}
+
+.user-edit .form-actions .link.link--pill:active{
+  transform: translateY(1px);
+  box-shadow:none;
+}
+
+/* Salvar (primary) */
+.user-edit .form-actions .btn.btn--primary{
+  min-width: 180px;
+  box-shadow: 0 16px 30px rgba(2,6,23,.18);
+}
+
+.user-edit .form-actions .btn.btn--primary:hover{
+  filter: brightness(1.04);
+}
+
+.user-edit .form-actions .btn.btn--primary:active{
+  transform: translateY(1px);
+}
+
+/* Acessibilidade: foco visível */
+.user-edit .form-actions .btn:focus-visible,
+.user-edit .form-actions .link:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(92,44,140,.18);
+}
+
+/* =========================
+   Excluir (danger)
+   ========================= */
+
+.user-edit .delete-form{
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(220,38,38,.25);
+}
+
+.user-edit .btn.btn--danger{
+  height: 44px;
+  width: 100%;
+  border-radius: 12px;
+  font-weight: 900;
+
+  background: rgba(220,38,38,.10);
+  border: 1px solid rgba(220,38,38,.28);
+  color: #b91c1c;
+
+  box-shadow: 0 14px 28px rgba(220,38,38,.08);
+  transition: transform .08s ease, background .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+
+.user-edit .btn.btn--danger:hover{
+  background: rgba(220,38,38,.14);
+  box-shadow: 0 18px 34px rgba(220,38,38,.10);
+}
+
+.user-edit .btn.btn--danger:active{
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.user-edit .btn.btn--danger:disabled{
+  opacity: .55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Responsivo */
+@media (max-width: 900px){
+  .user-edit .form-actions{
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .user-edit .form-actions .btn.btn--primary{
+    width: 100%;
+    min-width: 0;
+  }
+  .user-edit .form-actions .link.link--pill{
+    width: 100%;
+  }
+}
+
+.avatar-lg--emoji{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  background:rgba(255,255,255,.75);
+  border:1px solid rgba(15,23,42,.12);
+  color:rgba(15,23,42,.55);
+}

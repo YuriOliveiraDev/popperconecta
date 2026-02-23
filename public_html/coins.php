@@ -13,7 +13,7 @@ header('Expires: 0');
 $u = current_user();
 $userId = (int)($u['id'] ?? 0);
 
-// Dashboards no header (se você usa dropdown)
+// Dashboards no header (dropdown)
 try {
   $dashboards = db()->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
@@ -102,9 +102,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_reward_id'])) 
     ensure_wallet_int($userId);
     $stmt = $db->prepare("SELECT balance FROM popper_coin_wallets WHERE user_id = ? FOR UPDATE");
     $stmt->execute([$userId]);
-    $balance = (int)($stmt->fetchColumn() ?? 0);
+    $balanceCheck = (int)($stmt->fetchColumn() ?? 0);
 
-    if ($balance < $cost) throw new Exception('Saldo insuficiente.');
+    if ($balanceCheck < $cost) throw new Exception('Saldo insuficiente.');
 
     // segura saldo (desconto temporário)
     apply_ledger_no_tx($userId, -abs($cost), 'hold', 'Resgate solicitado (pendente): ' . $title, $userId);
@@ -162,7 +162,7 @@ $rewards = db()->query("
   ORDER BY sort_order ASC, id ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Seus pedidos
+// Seus pedidos (últimos 30)
 $stmt = db()->prepare("
   SELECT r.id, r.status, r.cost, r.qty, r.user_note, r.created_at,
          rw.title AS reward_title
@@ -175,16 +175,36 @@ $stmt = db()->prepare("
 $stmt->execute([$userId]);
 $requests = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Extrato
+// Extrato (últimos 10)
 $stmt = db()->prepare("
   SELECT id, amount, action_type, reason, created_at
   FROM popper_coin_ledger
   WHERE user_id = ?
   ORDER BY id DESC
-  LIMIT 50
+  LIMIT 10
 ");
 $stmt->execute([$userId]);
 $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Histórico de aprovações (últimos 10)
+$approvalLogs = [];
+try {
+  $stmt = db()->prepare("
+    SELECT l.created_at, l.action, l.status, l.note, l.approved_by_name,
+           rw.title AS reward_title
+    FROM approval_logs l
+    JOIN popper_coin_redemptions r ON r.id = l.entity_id AND l.entity_type = 'coins_redemption'
+    JOIN popper_coin_rewards rw ON rw.id = r.reward_id
+    WHERE r.user_id = ?
+    ORDER BY l.created_at DESC
+    LIMIT 10
+  ");
+  $stmt->execute([$userId]);
+  $approvalLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  // se a tabela approval_logs não existir ainda, não quebra a página
+  $approvalLogs = [];
+}
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -193,73 +213,18 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Popper Coins — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
-
-  <style>
-    .pc-container{display:grid;grid-template-columns:1fr;gap:24px;max-width:1400px;margin:0 auto;}
-    .pc-header{text-align:center;margin-bottom:24px;}
-    .pc-title{font-size:2.2rem;font-weight:900;color:var(--ink);margin:0;}
-    .pc-subtitle{font-size:1.05rem;color:var(--muted);margin:8px 0 0;}
-
-    .pc-card{
-      background:var(--card);
-      border:1px solid rgba(15,23,42,0.08);
-      border-radius:16px;
-      box-shadow:0 4px 20px rgba(15,23,42,0.06);
-      padding:24px;
-    }
-
-    .pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
-    @media (max-width:900px){.pc-grid{grid-template-columns:1fr;}}
-
-    .pc-card--balance{
-      min-height:200px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      text-align:center;
-      padding:32px 24px;
-    }
-
-    .pc-balance{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:12px;}
-    .pc-balance__icon{font-size:2.5rem;line-height:1;}
-    .pc-balance__num{font-size:2.6rem;font-weight:950;letter-spacing:-1px;color:var(--accent,#5c2d91);}
-    .pc-balance__meta{color:var(--muted);font-size:.9rem;}
-
-    .table-wrap{overflow-x:auto;border-radius:12px;}
-    .table{width:100%;border-collapse:separate;border-spacing:0;}
-    .table th,.table td{padding:14px 16px;text-align:left;border-bottom:1px solid rgba(15,23,42,0.06);}
-    .table thead th{font-weight:800;text-transform:uppercase;font-size:11px;color:var(--muted);background:rgba(15,23,42,0.02);}
-    .table tbody tr:hover{background:rgba(92,44,140,0.04);}
-    .table .right{text-align:right;}
-
-    .pc-form{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;}
-    .pc-form input{flex:1;min-width:180px;padding:8px 12px;border:1px solid rgba(15,23,42,0.12);border-radius:8px;font-size:14px;}
-    .pc-form button{padding:8px 16px;border-radius:8px;font-weight:800;}
-    .btn:disabled{opacity:.55;cursor:not-allowed;}
-
-    .pill{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;border:1px solid rgba(15,23,42,0.1);}
-    .pill--pending{background:rgba(245,158,11,0.12);color:#92400e;}
-    .pill--approved{background:rgba(22,163,74,0.12);color:#166534;}
-    .pill--rejected{background:rgba(220,38,38,0.12);color:#991b1b;}
-
-    @media (max-width:768px){
-      .pc-title{font-size:1.8rem;}
-      .pc-card--balance{min-height:170px;}
-      .pc-balance__icon{font-size:2rem;}
-      .pc-balance__num{font-size:2.2rem;}
-      .pc-form{flex-direction:column;align-items:stretch;}
-      .pc-form input{min-width:auto;}
-    }
-  </style>
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/coins.css?v=<?= filemtime(__DIR__ . '/assets/css/coins.css') ?>" />
 </head>
 <body class="page">
 
 <?php require_once __DIR__ . '/app/header.php'; ?>
 
-<main class="container">
+<main class="container coins">
   <div class="pc-header">
     <h1 class="pc-title">Popper Coins</h1>
     <p class="pc-subtitle">Solicite recompensas e acompanhe seus pedidos.</p>
@@ -270,19 +235,32 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   <div class="pc-container">
     <div class="pc-grid">
+      <!-- SALDO (moderno / sem emoji) -->
       <div class="pc-card pc-card--balance">
-        <h3 style="margin:0 0 8px 0;">Seu saldo</h3>
-        <div class="pc-balance">
-          <span class="pc-balance__icon" aria-hidden="true">🪙</span>
-          <div class="pc-balance__num"><?= (int)$balance ?> coins</div>
+        <div class="pc-balance-head">
+          <h3 class="pc-balance-title">Seu saldo</h3>
+          <span class="pc-balance-pill">Popper Coins</span>
         </div>
-        <div class="pc-balance__meta">Usuário: <?= htmlspecialchars((string)($u['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
+
+        <div class="pc-balance-value">
+          <div class="pc-balance-num"><?= number_format((int)$balance, 0, ',', '.') ?></div>
+          <div class="pc-balance-unit">coins</div>
+        </div>
+
+        <div class="pc-balance-foot">
+          <span class="pc-balance-label">Usuário</span>
+          <span class="pc-balance-user"><?= htmlspecialchars((string)($u['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?></span>
+        </div>
       </div>
 
-      <div class="pc-card">
-        <h3 style="margin:0 0 8px 0;">Seus pedidos (últimos 30)</h3>
+      <!-- SEUS PEDIDOS (scroll ~5 itens) -->
+      <div class="pc-card pc-card--requests">
+        <div class="pc-card-head">
+          <h3 class="pc-card-title">Seus pedidos</h3>
+          <span class="pc-card-badge">Últimos 30</span>
+        </div>
 
-        <div class="table-wrap">
+        <div class="table-wrap pc-table-scroll pc-table-scroll--requests">
           <table class="table">
             <thead>
               <tr>
@@ -314,57 +292,12 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
       </div>
     </div>
-
+    <!-- EXTRATO (últimos 10) -->
     <div class="pc-card">
-      <h3 style="margin:0 0 8px 0;">Catálogo de recompensas</h3>
-      <p class="muted" style="margin:0 0 16px 0;">O saldo e o inventário serão bloqueados temporariamente até decisão do RH.</p>
-
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Recompensa</th>
-              <th class="right">Custo</th>
-              <th class="right">Inventário</th>
-              <th>Descrição</th>
-              <th class="right">Solicitar</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php if (!$rewards): ?>
-              <tr><td colspan="5" class="muted">Nenhuma recompensa cadastrada.</td></tr>
-            <?php else: ?>
-              <?php foreach ($rewards as $rw): ?>
-                <?php
-                  $inv = (int)($rw['inventory'] ?? 0);
-                  $cost = (int)($rw['cost'] ?? 0);
-                  $disabled = ($inv <= 0 || $balance < $cost);
-                ?>
-                <tr>
-                  <td><?= htmlspecialchars((string)$rw['title'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="right"><?= $cost ?></td>
-                  <td class="right"><?= $inv ?></td>
-                  <td><?= htmlspecialchars((string)($rw['description'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-                  <td class="right">
-                    <form method="post" class="pc-form">
-                      <input type="hidden" name="redeem_reward_id" value="<?= (int)$rw['id'] ?>" />
-                      <input type="hidden" name="redeem_token" value="<?= htmlspecialchars($redeemToken, ENT_QUOTES, 'UTF-8') ?>" />
-                      <input type="text" name="user_note" placeholder="Obs. (opcional)" />
-                      <button class="btn btn--primary" type="submit" <?= $disabled ? 'disabled' : '' ?> onclick="return confirm('Solicitar resgate? Saldo e inventário serão bloqueados até decisão do RH.');">
-                        Solicitar
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              <?php endforeach; ?>
-            <?php endif; ?>
-          </tbody>
-        </table>
+      <div class="pc-card-head">
+        <h3 class="pc-card-title">Extrato</h3>
+        <span class="pc-card-badge">Últimos 10</span>
       </div>
-    </div>
-
-    <div class="pc-card">
-      <h3 style="margin:0 0 8px 0;">Extrato (últimos 50)</h3>
 
       <div class="table-wrap">
         <table class="table">
@@ -393,23 +326,52 @@ $entries = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </table>
       </div>
     </div>
+
+    <!-- HISTÓRICO DE APROVAÇÕES (últimos 10) -->
+    <div class="pc-card">
+      <div class="pc-card-head">
+        <h3 class="pc-card-title">Histórico de Aprovações</h3>
+        <span class="pc-card-badge">Últimos 10</span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Recompensa</th>
+              <th>Ação</th>
+              <th>Status</th>
+              <th>Por</th>
+              <th>Obs</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php if (empty($approvalLogs)): ?>
+              <tr><td colspan="6" class="muted">Sem ações registradas.</td></tr>
+            <?php else: ?>
+              <?php foreach ($approvalLogs as $l): ?>
+                <tr>
+                  <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)$l['reward_title'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)$l['action'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)$l['status'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)$l['approved_by_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)($l['note'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 </main>
 
+<?php require_once __DIR__ . '/app/footer.php'; ?>
+
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
-<script>
-  // Bloqueio de duplo clique (somente formulários desta página)
-  document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.pc-container form[method="post"]').forEach(function(form){
-      form.addEventListener('submit', function(){
-        var btn = form.querySelector('button[type="submit"]');
-        if (btn) {
-          btn.disabled = true;
-          btn.textContent = 'Enviando...';
-        }
-      });
-    });
-  });
-</script>
+<script src="/assets/js/coins.js?v=<?= filemtime(__DIR__ . '/assets/js/coins.js') ?>"></script>
 </body>
 </html>

@@ -1,0 +1,243 @@
+/* =========================
+   rh_redemptions.css (Admin / RH Redemptions)
+   ========================= */
+
+/* ===== Alert OK roxo (borda roxa + fundo suave) ===== */
+.rh-redemptions .alert.alert--ok.alert--purple{
+  border: 1px solid rgba(92,44,140,1) !important;
+  background: rgba(92,44,140,.10) !important; /* mais claro/transparente */
+  color: rgba(15,23,42,.92) !important;       /* texto escuro por legibilidade */
+  box-shadow: 0 10px 22px rgba(92,44,140,.08) !important;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+
+/* Hover mais suave */
+.rh-redemptions .alert.alert--ok.alert--purple:hover{
+  background: rgba(92,44,140,.14) !important;
+  box-shadow: 0 14px 28px rgba(92,44,140,.12) !important;
+  transform: translateY(-1px);
+}
+/* ===== Correção: e-mail dentro da tabela não pode ficar branco ===== */
+.rh-redemptions .muted{
+  color: rgba(15,23,42,.62) !important;
+}
+/* =========================
+   Modern: RH Redemptions
+   ========================= */
+
+.rh-redemptions{
+  --rx-accent: rgba(92,44,140,1);
+  --rx-accent-soft: rgba(92,44,140,.10);
+  --rx-ink: rgba(15,23,42,.92);
+  --rx-muted: rgba(15,23,42,.62);
+  --rx-border: rgba(15,23,42,.10);
+}
+
+/* Título mais “produto” */
+.rh-redemptions .page-title{
+  margin-bottom: 14px;
+  letter-spacing: -0.2px;
+}
+
+/* Alert OK roxo (borda roxa + fundo suave + hover) */
+.rh-redemptions .alert.alert--ok.alert--purple{
+  border: 1px solid var(--rx-accent) !important;
+  background: var(--rx-accent-soft) !important;
+  color: var(--rx-ink) !important;
+  box-shadow: 0 10px 22px rgba(92,44,140,.08) !important;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+.rh-redemptions .alert.alert--ok.alert--purple:hover{
+  background: rgba(92,44,140,.14) !important;
+  box-shadow: 0 14px 28px rgba(92,44,140,.12) !important;
+  transform: translateY(-1px);
+}
+
+/* Card mais moderno */
+.rh-redemptions .card{
+  border: 1px solid var(--rx-border);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15,23,42,.06);
+  overflow: hidden; /* deixa a tabela “integrada” */
+}
+
+/* Wrapper da tabela sem scroll horizontal (mantém elegante) */
+.rh-redemptions .table-wrap{
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Tabela moderna */
+.rh-redemptions .table{
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.rh-redemptions .table thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: rgba(92,44,140,.06);
+  color: rgba(15,23,42,.86);
+  font-weight: 900;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+}
+
+.rh-redemptions .table th,
+.rh-redemptions .table td{
+  padding: 14px 14px;
+  vertical-align: top;
+  border-bottom: 1px solid rgba(15,23,42,.06);
+}
+
+.rh-redemptions .table tbody tr{
+  transition: background .15s ease;
+}
+
+.rh-redemptions .table tbody tr:hover{
+  background: rgba(92,44,140,.04);
+}
+
+/* Corrige o “email branco” e melhora leitura */
+.rh-redemptions .muted{
+  color: var(--rx-muted) !important;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+/* Numéricos */
+.rh-redemptions .right{ text-align: right !important; }
+
+/* ===== Ações modernas ===== */
+.rh-redemptions .rx-actions{
+  display: grid;
+  grid-template-columns: minmax(180px, 220px) auto;
+  gap: 10px;
+  justify-content: end;
+  align-items: end;
+}
+
+.rh-redemptions .rx-note{
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.rh-redemptions .rx-note__label{
+  font-size: 11px;
+  font-weight: 900;
+  color: rgba(15,23,42,.62);
+  letter-spacing: .2px;
+}
+
+.rh-redemptions .rx-note__input{
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: #fff;
+  color: var(--rx-ink);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+
+.rh-redemptions .rx-note__input:focus{
+  border-color: rgba(92,44,140,.45);
+  box-shadow: 0 0 0 4px rgba(92,44,140,.10);
+}
+
+.rh-redemptions .rx-buttons{
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.rh-redemptions .rx-btn{
+  border-radius: 12px;
+  transition: transform .10s ease, filter .15s ease;
+}
+
+.rh-redemptions .rx-btn:hover{
+  filter: brightness(1.02);
+}
+
+.rh-redemptions .rx-btn:active{
+  transform: translateY(1px);
+}
+
+/* Responsivo */
+@media (max-width: 1100px){
+  .rh-redemptions .rx-actions{
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+  .rh-redemptions .rx-buttons{
+    justify-content: flex-start;
+  }
+}
+/* =========================
+   RH - Caixa "Obs"
+   ========================= */
+
+.rh .rh-obs{
+  margin: 14px 0 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+
+  background: rgba(92,44,140,.08);
+  border: 1px solid rgba(92,44,140,.20);
+
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.rh .rh-obs__icon{
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(92,44,140,.14);
+  border: 1px solid rgba(92,44,140,.22);
+
+  font-size: 16px;
+  line-height: 1;
+  flex: 0 0 auto;
+}
+
+.rh .rh-obs__title{
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(15,23,42,.92);
+}
+
+.rh .rh-obs__text{
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: rgba(15,23,42,.74);
+}
+
+.rh .rh-obs__text strong{
+  color: rgba(92,44,140,1);
+}
+
+/* Variante "warning" (opcional) */
+.rh .rh-obs--warn{
+  background: rgba(234,179,8,.10);
+  border-color: rgba(234,179,8,.22);
+}
+.rh .rh-obs--warn .rh-obs__icon{
+  background: rgba(234,179,8,.16);
+  border-color: rgba(234,179,8,.24);
+}

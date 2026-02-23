@@ -6,51 +6,71 @@ require_once __DIR__ . '/../app/db.php';
 require_once __DIR__ . '/../app/permissions.php';
 require_admin();
 
-$u = current_user(); // header
-$me = current_user();
+$u = current_user(); // header.php
+$me = $u;
+$activePage = 'admin'; // destaca no header
+
+// Dropdown "Dashboards" no header
+try {
+  $dashboards = db()
+    ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
+    ->fetchAll(PDO::FETCH_ASSOC);
+} catch (Throwable $e) {
+  $dashboards = null;
+}
 
 $success = '';
 $error = '';
 
-$id = (int)($_GET['id'] ?? 0);
+$id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
   http_response_code(400);
   echo 'ID inválido.';
   exit;
 }
 
-function upload_profile_photo_for_user(int $userId): array {
+function upload_profile_photo_for_user(int $userId): array
+{
   if (!isset($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
     return ['ok' => true, 'path' => null, 'error' => null];
   }
 
   $file = $_FILES['profile_photo'];
-  $err = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+  $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
 
-  if ($err === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'path' => null, 'error' => null];
-  if ($err !== UPLOAD_ERR_OK) return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
+  if ($err === UPLOAD_ERR_NO_FILE)
+    return ['ok' => true, 'path' => null, 'error' => null];
+  if ($err !== UPLOAD_ERR_OK)
+    return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
 
-  $tmp = (string)($file['tmp_name'] ?? '');
-  $size = (int)($file['size'] ?? 0);
+  $tmp = (string) ($file['tmp_name'] ?? '');
+  $size = (int) ($file['size'] ?? 0);
 
-  if ($size <= 0) return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
-  if ($size > 2 * 1024 * 1024) return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
+  if ($size <= 0)
+    return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
+  if ($size > 2 * 1024 * 1024)
+    return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
 
   $imgInfo = @getimagesize($tmp);
   if ($imgInfo === false || empty($imgInfo['mime'])) {
     return ['ok' => false, 'path' => null, 'error' => 'Arquivo não é uma imagem válida.'];
   }
-  $mime = (string)$imgInfo['mime'];
+  $mime = (string) $imgInfo['mime'];
 
   $ext = null;
-  if ($mime === 'image/jpeg') $ext = 'jpg';
-  if ($mime === 'image/png')  $ext = 'png';
-  if ($mime === 'image/webp') $ext = 'webp';
+  if ($mime === 'image/jpeg')
+    $ext = 'jpg';
+  if ($mime === 'image/png')
+    $ext = 'png';
+  if ($mime === 'image/webp')
+    $ext = 'webp';
 
-  if ($ext === null) return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
+  if ($ext === null)
+    return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
 
   $dir = __DIR__ . '/../uploads/profile_photos';
-  if (!is_dir($dir)) @mkdir($dir, 0775, true);
+  if (!is_dir($dir))
+    @mkdir($dir, 0775, true);
 
   $fileName = 'u' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
   $destAbs = $dir . '/' . $fileName;
@@ -79,7 +99,7 @@ $curPerms = array_values(array_unique(array_intersect($curPerms, $allowedPerms))
 
 // EXCLUI USUÁRIO
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-  if ((int)$me['id'] === (int)$id) {
+  if ((int) $me['id'] === (int) $id) {
     $error = 'Você não pode excluir o seu próprio usuário.';
   } else {
     try {
@@ -108,13 +128,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
   $role = trim($_POST['role'] ?? 'user');
   $setor = trim($_POST['setor'] ?? '');
   $hierarquia = trim($_POST['hierarquia'] ?? 'Assistente');
-  $is_active = (int)($_POST['is_active'] ?? 1);
+  $is_active = (int) ($_POST['is_active'] ?? 1);
   $newPass = trim($_POST['new_pass'] ?? '');
-  $removePhoto = (int)($_POST['remove_photo'] ?? 0) === 1;
+  $removePhoto = (int) ($_POST['remove_photo'] ?? 0) === 1;
 
-  // Permissões (checkbox)
   $perms = $_POST['perms'] ?? [];
-  if (!is_array($perms)) $perms = [];
+  if (!is_array($perms))
+    $perms = [];
   $perms = array_values(array_unique(array_intersect($perms, $allowedPerms)));
   $permsJson = json_encode($perms, JSON_UNESCAPED_UNICODE);
 
@@ -126,13 +146,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
     $error = 'Telefone muito longo.';
   } elseif ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) {
     $error = 'Data de nascimento inválida.';
-  } elseif ($gender !== '' && !in_array($gender, ['M','F','O','N'], true)) {
+  } elseif ($gender !== '' && !in_array($gender, ['M', 'F', 'O', 'N'], true)) {
     $error = 'Gênero inválido.';
   } elseif ($newPass !== '' && strlen($newPass) < 6) {
     $error = 'A nova senha deve ter pelo menos 6 caracteres.';
   } else {
     try {
-      // E-mail duplicado?
       $stmt = db()->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
       $stmt->execute([$email, $id]);
       if ($stmt->fetch()) {
@@ -142,11 +161,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
         try {
           $photoPath = $user['profile_photo_path'] ?? null;
 
-          if ($removePhoto) $photoPath = null;
+          if ($removePhoto)
+            $photoPath = null;
 
           $up = upload_profile_photo_for_user($id);
-          if (!$up['ok']) throw new Exception((string)$up['error']);
-          if (!empty($up['path'])) $photoPath = $up['path'];
+          if (!$up['ok'])
+            throw new Exception((string) $up['error']);
+          if (!empty($up['path']))
+            $photoPath = (string) $up['path'];
 
           if ($newPass !== '') {
             $hash = password_hash($newPass, PASSWORD_DEFAULT);
@@ -187,7 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
           db()->commit();
           $success = 'Usuário atualizado com sucesso.';
 
-          // Recarrega
           $stmt = db()->prepare('SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions FROM users WHERE id = ? LIMIT 1');
           $stmt->execute([$id]);
           $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -205,193 +226,288 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
   }
 }
 
-$setores = ['FACILITIES','RH','FINANCEIRO','LOGISTICA','COMERCIAL','COMEX','DIRETORIA','CONTROLADORIA','MARKETING'];
+$setores = ['FACILITIES', 'RH', 'FINANCEIRO', 'LOGISTICA', 'COMERCIAL', 'COMEX', 'DIRETORIA', 'CONTROLADORIA', 'MARKETING'];
 $hierarquias = ['Assistente', 'Analista', 'Supervisor', 'Gestor', 'Gerente', 'Diretor'];
 
-function selected(string $a, string $b): string { return $a === $b ? 'selected' : ''; }
+function selected(string $a, string $b): string
+{
+  return $a === $b ? 'selected' : '';
+}
 ?>
 <!doctype html>
 <html lang="pt-br">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Editar Usuário — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
+  <title>Editar Usuário — <?= htmlspecialchars((string) APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/edit.css?v=<?= filemtime(__DIR__ . '/../assets/css/edit.css') ?>" />
+  <link rel="stylesheet"
+    href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet"
+    href="/assets/css/user-edit.css?v=<?= filemtime(__DIR__ . '/../assets/css/user-edit.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 
   <style>
-    .topbar{overflow:visible!important;}
-    .page{overflow:visible!important;}
-
-    .perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding-top:6px;}
-    .perm-item{display:inline-flex;align-items:center;gap:8px;margin:0;user-select:none;}
-    .perm-help{margin-top:8px;font-size:12px;opacity:.8;}
-    @media (max-width: 720px){.perm-grid{grid-template-columns:1fr;}}
-
-    .avatar-lg{width:72px;height:72px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);background:#fff;}
+    .avatar-lg{
+      width:80px;
+      height:80px;
+      border-radius:8px; /* quadrado com bordas suaves */
+      object-fit:cover;
+      border:1px solid rgba(15,23,42,.12);
+      background:#fff;
+    }
+    .avatar-lg--emoji{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+      background:rgba(255,255,255,.75);
+      border:1px solid rgba(15,23,42,.12);
+      color:rgba(15,23,42,.55);
+    }
     .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-    .file-control{padding-top:10px;height:auto;}
+    .help-row{margin-top:8px;}
   </style>
 </head>
+
 <body class="page">
 
-<?php require_once __DIR__ . '/../app/header.php'; ?>
+  <?php require_once __DIR__ . '/../app/header.php'; ?>
 
-<a class="link" href="/admin/users.php" style="display:block;margin:12px 20px;">← Voltar</a>
+  <a class="link user-edit__back" href="/admin/users.php">← Voltar</a>
 
-<main class="container">
-  <h2 class="page-title">Editar Usuário</h2>
+  <main class="container user-edit">
+    <h2 class="page-title">Editar Usuário</h2>
 
-  <div class="card card--narrow">
-    <div class="card__header">
-      <h3 class="card__title"><?= htmlspecialchars((string)$user['name'], ENT_QUOTES, 'UTF-8') ?></h3>
-      <p class="card__subtitle"><?= htmlspecialchars((string)$user['email'], ENT_QUOTES, 'UTF-8') ?></p>
-    </div>
+    <div class="card card--narrow">
+      <div class="card__header">
+        <h3 class="card__title"><?= htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8') ?></h3>
+        <p class="card__subtitle"><?= htmlspecialchars((string) $user['email'], ENT_QUOTES, 'UTF-8') ?></p>
+      </div>
 
-    <?php if ($success): ?>
-      <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
-    <?php endif; ?>
+      <?php if ($success): ?>
+        <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
+      <?php endif; ?>
 
-    <?php if ($error): ?>
-      <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
-    <?php endif; ?>
+      <?php if ($error): ?>
+        <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+      <?php endif; ?>
 
-    <form method="post" class="form form--edit" action="/admin/user_edit.php?id=<?= (int)$user['id'] ?>" enctype="multipart/form-data">
-      <div class="field field--full">
-        <label class="field__label">Foto</label>
-        <div class="photo-row">
-          <?php if (!empty($user['profile_photo_path'])): ?>
-            <img class="avatar-lg" src="<?= htmlspecialchars((string)$user['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
-          <?php else: ?>
-            <div class="avatar-lg" style="display:flex;align-items:center;justify-content:center;color:rgba(15,23,42,.45);font-weight:700;">—</div>
-          <?php endif; ?>
+      <form method="post" class="form form--edit" action="/admin/user_edit.php?id=<?= (int) $user['id'] ?>"
+        enctype="multipart/form-data">
+        <div class="field field--full">
+          <label class="field__label">Foto</label>
 
-          <div style="min-width:260px;flex:1;">
-            <input class="field__control file-control" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
-            <div class="perm-help">PNG/JPG/WEBP. Máx: 2MB.</div>
-
+          <div class="photo-row">
             <?php if (!empty($user['profile_photo_path'])): ?>
-              <label class="perm-item" style="margin-top:10px;">
-                <input type="checkbox" name="remove_photo" value="1">
-                <span>Remover foto</span>
-              </label>
+              <img class="avatar-lg" id="userPhotoPreviewImg" src="<?= htmlspecialchars((string)$user['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
+              <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" style="display:none;" aria-label="Sem foto">👤</div>
+            <?php else: ?>
+              <img class="avatar-lg" id="userPhotoPreviewImg" alt="Foto" style="display:none;" />
+              <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" aria-label="Sem foto">👤</div>
             <?php endif; ?>
+
+            <div style="min-width:260px;flex:1;">
+              <div class="file-field__row">
+                <input
+                  class="file-input"
+                  id="userProfilePhoto"
+                  name="profile_photo"
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                />
+                <label class="file-btn" for="userProfilePhoto">🖼️ Escolher foto</label>
+
+                <div class="file-meta">
+                  <span class="file-name" id="userProfilePhotoName">Nenhum arquivo selecionado</span>
+                  <span class="file-hint">PNG/JPG/WEBP • Máx: 2MB</span>
+                </div>
+
+                <?php if (!empty($user['profile_photo_path'])): ?>
+                  <label class="perm-item" style="margin-top:10px;">
+                    <input type="checkbox" name="remove_photo" value="1">
+                    <span>Remover foto</span>
+                  </label>
+                <?php endif; ?>
+              </div>
+
+              <div class="help help-row">Escolha uma foto e clique em salvar.</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label class="field__label" for="name">Nome completo</label>
-        <input class="field__control" id="name" name="name" type="text" required value="<?= htmlspecialchars((string)$user['name'], ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
+        <div class="field">
+          <label class="field__label" for="name">Nome completo</label>
+          <input class="field__control" id="name" name="name" type="text" required
+            value="<?= htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="email">E-mail</label>
-        <input class="field__control" id="email" name="email" type="email" required value="<?= htmlspecialchars((string)$user['email'], ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
+        <div class="field">
+          <label class="field__label" for="email">E-mail</label>
+          <input class="field__control" id="email" name="email" type="email" required
+            value="<?= htmlspecialchars((string) $user['email'], ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="phone">Telefone</label>
-        <input class="field__control" id="phone" name="phone" type="tel" maxlength="20" value="<?= htmlspecialchars((string)($user['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
+        <div class="field">
+          <label class="field__label" for="phone">Telefone</label>
+          <input class="field__control" id="phone" name="phone" type="tel" maxlength="20"
+            value="<?= htmlspecialchars((string) ($user['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="birth_date">Data de nascimento</label>
-        <input class="field__control" id="birth_date" name="birth_date" type="date" value="<?= htmlspecialchars((string)($user['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
+        <div class="field">
+          <label class="field__label" for="birth_date">Data de nascimento</label>
+          <input class="field__control" id="birth_date" name="birth_date" type="date"
+            value="<?= htmlspecialchars((string) ($user['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="gender">Gênero</label>
-        <select class="field__control" id="gender" name="gender">
-          <option value="" <?= selected('', (string)($user['gender'] ?? '')) ?>>Selecione...</option>
-          <option value="M" <?= selected('M', (string)($user['gender'] ?? '')) ?>>Masculino</option>
-          <option value="F" <?= selected('F', (string)($user['gender'] ?? '')) ?>>Feminino</option>
-          <option value="O" <?= selected('O', (string)($user['gender'] ?? '')) ?>>Outro</option>
-          <option value="N" <?= selected('N', (string)($user['gender'] ?? '')) ?>>Prefere não informar</option>
-        </select>
-      </div>
+        <div class="field">
+          <label class="field__label" for="gender">Gênero</label>
+          <select class="field__control" id="gender" name="gender">
+            <option value="" <?= selected('', (string) ($user['gender'] ?? '')) ?>>Selecione...</option>
+            <option value="M" <?= selected('M', (string) ($user['gender'] ?? '')) ?>>Masculino</option>
+            <option value="F" <?= selected('F', (string) ($user['gender'] ?? '')) ?>>Feminino</option>
+            <option value="O" <?= selected('O', (string) ($user['gender'] ?? '')) ?>>Outro</option>
+            <option value="N" <?= selected('N', (string) ($user['gender'] ?? '')) ?>>Prefere não informar</option>
+          </select>
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="setor">Setor</label>
-        <select class="field__control" id="setor" name="setor" required>
-          <?php
-            $curSetor = (string)($user['setor'] ?? '');
+        <div class="field">
+          <label class="field__label" for="setor">Setor</label>
+          <select class="field__control" id="setor" name="setor" required>
+            <?php
+            $curSetor = (string) ($user['setor'] ?? '');
             echo '<option value="">Selecione...</option>';
             foreach ($setores as $s) {
               echo '<option value="' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '" ' . ($s === $curSetor ? 'selected' : '') . '>' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '</option>';
             }
-          ?>
-        </select>
-      </div>
+            ?>
+          </select>
+        </div>
 
-      <div class="field">
-        <label class="field__label" for="hierarquia">Hierarquia</label>
-        <select class="field__control" id="hierarquia" name="hierarquia" required>
-          <?php
-            $cur = (string)($user['hierarquia'] ?? 'Assistente');
+        <div class="field">
+          <label class="field__label" for="hierarquia">Hierarquia</label>
+          <select class="field__control" id="hierarquia" name="hierarquia" required>
+            <?php
+            $cur = (string) ($user['hierarquia'] ?? 'Assistente');
             foreach ($hierarquias as $h) {
               echo '<option value="' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '" ' . ($cur === $h ? 'selected' : '') . '>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</option>';
             }
-          ?>
-        </select>
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="role">Perfil</label>
-        <select class="field__control" id="role" name="role" required>
-          <option value="user" <?= (($user['role'] ?? '') === 'user') ? 'selected' : '' ?>>Usuário</option>
-          <option value="admin" <?= (($user['role'] ?? '') === 'admin') ? 'selected' : '' ?>>Administrador</option>
-        </select>
-      </div>
-
-      <div class="field field--full">
-        <label class="field__label">Permissões (Administração)</label>
-        <div class="perm-grid">
-          <?php foreach (PERMISSION_CATALOG as $perm => $meta): ?>
-            <label class="perm-item">
-              <input type="checkbox" name="perms[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>" <?= in_array($perm, $curPerms, true) ? 'checked' : '' ?>>
-              <span><?= htmlspecialchars((string)($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
-            </label>
-          <?php endforeach; ?>
+            ?>
+          </select>
         </div>
-        <div class="perm-help">Marque as áreas do Admin que este usuário poderá acessar.</div>
-      </div>
 
-      <div class="field">
-        <label class="field__label" for="is_active">Status</label>
-        <select class="field__control" id="is_active" name="is_active" required>
-          <option value="1" <?= ((int)($user['is_active'] ?? 0) === 1) ? 'selected' : '' ?>>Ativo</option>
-          <option value="0" <?= ((int)($user['is_active'] ?? 0) === 0) ? 'selected' : '' ?>>Inativo</option>
-        </select>
-      </div>
+        <div class="field">
+          <label class="field__label" for="role">Perfil</label>
+          <select class="field__control" id="role" name="role" required>
+            <option value="user" <?= (($user['role'] ?? '') === 'user') ? 'selected' : '' ?>>Usuário</option>
+            <option value="admin" <?= (($user['role'] ?? '') === 'admin') ? 'selected' : '' ?>>Administrador</option>
+          </select>
+        </div>
 
-      <div class="field field--full">
-        <label class="field__label" for="new_pass">Nova senha (deixe em branco para não alterar)</label>
-        <input class="field__control" id="new_pass" name="new_pass" type="password" autocomplete="new-password" />
-        <div class="help">Se ficar em branco, a senha atual será mantida.</div>
-      </div>
+        <div class="field field--full">
+          <label class="field__label">Permissões (Administração)</label>
+          <div class="perm-grid">
+            <?php foreach (PERMISSION_CATALOG as $perm => $meta): ?>
+              <label class="perm-item">
+                <input type="checkbox" name="perms[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>"
+                  <?= in_array($perm, $curPerms, true) ? 'checked' : '' ?>>
+                <span><?= htmlspecialchars((string) ($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
+              </label>
+            <?php endforeach; ?>
+          </div>
+          <div class="perm-help">Marque as áreas do Admin que este usuário poderá acessar.</div>
+        </div>
 
-      <div class="form-actions">
-        <a class="link link--pill" href="/admin/users.php">Cancelar</a>
-        <button type="submit" class="btn btn--primary">Salvar alterações</button>
-      </div>
-    </form>
+        <div class="field">
+          <label class="field__label" for="is_active">Status</label>
+          <select class="field__control" id="is_active" name="is_active" required>
+            <option value="1" <?= ((int) ($user['is_active'] ?? 0) === 1) ? 'selected' : '' ?>>Ativo</option>
+            <option value="0" <?= ((int) ($user['is_active'] ?? 0) === 0) ? 'selected' : '' ?>>Inativo</option>
+          </select>
+        </div>
 
-    <form method="post" action="/admin/user_edit.php?id=<?= (int)$user['id'] ?>" onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.');" style="margin-top: 14px;">
-      <input type="hidden" name="action" value="delete">
-      <button type="submit" class="btn btn--danger" <?= ((int)$me['id'] === (int)$user['id']) ? 'disabled' : '' ?>
-        title="<?= ((int)$me['id'] === (int)$user['id']) ? 'Você não pode excluir o seu próprio usuário.' : 'Excluir usuário' ?>">
-        Excluir usuário
-      </button>
-    </form>
+        <div class="field field--full">
+          <label class="field__label" for="new_pass">Nova senha (deixe em branco para não alterar)</label>
+          <input class="field__control" id="new_pass" name="new_pass" type="password" autocomplete="new-password" />
+          <div class="help">Se ficar em branco, a senha atual será mantida.</div>
+        </div>
 
-  </div>
-</main>
+        <div class="form-actions">
+          <a class="link link--pill" href="/admin/users.php">← Cancelar</a>
+          <button type="submit" class="btn btn--primary">💾 Salvar alterações</button>
+        </div>
+      </form>
 
-<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+      <form method="post" action="/admin/user_edit.php?id=<?= (int) $user['id'] ?>"
+        onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.');"
+        class="delete-form">
+        <input type="hidden" name="action" value="delete">
+        <button type="submit" class="btn btn--danger" <?= ((int) $me['id'] === (int) $user['id']) ? 'disabled' : '' ?>
+          title="<?= ((int) $me['id'] === (int) $user['id']) ? 'Você não pode excluir o seu próprio usuário.' : 'Excluir usuário' ?>">
+          🗑️ Excluir usuário
+        </button>
+      </form>
+
+    </div>
+  </main>
+
+  <?php require_once __DIR__ . '/../app/footer.php'; ?>
+
+  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
+  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+  <script src="/assets/js/user-edit.js?v=<?= filemtime(__DIR__ . '/../assets/js/user-edit.js') ?>"></script>
+
+  <script>
+    (function(){
+      const input = document.getElementById('userProfilePhoto');
+      const img = document.getElementById('userPhotoPreviewImg');
+      const emoji = document.getElementById('userPhotoEmoji');
+      const remove = document.querySelector('input[name="remove_photo"]');
+      const fileNameEl = document.getElementById('userProfilePhotoName');
+
+      if (!input || !img || !emoji) return;
+
+      function showEmoji(){
+        img.style.display = 'none';
+        img.removeAttribute('src');
+        emoji.style.display = '';
+      }
+
+      function showImg(src){
+        img.src = src;
+        img.style.display = '';
+        emoji.style.display = 'none';
+      }
+
+      input.addEventListener('change', function(){
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+
+        if (fileNameEl) fileNameEl.textContent = file.name;
+
+        if (remove && remove.checked) remove.checked = false;
+
+        const url = URL.createObjectURL(file);
+        showImg(url);
+
+        img.onload = () => URL.revokeObjectURL(url);
+      });
+
+      if (remove) {
+        remove.addEventListener('change', function(){
+          if (!remove.checked) return;
+
+          input.value = '';
+          if (fileNameEl) fileNameEl.textContent = 'Nenhum arquivo selecionado';
+          showEmoji();
+        });
+      }
+    })();
+  </script>
 
 </body>
+
 </html>

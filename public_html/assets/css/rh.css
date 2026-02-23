@@ -1,0 +1,119 @@
+/* =========================
+   rh.css (Admin / RH)
+   ========================= */
+
+.rh .rh-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1000px) {
+  .rh .rh-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rh .rh-card {
+  background: var(--card);
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 14px;
+  box-shadow: 0 10px 28px rgba(15,23,42,.06);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+
+.rh .rh-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 34px rgba(15,23,42,.10);
+  border-color: rgba(92,44,140,.25);
+}
+
+.rh .rh-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rh .rh-badge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .3px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(92,44,140,.10);
+  color: rgba(92,44,140,1);
+  border: 1px solid rgba(92,44,140,.18);
+  white-space: nowrap;
+}
+
+.rh .rh-title {
+  font-size: 16px;
+  font-weight: 900;
+  margin: 0;
+  color: var(--ink);
+}
+
+.rh .rh-sub {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.rh .rh-actions {
+  margin-top: 6px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Botão moderno (não depende do btn--primary) */
+.rh .btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: #fff;
+  color: rgba(15,23,42,.92);
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+  transition: background .15s ease, border-color .15s ease, transform .05s ease, box-shadow .15s ease;
+  box-shadow: 0 6px 16px rgba(15,23,42,.06);
+}
+
+.rh .btn-modern:hover {
+  background: rgba(92,44,140,.06);
+  border-color: rgba(92,44,140,.22);
+  box-shadow: 0 10px 20px rgba(15,23,42,.08);
+}
+
+.rh .btn-modern:active {
+  transform: translateY(1px);
+}
+
+.rh .btn-modern__icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Variante roxa discreta */
+.rh .btn-modern--accent {
+  background: rgba(92,44,140,1);
+  border-color: rgba(92,44,140,1);
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(92,44,140,.22);
+}
+
+.rh .btn-modern--accent:hover {
+  background: rgba(80,36,120,1);
+  border-color: rgba(80,36,120,1);
+}

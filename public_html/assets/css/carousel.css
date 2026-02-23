@@ -13,33 +13,88 @@
   position: relative;
   margin: 24px 0;
   background: linear-gradient(135deg, rgba(92,44,140,.05) 0%, rgba(172,200,54,.05) 100%);
-  padding: 0;              /* edge-to-edge */
-  border-radius: 0;
-  overflow: visible;       /* não corta setas/dots */
+  padding: 0;
+  border-radius: 0;         /* sem cantos arredondados */
+  overflow: visible;        /* não corta setas/dots */
 }
 
-.carousel__viewport{
-  overflow: hidden;        /* corta só o conteúdo */
+/* Viewport (ALTURA DEFINITIVA AQUI) */
+#mainCarousel .carousel__viewport{
+  overflow: hidden;
+  height: min(92vh, 720px); /* quase toda a tela */
   border-radius: 0;
 }
 
+/* Track */
 .carousel__track{
   display: flex;
+  height: 100%;
   transition: transform .6s cubic-bezier(.23, 1, .32, 1);
+  will-change: transform;
 }
 
 /* Slide base */
 .slide{
   min-width: 100%;
+  height: 100%;
   box-sizing: border-box;
   display: flex;
   justify-content: center;
-  padding: 0;              /* o texto usa .slide__doc com margin; imagem é full */
+  padding: 0;
 }
 
-/* Mantém compatibilidade com .slide__inner (imagens) */
+/* Compat imagem */
 .slide__inner{
   width: 100%;
+  height: 100%;
+}
+
+/* Slide com imagem: fundo preenche, imagem não estica */
+.slide--image{
+  border-radius: 0;         /* sem cantos arredondados */
+  overflow: hidden;
+}
+
+.slide--image .slide__inner{
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(92,44,140,.06), rgba(172,200,54,.06));
+}
+
+.slide--image .slide__img-full{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;      /* não estica; imagem grande diminui, pequena não distorce */
+  object-position:center;
+  display: block;
+  background: transparent;
+}
+
+/* Slide com texto (scroll interno se precisar) */
+.slide--text{
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.slide--text .slide__doc{
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px;
+}
+
+/* Slide insight */
+.slide--insight .insight{
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
 }
 
 /* Setas */
@@ -50,7 +105,7 @@
   z-index: 10;
   width: 48px;
   height: 48px;
-  border-radius: 50%;
+  border-radius: 50%; /* seta circular ok */
   border: none;
   background: #fff;
   color: var(--primary-color);
@@ -76,7 +131,7 @@
   height: 24px;
 }
 
-/* Dots */
+/* Dots (indicador embaixo, estilo “pílula” quando ativo) */
 .carousel__dots{
   position: absolute;
   bottom: 12px;
@@ -90,11 +145,11 @@
 .carousel__dot{
   width: 10px;
   height: 10px;
-  border-radius: 10px;
-  background: rgba(92,44,140,.2);
+  border-radius: 999px;
+  background: rgba(92,44,140,.22);
   border: none;
   cursor: pointer;
-  transition: all .3s ease;
+  transition: all .25s ease;
   padding: 0;
 }
 
@@ -103,7 +158,12 @@
   background: var(--primary-color);
 }
 
-/* Mobile */
+/* Responsivo */
 @media (max-width: 768px){
   .carousel__arrow{ display: none; }
+  #mainCarousel .carousel__viewport{ height: 82vh; }
+}
+
+@media (max-width: 420px){
+  #mainCarousel .carousel__viewport{ height: 78vh; }
 }

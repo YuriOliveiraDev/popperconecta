@@ -7,7 +7,7 @@ require_once __DIR__ . '/app/db.php';
 require_login();
 
 $u = current_user();
-$id = (int)($u['id'] ?? 0);
+$id = (int) ($u['id'] ?? 0);
 if ($id <= 0) {
   http_response_code(401);
   echo 'Sessão inválida.';
@@ -17,38 +17,48 @@ if ($id <= 0) {
 $success = '';
 $error = '';
 
-function upload_my_photo(int $userId): array {
+function upload_my_photo(int $userId): array
+{
   if (!isset($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
     return ['ok' => true, 'path' => null, 'error' => null];
   }
 
   $file = $_FILES['profile_photo'];
-  $err = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+  $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
 
-  if ($err === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'path' => null, 'error' => null];
-  if ($err !== UPLOAD_ERR_OK) return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
+  if ($err === UPLOAD_ERR_NO_FILE)
+    return ['ok' => true, 'path' => null, 'error' => null];
+  if ($err !== UPLOAD_ERR_OK)
+    return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
 
-  $tmp = (string)($file['tmp_name'] ?? '');
-  $size = (int)($file['size'] ?? 0);
+  $tmp = (string) ($file['tmp_name'] ?? '');
+  $size = (int) ($file['size'] ?? 0);
 
-  if ($size <= 0) return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
-  if ($size > 2 * 1024 * 1024) return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
+  if ($size <= 0)
+    return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
+  if ($size > 2 * 1024 * 1024)
+    return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
 
   $imgInfo = @getimagesize($tmp);
   if ($imgInfo === false || empty($imgInfo['mime'])) {
     return ['ok' => false, 'path' => null, 'error' => 'Arquivo não é uma imagem válida.'];
   }
-  $mime = (string)$imgInfo['mime'];
+  $mime = (string) $imgInfo['mime'];
 
   $ext = null;
-  if ($mime === 'image/jpeg') $ext = 'jpg';
-  if ($mime === 'image/png')  $ext = 'png';
-  if ($mime === 'image/webp') $ext = 'webp';
+  if ($mime === 'image/jpeg')
+    $ext = 'jpg';
+  if ($mime === 'image/png')
+    $ext = 'png';
+  if ($mime === 'image/webp')
+    $ext = 'webp';
 
-  if ($ext === null) return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
+  if ($ext === null)
+    return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
 
   $dir = __DIR__ . '/uploads/profile_photos';
-  if (!is_dir($dir)) @mkdir($dir, 0775, true);
+  if (!is_dir($dir))
+    @mkdir($dir, 0775, true);
 
   $fileName = 'u' . $userId . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
   $destAbs = $dir . '/' . $fileName;
@@ -76,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $birth_date = trim($_POST['birth_date'] ?? '');
   $gender = trim($_POST['gender'] ?? '');
   $newPass = trim($_POST['new_pass'] ?? '');
-  $removePhoto = (int)($_POST['remove_photo'] ?? 0) === 1;
+  $removePhoto = (int) ($_POST['remove_photo'] ?? 0) === 1;
 
   if ($name === '' || $email === '') {
     $error = 'Nome e e-mail são obrigatórios.';
@@ -86,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $error = 'Telefone muito longo.';
   } elseif ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) {
     $error = 'Data de nascimento inválida.';
-  } elseif ($gender !== '' && !in_array($gender, ['M','F','O','N'], true)) {
+  } elseif ($gender !== '' && !in_array($gender, ['M', 'F', 'O', 'N'], true)) {
     $error = 'Gênero inválido.';
   } elseif ($newPass !== '' && strlen($newPass) < 6) {
     $error = 'A nova senha deve ter pelo menos 6 caracteres.';
@@ -100,11 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         db()->beginTransaction();
         try {
           $photoPath = $uRow['profile_photo_path'] ?? null;
-          if ($removePhoto) $photoPath = null;
+          if ($removePhoto)
+            $photoPath = null;
 
           $up = upload_my_photo($id);
-          if (!$up['ok']) throw new Exception((string)$up['error']);
-          if (!empty($up['path'])) $photoPath = $up['path'];
+          if (!$up['ok'])
+            throw new Exception((string) $up['error']);
+          if (!empty($up['path']))
+            $photoPath = $up['path'];
 
           if ($newPass !== '') {
             $hash = password_hash($newPass, PASSWORD_DEFAULT);
@@ -151,125 +164,298 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $activePage = 'me';
 
-function selected(string $a, string $b): string { return $a === $b ? 'selected' : ''; }
+function selected(string $a, string $b): string
+{
+  return $a === $b ? 'selected' : '';
+}
 ?>
 <!doctype html>
 <html lang="pt-br">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Meus dados — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
+  <title>Meus dados — <?= htmlspecialchars((string) APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 
   <style>
-    .avatar-lg{width:72px;height:72px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);background:#fff;}
-    .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
-    .file-control{padding-top:10px;height:auto;}
-    .help-row{margin-top:8px;}
+    .avatar-lg {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(15, 23, 42, .12);
+      background: #fff;
+    }
+
+    .avatar-lg--emoji {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      background: rgba(255, 255, 255, .75);
+      border: 1px solid rgba(15, 23, 42, .12);
+      color: rgba(15, 23, 42, .55);
+    }
+
+    .photo-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .help-row {
+      margin-top: 8px;
+    }
   </style>
+
+  <style>
+  .avatar-lg{
+    width:80px;
+    height:80px;
+    border-radius:8px; /* quadrado com bordas suaves */
+    object-fit:cover;
+    border:1px solid rgba(15,23,42,.12);
+    background:#fff;
+  }
+  .avatar-lg--emoji{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:28px;
+    background:rgba(255,255,255,.75);
+    border:1px solid rgba(15,23,42,.12);
+    color:rgba(15,23,42,.55);
+  }
+  .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .help-row{margin-top:8px;}
+</style>
 </head>
+
 <body class="page">
 
-<?php require_once __DIR__ . '/app/header.php'; ?>
+  <?php require_once __DIR__ . '/app/header.php'; ?>
 
-<main class="container">
-  <h2 class="page-title">Meus dados</h2>
+  <main class="container">
+    <h2 class="page-title">Meus dados</h2>
 
-  <section class="card card--narrow">
-    <div class="card__header">
-      <h3 class="card__title">Editar dados</h3>
-      <p class="card__subtitle">Atualize seus dados e sua foto.</p>
-    </div>
+    <section class="card card--narrow">
+      <div class="card__header">
+        <h3 class="card__title">Editar dados</h3>
+        <p class="card__subtitle">Atualize seus dados e sua foto.</p>
+      </div>
 
-    <?php if ($success): ?>
-      <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
-    <?php endif; ?>
+      <?php if ($success): ?>
+        <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
+      <?php endif; ?>
 
-    <?php if ($error): ?>
-      <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
-    <?php endif; ?>
+      <?php if ($error): ?>
+        <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+      <?php endif; ?>
 
-    <form method="post" class="form form--edit" action="/me.php" autocomplete="off" enctype="multipart/form-data">
-      <div class="field field--full">
-        <label class="field__label">Foto</label>
-        <div class="photo-row">
-          <?php if (!empty($uRow['profile_photo_path'])): ?>
-            <img class="avatar-lg" src="<?= htmlspecialchars((string)$uRow['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
-          <?php else: ?>
-            <div class="avatar-lg" style="display:flex;align-items:center;justify-content:center;color:rgba(15,23,42,.45);font-weight:700;">—</div>
-          <?php endif; ?>
+      <form method="post" class="form form--edit" action="/me.php" autocomplete="off" enctype="multipart/form-data">
+        <div class="field field--full">
+          <label class="field__label">Foto</label>
 
-          <div style="min-width:260px;flex:1;">
-            <input class="field__control file-control" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
-            <div class="help help-row">PNG/JPG/WEBP. Máx: 2MB.</div>
-
-            <?php if (!empty($uRow['profile_photo_path'])): ?>
-              <label class="perm-item" style="margin-top:10px;">
-                <input type="checkbox" name="remove_photo" value="1">
-                <span>Remover foto</span>
-              </label>
+          <div class="photo-row">
+            <?php if (!empty($user['profile_photo_path'])): ?>
+              <img class="avatar-lg" id="userPhotoPreviewImg"
+                src="<?= htmlspecialchars((string) $user['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
+              <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" style="display:none;" aria-label="Sem foto">👤
+              </div>
+            <?php else: ?>
+              <img class="avatar-lg" id="userPhotoPreviewImg" alt="Foto" style="display:none;" />
+              <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" aria-label="Sem foto">👤</div>
             <?php endif; ?>
+
+            <div style="min-width:260px;flex:1;">
+              <div class="file-field__row">
+                <input class="file-input" id="userProfilePhoto" name="profile_photo" type="file"
+                  accept="image/png,image/jpeg,image/webp" />
+                <label class="file-btn" for="userProfilePhoto">🖼️ Escolher foto</label>
+
+                <div class="file-meta">
+                  <span class="file-name" id="userProfilePhotoName">Nenhum arquivo selecionado</span>
+                  <span class="file-hint">PNG/JPG/WEBP • Máx: 2MB</span>
+                </div>
+
+                <?php if (!empty($user['profile_photo_path'])): ?>
+                  <label class="perm-item" style="margin-top:10px;">
+                    <input type="checkbox" name="remove_photo" value="1">
+                    <span>Remover foto</span>
+                  </label>
+                <?php endif; ?>
+              </div>
+
+              <div class="help help-row">Escolha uma foto e clique em salvar.</div>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label class="field__label" for="name">Nome</label>
-        <input class="field__control" id="name" name="name" type="text" required value="<?= htmlspecialchars((string)($uRow['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="email">E-mail</label>
-        <input class="field__control" id="email" name="email" type="email" required value="<?= htmlspecialchars((string)($uRow['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="phone">Telefone</label>
-        <input class="field__control" id="phone" name="phone" type="tel" maxlength="20" value="<?= htmlspecialchars((string)($uRow['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="birth_date">Data de Nascimento</label>
-        <input class="field__control" id="birth_date" name="birth_date" type="date" value="<?= htmlspecialchars((string)($uRow['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
-      </div>
-
-      <div class="field">
-        <label class="field__label" for="gender">Gênero</label>
-        <select class="field__control" id="gender" name="gender">
-          <option value="" <?= selected('', (string)($uRow['gender'] ?? '')) ?>>Selecione...</option>
-          <option value="M" <?= selected('M', (string)($uRow['gender'] ?? '')) ?>>Masculino</option>
-          <option value="F" <?= selected('F', (string)($uRow['gender'] ?? '')) ?>>Feminino</option>
-          <option value="O" <?= selected('O', (string)($uRow['gender'] ?? '')) ?>>Outro</option>
-          <option value="N" <?= selected('N', (string)($uRow['gender'] ?? '')) ?>>Prefere não informar</option>
-        </select>
-      </div>
-
-      <div class="field field--full">
-        <label class="field__label" for="new_pass">Nova senha (opcional)</label>
-        <input class="field__control" id="new_pass" name="new_pass" type="password" autocomplete="new-password" />
-        <div class="help">Deixe em branco para não alterar.</div>
-      </div>
-
-      <div class="field field--full">
-        <div class="help">
-          Perfil: <strong><?= htmlspecialchars((string)($uRow['role'] ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
-          <?php if (!empty($uRow['setor'])): ?> | Setor: <strong><?= htmlspecialchars((string)$uRow['setor'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?>
-          <?php if (!empty($uRow['hierarquia'])): ?> | Hierarquia: <strong><?= htmlspecialchars((string)$uRow['hierarquia'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?>
+        <div class="field">
+          <label class="field__label" for="name">Nome</label>
+          <input class="field__control" id="name" name="name" type="text" required
+            value="<?= htmlspecialchars((string) ($uRow['name'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
-      </div>
 
-      <div class="form-actions">
-        <a class="link link--pill" href="/index.php">Voltar</a>
-        <button type="submit" class="btn btn--primary">Salvar</button>
-      </div>
-    </form>
-  </section>
-</main>
+        <div class="field">
+          <label class="field__label" for="email">E-mail</label>
+          <input class="field__control" id="email" name="email" type="email" required
+            value="<?= htmlspecialchars((string) ($uRow['email'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
-<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
+        <div class="field">
+          <label class="field__label" for="phone">Telefone</label>
+          <input class="field__control" id="phone" name="phone" type="tel" maxlength="20"
+            value="<?= htmlspecialchars((string) ($uRow['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
 
+        <div class="field">
+          <label class="field__label" for="birth_date">Data de Nascimento</label>
+          <input class="field__control" id="birth_date" name="birth_date" type="date"
+            value="<?= htmlspecialchars((string) ($uRow['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="gender">Gênero</label>
+          <select class="field__control" id="gender" name="gender">
+            <option value="" <?= selected('', (string) ($uRow['gender'] ?? '')) ?>>Selecione...</option>
+            <option value="M" <?= selected('M', (string) ($uRow['gender'] ?? '')) ?>>Masculino</option>
+            <option value="F" <?= selected('F', (string) ($uRow['gender'] ?? '')) ?>>Feminino</option>
+            <option value="O" <?= selected('O', (string) ($uRow['gender'] ?? '')) ?>>Outro</option>
+            <option value="N" <?= selected('N', (string) ($uRow['gender'] ?? '')) ?>>Prefere não informar</option>
+          </select>
+        </div>
+
+        <div class="field field--full">
+          <label class="field__label" for="new_pass">Nova senha (opcional)</label>
+          <input class="field__control" id="new_pass" name="new_pass" type="password" autocomplete="new-password" />
+          <div class="help">Deixe em branco para não alterar.</div>
+        </div>
+
+        <div class="field field--full">
+          <div class="help">
+            Perfil: <strong><?= htmlspecialchars((string) ($uRow['role'] ?? ''), ENT_QUOTES, 'UTF-8') ?></strong>
+            <?php if (!empty($uRow['setor'])): ?> | Setor:
+              <strong><?= htmlspecialchars((string) $uRow['setor'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?>
+            <?php if (!empty($uRow['hierarquia'])): ?> | Hierarquia:
+              <strong><?= htmlspecialchars((string) $uRow['hierarquia'], ENT_QUOTES, 'UTF-8') ?></strong><?php endif; ?>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a class="link link--pill" href="/index.php">Voltar</a>
+          <button type="submit" class="btn btn--primary">Salvar</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <?php require_once __DIR__ . '/app/footer.php'; ?>
+
+  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
+  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
+
+  <script>
+    (function () {
+      const input = document.getElementById('meProfilePhoto');
+      const img = document.getElementById('mePhotoPreviewImg');
+      const emoji = document.getElementById('mePhotoEmoji');
+      const remove = document.querySelector('input[name="remove_photo"]');
+      const fileNameEl = document.getElementById('meProfilePhotoName');
+
+      if (!input || !img || !emoji) return;
+
+      function showEmoji() {
+        img.style.display = 'none';
+        img.removeAttribute('src');
+        emoji.style.display = '';
+      }
+
+      function showImg(src) {
+        img.src = src;
+        img.style.display = '';
+        emoji.style.display = 'none';
+      }
+
+      input.addEventListener('change', function () {
+        const file = input.files && input.files[0] ? input.files[0] : null;
+        if (!file) return;
+
+        if (fileNameEl) fileNameEl.textContent = file.name;
+
+        if (remove && remove.checked) remove.checked = false;
+
+        const url = URL.createObjectURL(file);
+        showImg(url);
+
+        img.onload = () => URL.revokeObjectURL(url);
+      });
+
+      if (remove) {
+        remove.addEventListener('change', function () {
+          if (!remove.checked) return;
+
+          input.value = '';
+          if (fileNameEl) fileNameEl.textContent = 'Nenhum arquivo selecionado';
+          showEmoji();
+        });
+      }
+    })();
+  </script>
+<script>
+(function(){
+  const input = document.getElementById('userProfilePhoto');
+  const img = document.getElementById('userPhotoPreviewImg');
+  const emoji = document.getElementById('userPhotoEmoji');
+  const remove = document.querySelector('input[name="remove_photo"]');
+  const fileNameEl = document.getElementById('userProfilePhotoName');
+
+  if (!input || !img || !emoji) return;
+
+  function showEmoji(){
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    emoji.style.display = '';
+  }
+
+  function showImg(src){
+    img.src = src;
+    img.style.display = '';
+    emoji.style.display = 'none';
+  }
+
+  input.addEventListener('change', function(){
+    const file = input.files && input.files[0] ? input.files[0] : null;
+    if (!file) return;
+
+    if (fileNameEl) fileNameEl.textContent = file.name;
+
+    if (remove && remove.checked) remove.checked = false;
+
+    const url = URL.createObjectURL(file);
+    showImg(url);
+
+    img.onload = () => URL.revokeObjectURL(url);
+  });
+
+  if (remove) {
+    remove.addEventListener('change', function(){
+      if (!remove.checked) return;
+
+      input.value = '';
+      if (fileNameEl) fileNameEl.textContent = 'Nenhum arquivo selecionado';
+      showEmoji();
+    });
+  }
+})();
+</script>
 </body>
+
 </html>

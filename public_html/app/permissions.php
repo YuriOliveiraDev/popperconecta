@@ -9,8 +9,10 @@ const PERMISSION_CATALOG = [
   'admin.users'        => ['label' => 'Usuários',      'icon' => '👥', 'url' => '/admin/users.php'],
   'admin.metrics'      => ['label' => 'Métricas',      'icon' => '🧮', 'url' => '/admin/metrics.php'],
   'admin.comunicados'  => ['label' => 'Comunicados',   'icon' => '📢', 'url' => '/admin/comunicados.php'],
-  'admin.rh'           => ['label' => 'RH',           'icon' => '🧑‍💼', 'url' => '/admin/rh.php'],
-  // Futuro: 'admin.popper_coins' => [...]
+
+  // RH (página “hub”)
+  'admin.rh'           => ['label' => 'RH',            'icon' => '🧑‍💼', 'url' => '/admin/rh.php'],
+
 ];
 
 /**

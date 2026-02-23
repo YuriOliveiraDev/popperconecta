@@ -25,14 +25,16 @@ $current_dash = 'financeiro';
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Financeiro — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
-  <!-- ✅ CSS atualizados com cache-busting -->
+  <!-- ✅ CSS globais + específicos (igual aos outros) -->
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 </head>
 <body class="page">
 
-  <!-- ✅ Header antigo substituído pelo template -->
+  <!-- ✅ Header (igual aos outros) -->
   <?php require_once __DIR__ . '/app/header.php'; ?>
 
   <main class="container">
@@ -68,52 +70,18 @@ $current_dash = 'financeiro';
     </section>
   </main>
 
-  <!-- ✅ Adicionado: script para os dropdowns do header funcionarem -->
+  <!-- ✅ Footer (igual aos outros) -->
+  <?php require_once __DIR__ . '/app/footer.php'; ?>
+
+  <!-- ✅ JS global + específico (igual aos outros) -->
+  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
 
+  <!-- ✅ Passa dados do PHP para o JS (sem PHP dentro do .js) -->
   <script>
-    const brl = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
-
-    function setText(id, text){
-      const el = document.getElementById(id);
-      if (el) el.textContent = text;
-    }
-    function num(v){ return (typeof v === 'number' && isFinite(v)) ? v : 0; }
-
-    function render(payload){
-      const v = payload.values || {};
-      const updatedAt = payload.updated_at || '—';
-
-      const faturado = num(v.faturado_dia);
-      const contas = num(v.contas_pagar_dia);
-
-      setText('kpi-faturado-dia', brl.format(faturado));
-      setText('kpi-contas-pagar-dia', brl.format(contas));
-      setText('kpi-fin-updated', `Atualizado: ${updatedAt}`);
-
-      const tbody = document.getElementById('finTableBody');
-      if (tbody){
-        tbody.innerHTML = '';
-        const rows = [
-          ['Faturado no dia', brl.format(faturado)],
-          ['Contas a pagar no dia', brl.format(contas)],
-        ];
-        rows.forEach(([k,val]) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${k}</td><td class="right">${val}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-    }
-
-    async function refresh(){
-      const res = await fetch('/api/dashboard-data.php?dash=financeiro', { cache: 'no-store' });
-      const payload = await res.json();
-      render(payload);
-    }
-
-    refresh();
-    setInterval(refresh, 5000);
+    window.DASH_CURRENT = <?= json_encode($current_dash, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
   </script>
+
+  <script src="/assets/js/financeiro.js?v=<?= filemtime(__DIR__ . '/assets/js/financeiro.js') ?>"></script>
 </body>
 </html>

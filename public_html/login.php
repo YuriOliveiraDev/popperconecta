@@ -59,9 +59,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     <link rel="stylesheet" type="text/css" href="/assets/css/util.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/auth.css">
     <!---->
+    <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
 </head>
-<body>
-    
+<body class="page">
+
+  <main>
     <div class="limiter">
         <div class="container-login100">
             <div class="wrap-login100">
@@ -109,8 +111,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             </div>
         </div>
     </div>
-    
-    
+  </main>
+
+  <?php require_once __DIR__ . '/app/footer.php'; ?>
+
 <!---->
     <script src="/assets/vendor/jquery/jquery-3.2.1.min.js"></script>
 <!---->

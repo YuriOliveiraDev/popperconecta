@@ -2,10 +2,12 @@
 declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
-require_admin();
+require_admin(); // Troque para require_login() se quiser testar sem ser admin
 
 $u = current_user();
+$activePage = 'admin'; // destaca no header
 
+// Dropdown "Dashboards" no header
 try {
   $dashboards = db()
     ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
@@ -152,227 +154,127 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Comunicados — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <!-- CSS global -->
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
-
-  <style>
-    .com-form, .com-form *{box-sizing:border-box;}
-    .com-form{margin-top:10px;}
-    .com-form label{display:block;margin:0 0 6px 0;font-weight:700;font-size:13px;color:var(--ink);}
-    .com-form input[type="text"],
-    .com-form input[type="number"],
-    .com-form textarea,
-    .com-form input[type="file"]{width:100%;font:inherit;}
-    .com-form input[type="text"],
-    .com-form input[type="number"],
-    .com-form textarea{
-      border:1px solid rgba(15,23,42,.18);
-      border-radius:10px;
-      padding:10px 12px;
-      font-size:14px;
-      line-height:1.2;
-      background:#fff;
-      outline:none;
-    }
-    .com-form input[type="text"],
-    .com-form input[type="number"]{height:42px;}
-    .com-form textarea{min-height:110px;resize:vertical;}
-    .com-form input[type="file"]{
-      border:1px dashed rgba(15,23,42,.25);
-      border-radius:10px;
-      padding:10px 12px;
-      background:rgba(15,23,42,.02);
-    }
-    .form-grid{display:grid;grid-template-columns:1fr 220px;gap:18px;align-items:end;}
-    @media(max-width:768px){.form-grid{grid-template-columns:1fr;}}
-    .form-row{margin-bottom:16px;}
-    .com-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;}
-    .comunicados-list{margin-top:26px;}
-    .comunicado-card{border:1px solid rgba(15,23,42,.1);border-radius:14px;padding:18px;margin-bottom:16px;background:var(--card,#fff);}
-    .comunicado-card.inativo{opacity:.72;background:rgba(15,23,42,.04);}
-    .comunicado-img{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin:10px 0 12px;border:1px solid rgba(15,23,42,.08);}
-    .comunicado-title{font-size:16px;font-weight:900;margin:0 0 6px;}
-    .comunicado-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
-    .comunicado-content{line-height:1.45;margin:0 0 14px;}
-    .comunicado-actions{display:flex;gap:10px;flex-wrap:wrap;}
-    .btn{border-radius:10px !important;}
-  </style>
+  <link rel="stylesheet" href="/assets/css/comunicados.css?v=<?= filemtime(__DIR__ . '/../assets/css/comunicados.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 </head>
 <body class="page">
 
-  <?php require_once __DIR__ . '/../app/header.php'; ?>
+<?php require_once __DIR__ . '/../app/header.php'; ?>
 
-  <main class="container">
-    <h2 class="page-title">Gerenciar Comunicados</h2>
+<main class="container comunicados">
+  <h2 class="page-title">Gerenciar Comunicados</h2>
 
-    <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
-    <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($success): ?><div class="alert alert--ok">✅ <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($error): ?><div class="alert alert--error">❌ <?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
 
-    <div class="card">
-      <h3 id="formTitle">Adicionar Comunicado</h3>
+  <div class="card">
+    <h3 id="formTitle">Adicionar Comunicado</h3>
 
-      <form method="post" class="com-form" enctype="multipart/form-data">
-        <input type="hidden" name="id" value="">
-        <input type="hidden" name="ativo" value="1">
-        <input type="hidden" name="remove_imagem" value="0">
+    <form method="post" class="com-form" enctype="multipart/form-data">
+      <input type="hidden" name="id" value="">
+      <input type="hidden" name="ativo" value="1">
+      <input type="hidden" name="remove_imagem" value="0">
 
-        <div class="form-grid">
-          <div class="form-row">
-            <label for="titulo">Título</label>
-            <input id="titulo" type="text" name="titulo">
-          </div>
-
-          <div class="form-row">
-            <label for="ordem">Ordem (menor aparece primeiro)</label>
-            <input id="ordem" type="number" name="ordem" value="0">
-          </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="titulo">Título</label>
+          <input id="titulo" type="text" name="titulo">
         </div>
 
         <div class="form-row">
-          <label for="conteudo">Conteúdo</label>
-          <textarea id="conteudo" name="conteudo"></textarea>
+          <label for="ordem">Ordem (menor aparece primeiro)</label>
+          <input id="ordem" type="number" name="ordem" value="0">
         </div>
-
-        <div class="form-row">
-          <label for="imagem">Imagem (opcional)</label>
-          <input id="imagem" type="file" name="imagem" accept="image/png,image/jpeg,image/webp">
-        </div>
-
-        <div class="com-actions">
-          <button type="submit" name="save" class="btn btn--primary" id="saveBtn">Salvar</button>
-          <button type="button" class="btn btn--secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
-
-          <!-- ✅ botão remover imagem só aparece no modo edição -->
-          <button type="button" class="btn btn--secondary" id="removeImgBtn" style="display:none;">Remover imagem atual</button>
-        </div>
-      </form>
-
-      <div class="comunicados-list">
-        <h3>Comunicados Existentes</h3>
-
-        <?php if (empty($comunicados)): ?>
-          <p class="muted">Nenhum comunicado cadastrado.</p>
-        <?php else: ?>
-          <?php foreach ($comunicados as $c): ?>
-            <div class="comunicado-card <?= ((int)$c['ativo'] === 1) ? '' : 'inativo' ?>">
-              <?php if (!empty($c['imagem_path'])): ?>
-                <img class="comunicado-img" src="<?= htmlspecialchars((string)$c['imagem_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem do comunicado">
-              <?php endif; ?>
-
-              <h4 class="comunicado-title">
-                <?= htmlspecialchars((string)($c['titulo'] !== '' ? $c['titulo'] : 'Comunicado sem título'), ENT_QUOTES, 'UTF-8') ?>
-              </h4>
-
-              <div class="comunicado-meta">
-                Ordem: <?= (int)$c['ordem'] ?> · <?= ((int)$c['ativo'] === 1) ? 'Ativo' : 'Inativo' ?>
-              </div>
-
-              <p class="comunicado-content">
-                <?= htmlspecialchars((string)($c['conteudo'] !== '' ? $c['conteudo'] : 'Sem conteúdo.'), ENT_QUOTES, 'UTF-8') ?>
-              </p>
-
-              <div class="comunicado-actions">
-                <form method="post" style="display:inline;">
-                  <input type="hidden" name="delete" value="<?= (int)$c['id'] ?>">
-                  <button type="submit" class="btn btn--danger" onclick="return confirm('Remover?')">Remover</button>
-                </form>
-
-                <button
-                  class="btn btn--secondary"
-                  type="button"
-                  data-id="<?= (int)$c['id'] ?>"
-                  data-titulo="<?= htmlspecialchars((string)$c['titulo'], ENT_QUOTES, 'UTF-8') ?>"
-                  data-conteudo="<?= htmlspecialchars((string)$c['conteudo'], ENT_QUOTES, 'UTF-8') ?>"
-                  data-imagem="<?= htmlspecialchars((string)($c['imagem_path'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                  data-ordem="<?= (int)$c['ordem'] ?>"
-                  data-ativo="<?= ((int)$c['ativo'] === 1) ? 1 : 0 ?>"
-                  onclick="editFromButton(this)"
-                >Editar</button>
-              </div>
-            </div>
-          <?php endforeach; ?>
-        <?php endif; ?>
       </div>
+
+      <div class="form-row">
+        <label for="conteudo">Conteúdo</label>
+        <textarea id="conteudo" name="conteudo"></textarea>
+      </div>
+
+      <div class="form-row">
+  <label for="imagem">Imagem (opcional)</label>
+
+  <div class="file-upload">
+    <input id="imagem" class="file-upload__input" type="file" name="imagem" accept="image/png,image/jpeg,image/webp">
+    <label class="file-upload__btn" for="imagem" id="imagemBtn">
+  <span class="file-upload__icon" aria-hidden="true">📸</span>
+  <span class="file-upload__text">Selecionar imagem</span>
+</label>
+    <span class="file-upload__name" id="imagemName">Nenhum arquivo selecionado</span>
+  </div>
+
+  <div class="file-upload__hint">PNG/JPG/WEBP. Máx: 5MB.</div>
+</div>
+
+      <div class="com-actions">
+        <button type="submit" name="save" class="btn btn--primary" id="saveBtn">Salvar</button>
+        <button type="button" class="btn btn--secondary" id="cancelEditBtn" style="display:none;">Cancelar edição</button>
+
+        <!-- ✅ botão remover imagem só aparece no modo edição -->
+        <button type="button" class="btn btn--secondary" id="removeImgBtn" style="display:none;">Remover imagem atual</button>
+      </div>
+    </form>
+
+    <div class="comunicados-list">
+      <h3>Comunicados Existentes</h3>
+
+      <?php if (empty($comunicados)): ?>
+        <p class="muted">Nenhum comunicado cadastrado.</p>
+      <?php else: ?>
+        <?php foreach ($comunicados as $c): ?>
+          <div class="comunicado-card <?= ((int)$c['ativo'] === 1) ? '' : 'inativo' ?>">
+            <?php if (!empty($c['imagem_path'])): ?>
+              <img class="comunicado-img" src="<?= htmlspecialchars((string)$c['imagem_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Imagem do comunicado">
+            <?php endif; ?>
+
+            <h4 class="comunicado-title">
+              <?= htmlspecialchars((string)($c['titulo'] !== '' ? $c['titulo'] : 'Comunicado sem título'), ENT_QUOTES, 'UTF-8') ?>
+            </h4>
+
+            <div class="comunicado-meta">
+              Ordem: <?= (int)$c['ordem'] ?> · <?= ((int)$c['ativo'] === 1) ? 'Ativo' : 'Inativo' ?>
+            </div>
+
+            <p class="comunicado-content">
+              <?= htmlspecialchars((string)($c['conteudo'] !== '' ? $c['conteudo'] : 'Sem conteúdo.'), ENT_QUOTES, 'UTF-8') ?>
+            </p>
+
+            <div class="comunicado-actions">
+              <form method="post" style="display:inline;">
+                <input type="hidden" name="delete" value="<?= (int)$c['id'] ?>">
+                <button type="submit" class="btn btn--danger" onclick="return confirm('Remover?')">Remover</button>
+              </form>
+
+              <button
+                class="btn btn--secondary"
+                type="button"
+                data-id="<?= (int)$c['id'] ?>"
+                data-titulo="<?= htmlspecialchars((string)$c['titulo'], ENT_QUOTES, 'UTF-8') ?>"
+                data-conteudo="<?= htmlspecialchars((string)$c['conteudo'], ENT_QUOTES, 'UTF-8') ?>"
+                data-imagem="<?= htmlspecialchars((string)($c['imagem_path'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
+                data-ordem="<?= (int)$c['ordem'] ?>"
+                data-ativo="<?= ((int)$c['ativo'] === 1) ? 1 : 0 ?>"
+                onclick="editFromButton(this)"
+              >Editar</button>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php endif; ?>
     </div>
-  </main>
+  </div>
+</main>
 
-  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<?php require_once __DIR__ . '/../app/footer.php'; ?>
 
-  <script>
-    function editFromButton(btn){
-      var id = btn.getAttribute('data-id');
-      var titulo = btn.getAttribute('data-titulo') || '';
-      var conteudo = btn.getAttribute('data-conteudo') || '';
-      var imagem = btn.getAttribute('data-imagem') || '';
-      var ordem = btn.getAttribute('data-ordem') || '0';
-      var ativo = btn.getAttribute('data-ativo') || '1';
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
+<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<script src="/assets/js/comunicados.js?v=<?= filemtime(__DIR__ . '/../assets/js/comunicados.js') ?>"></script>
 
-      document.querySelector('input[name="id"]').value = id;
-      document.querySelector('input[name="titulo"]').value = titulo;
-      document.querySelector('textarea[name="conteudo"]').value = conteudo;
-      document.querySelector('input[name="ordem"]').value = ordem;
-
-      // ativo agora é hidden (mantém o estado do comunicado)
-      document.querySelector('input[name="ativo"]').value = (ativo === '1' ? '1' : '0');
-
-      // remove_imagem hidden volta ao padrão 0
-      document.querySelector('input[name="remove_imagem"]').value = '0';
-
-      var formTitle = document.getElementById('formTitle');
-      if (formTitle) formTitle.textContent = 'Editar Comunicado';
-
-      var saveBtn = document.getElementById('saveBtn');
-      if (saveBtn) saveBtn.textContent = 'Atualizar';
-
-      var cancel = document.getElementById('cancelEditBtn');
-      if (cancel) cancel.style.display = 'inline-flex';
-
-      var removeBtn = document.getElementById('removeImgBtn');
-      if (removeBtn) {
-        // só mostra se existe imagem
-        removeBtn.style.display = (imagem !== '' ? 'inline-flex' : 'none');
-        removeBtn.dataset.hasImage = (imagem !== '' ? '1' : '0');
-      }
-
-      // rola até o formulário (melhor UX)
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    (function(){
-      var cancel = document.getElementById('cancelEditBtn');
-      var removeBtn = document.getElementById('removeImgBtn');
-      if (cancel) {
-        cancel.addEventListener('click', function(){
-          document.querySelector('input[name="id"]').value = '';
-          document.querySelector('input[name="titulo"]').value = '';
-          document.querySelector('textarea[name="conteudo"]').value = '';
-          document.querySelector('input[name="ordem"]').value = 0;
-
-          document.querySelector('input[name="ativo"]').value = '1';
-          document.querySelector('input[name="remove_imagem"]').value = '0';
-
-          var formTitle = document.getElementById('formTitle');
-          if (formTitle) formTitle.textContent = 'Adicionar Comunicado';
-
-          var saveBtn = document.getElementById('saveBtn');
-          if (saveBtn) saveBtn.textContent = 'Salvar';
-
-          cancel.style.display = 'none';
-
-          if (removeBtn) removeBtn.style.display = 'none';
-        });
-      }
-
-      if (removeBtn) {
-        removeBtn.addEventListener('click', function(){
-          // marca hidden para remover a imagem ao salvar
-          document.querySelector('input[name="remove_imagem"]').value = '1';
-          removeBtn.style.display = 'none';
-          alert('Imagem marcada para remoção. Clique em "Atualizar" para confirmar.');
-        });
-      }
-    })();
-  </script>
 </body>
 </html>

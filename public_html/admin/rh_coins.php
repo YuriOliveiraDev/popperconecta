@@ -1,9 +1,10 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
-require_admin();
+require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/permissions.php';
+require_perm('admin.rh');
 
 $u = current_user();
 
@@ -66,16 +67,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   }
 }
 
-// Lista usuários com saldo
+/**
+ * ✅ Para o SELECT do formulário: lista leve (não precisa do saldo aqui)
+ * (assim não pesa e não precisa carregar tudo ordenado por saldo)
+ */
+$userOptions = db()->query("
+  SELECT id, name, email
+  FROM users
+  ORDER BY name ASC
+")->fetchAll(PDO::FETCH_ASSOC);
+
+/**
+ * ✅ Saldos: TODO MUNDO, ordenado por maior saldo (e com scroll no front)
+ */
 $rows = db()->query("
   SELECT u.id, u.name, u.email, u.setor, u.hierarquia, u.role,
          COALESCE(w.balance, 0) AS balance
   FROM users u
   LEFT JOIN popper_coin_wallets w ON w.user_id = u.id
-  ORDER BY u.name ASC
+  ORDER BY balance DESC, u.name ASC
 ")->fetchAll(PDO::FETCH_ASSOC);
 
-// Últimos lançamentos (auditoria)
+/**
+ * ✅ Lançamentos: todos (com scroll no front)
+ * Obs: pode ficar muito grande no futuro; se isso crescer demais,
+ * aí a gente troca para paginação/“carregar mais”.
+ */
 $ledger = db()->query("
   SELECT l.id, l.user_id, l.amount, l.action_type, l.reason, l.created_at,
          u.name AS user_name,
@@ -84,8 +101,14 @@ $ledger = db()->query("
   JOIN users u ON u.id = l.user_id
   JOIN users a ON a.id = l.created_by
   ORDER BY l.id DESC
-  LIMIT 50
 ")->fetchAll(PDO::FETCH_ASSOC);
+
+$actionLabels = [
+  'grant'  => 'Adicionar',
+  'revoke' => 'Remover',
+  'redeem' => 'Resgate',
+  'adjust' => 'Ajuste',
+];
 ?>
 <!doctype html>
 <html lang="pt-br">
@@ -94,45 +117,39 @@ $ledger = db()->query("
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>RH · Popper Coins — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/rh_coins.css?v=<?= filemtime(__DIR__ . '/../assets/css/rh_coins.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 
   <style>
-    /* ✅ Grid: não vaza, não quebra, e mantém os cards com boa largura */
-    .grid2{display:grid !important;grid-template-columns:minmax(0,1fr) minmax(0,1.45fr) !important;gap:20px !important;align-items:start !important;}
-    @media(max-width:900px){.grid2{grid-template-columns:1fr !important;}}
-    .grid2 > .card{min-width:0 !important;}
+    /* ✅ viewport de ~10 linhas (ajustável) */
+    .balances-scroll{
+      max-height: 520px; /* ~10 linhas dependendo do seu CSS de tabela */
+      overflow-y: auto;
+      border: 1px solid rgba(15,23,42,0.10);
+      border-radius: 12px;
+      background:#fff;
+    }
+    .balances-scroll thead th{
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 2;
+    }
 
-    /* ✅ evita texto “vazar” do card (principalmente subtítulos) */
-    .card, .card *{min-width:0;}
-    .card__title, .card__subtitle{overflow-wrap:anywhere;word-break:break-word;}
-
-    .small{font-size:12px;color:var(--muted)}
-    .pill{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:800;font-size:12px}
-    .pill--pos{background:rgba(22,163,74,.12);color:#166534}
-    .pill--neg{background:rgba(220,38,38,.12);color:#991b1b}
-    .right{text-align:right !important;}
-
-    /* ✅ sem rolagem horizontal: garante que tabela nunca exceda o card */
-    .table-wrap{width:100% !important;max-width:100% !important;overflow-x:hidden !important;}
-
-    /* ✅ tabela ajustada: colunas fixas e texto truncado para não gerar scroll */
-    .balances-table{width:100% !important;table-layout:fixed !important;}
-    .balances-table th,.balances-table td{vertical-align:top !important;}
-
-    /* Colunas: aproxima SETOR do usuário (sem “buraco”), mas sem causar scroll */
-    .balances-table th:nth-child(1), .balances-table td:nth-child(1){width:66% !important;}
-    .balances-table th:nth-child(2), .balances-table td:nth-child(2){width:22% !important;}
-    .balances-table th:nth-child(3), .balances-table td:nth-child(3){width:12% !important;}
-
-    /* Truncagem segura (sem empurrar layout) */
-    .truncate{display:block !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;max-width:100% !important;}
-
-    @media(max-width:520px){
-      .balances-table th:nth-child(1), .balances-table td:nth-child(1){width:62% !important;}
-      .balances-table th:nth-child(2), .balances-table td:nth-child(2){width:26% !important;}
-      .balances-table th:nth-child(3), .balances-table td:nth-child(3){width:12% !important;}
+    .ledger-scroll{
+      max-height: 520px;
+      overflow-y: auto;
+      border-top: 1px solid rgba(15,23,42,0.06);
+    }
+    .ledger-scroll thead th{
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 2;
     }
   </style>
 </head>
@@ -140,11 +157,15 @@ $ledger = db()->query("
 
 <?php require_once __DIR__ . '/../app/header.php'; ?>
 
-<main class="container">
+<main class="container rh-coins">
   <h2 class="page-title">Popper Coins</h2>
 
-  <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
-  <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($success): ?>
+    <div class="alert alert--ok alert--purple"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
+  <?php if ($error): ?>
+    <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
 
   <section class="grid2">
     <div class="card">
@@ -158,9 +179,9 @@ $ledger = db()->query("
           <span class="field__label">Usuário</span>
           <select class="field__control" name="user_id" required>
             <option value="">Selecione...</option>
-            <?php foreach ($rows as $r): ?>
+            <?php foreach ($userOptions as $r): ?>
               <option value="<?= (int)$r['id'] ?>">
-                <?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?> — saldo: <?= (int)$r['balance'] ?>
+                <?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?> — <?= htmlspecialchars((string)$r['email'], ENT_QUOTES, 'UTF-8') ?>
               </option>
             <?php endforeach; ?>
           </select>
@@ -169,17 +190,17 @@ $ledger = db()->query("
         <label class="field">
           <span class="field__label">Ação</span>
           <select class="field__control" name="action" required>
-            <option value="grant">Adicionar (grant)</option>
-            <option value="revoke">Remover (revoke)</option>
-            <option value="redeem">Resgate (redeem)</option>
-            <option value="adjust">Ajuste (adjust)</option>
+            <option value="grant">Adicionar</option>
+            <option value="revoke">Remover</option>
+            <option value="redeem">Resgate</option>
+            <option value="adjust">Ajuste</option>
           </select>
         </label>
 
         <label class="field">
           <span class="field__label">Quantidade</span>
           <input class="field__control" name="amount" type="number" step="1" required />
-          <div class="small">Use número positivo. “Remover/Resgate” vira negativo automaticamente.</div>
+          <div class="small">Use número positivo. "Remover/Resgate" vira negativo automaticamente.</div>
         </label>
 
         <label class="field">
@@ -194,34 +215,39 @@ $ledger = db()->query("
     <div class="card">
       <div class="card__header">
         <h3 class="card__title">Saldos (todos os usuários)</h3>
-        <p class="card__subtitle">Visão geral rápida.</p>
+        <p class="card__subtitle">Ordenado do maior para o menor (rolagem para ver mais).</p>
       </div>
 
-      <div class="table-wrap">
-        <table class="table balances-table">
-          <thead>
-            <tr>
-              <th>Usuário</th>
-              <th>Setor</th>
-              <th class="right">Saldo</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($rows as $r): ?>
-              <?php $bal = (int)$r['balance']; ?>
+      <div class="balances-scroll">
+        <div class="table-wrap">
+          <table class="table balances-table">
+            <thead>
               <tr>
-                <td>
-                  <span class="truncate"><?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?></span>
-                  <span class="small truncate"><?= htmlspecialchars((string)$r['email'], ENT_QUOTES, 'UTF-8') ?></span>
-                </td>
-                <td><span class="truncate"><?= htmlspecialchars((string)($r['setor'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></span></td>
-                <td class="right">
-                  <span class="pill <?= $bal >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $bal ?></span>
-                </td>
+                <th>Usuário</th>
+                <th>Setor</th>
+                <th class="right">Saldo</th>
               </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <?php foreach ($rows as $r): ?>
+                <?php $bal = (int)$r['balance']; ?>
+                <tr>
+                  <td>
+                    <span class="truncate"><?= htmlspecialchars((string)$r['name'], ENT_QUOTES, 'UTF-8') ?></span>
+                    <span class="small truncate"><?= htmlspecialchars((string)$r['email'], ENT_QUOTES, 'UTF-8') ?></span>
+                  </td>
+                  <td><span class="truncate"><?= htmlspecialchars((string)($r['setor'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></span></td>
+                  <td class="right">
+                    <span class="pill <?= $bal >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $bal ?></span>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+              <?php if (!$rows): ?>
+                <tr><td colspan="3" class="muted">Sem usuários.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
@@ -229,41 +255,54 @@ $ledger = db()->query("
   <section class="card card--mt">
     <div class="card__header">
       <h3 class="card__title">Últimos lançamentos</h3>
-      <p class="card__subtitle">Auditoria (últimos 50).</p>
+      <p class="card__subtitle">Histórico global (rolagem para ver mais).</p>
     </div>
 
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Usuário</th>
-            <th>Ação</th>
-            <th class="right">Valor</th>
-            <th>Motivo</th>
-            <th>Admin</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($ledger as $l): ?>
-            <?php $amt = (int)$l['amount']; ?>
+    <div class="ledger-scroll">
+      <div class="table-wrap ledger-wrap">
+        <table class="table">
+          <thead>
             <tr>
-              <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= htmlspecialchars((string)$l['user_name'], ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= htmlspecialchars((string)$l['action_type'], ENT_QUOTES, 'UTF-8') ?></td>
-              <td class="right">
-                <span class="pill <?= $amt >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $amt ?></span>
-              </td>
-              <td><?= htmlspecialchars((string)($l['reason'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-              <td><?= htmlspecialchars((string)$l['admin_name'], ENT_QUOTES, 'UTF-8') ?></td>
+              <th>Data</th>
+              <th>Usuário</th>
+              <th>Ação</th>
+              <th class="right">Valor</th>
+              <th>Motivo</th>
+              <th>Admin</th>
             </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <?php foreach ($ledger as $l): ?>
+              <?php $amt = (int)$l['amount']; ?>
+              <tr>
+                <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)$l['user_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td>
+                  <?php
+                    $type = (string)$l['action_type'];
+                    echo htmlspecialchars($actionLabels[$type] ?? $type, ENT_QUOTES, 'UTF-8');
+                  ?>
+                </td>
+                <td class="right">
+                  <span class="pill <?= $amt >= 0 ? 'pill--pos' : 'pill--neg' ?>"><?= $amt ?></span>
+                </td>
+                <td><?= htmlspecialchars((string)($l['reason'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                <td><?= htmlspecialchars((string)$l['admin_name'], ENT_QUOTES, 'UTF-8') ?></td>
+              </tr>
+            <?php endforeach; ?>
+            <?php if (!$ledger): ?>
+              <tr><td colspan="6" class="muted">Nenhum lançamento.</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </main>
 
+<?php require_once __DIR__ . '/../app/footer.php'; ?>
+
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 </body>
 </html>

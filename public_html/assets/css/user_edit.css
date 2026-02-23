@@ -295,3 +295,52 @@ body{
   .table{ min-width: 880px; }
   .page-title{ font-size: 22px; }
 }
+/* =========================
+   user-edit.css (Admin / Editar Usuário)
+   ========================= */
+
+.user-edit .topbar{overflow:visible!important;}
+.user-edit .page{overflow:visible!important;}
+
+.user-edit .perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding-top:6px;}
+.user-edit .perm-item{display:inline-flex;align-items:center;gap:8px;margin:0;user-select:none;}
+.user-edit .perm-help{margin-top:8px;font-size:12px;opacity:.8;}
+@media (max-width: 720px){.user-edit .perm-grid{grid-template-columns:1fr;}}
+
+.user-edit .avatar-lg{width:72px;height:72px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);background:#fff;}
+.user-edit .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.user-edit .file-control{padding-top:10px;height:auto;}
+
+.user-edit .form--edit{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.user-edit .field--full{grid-column: 1 / -1;}
+
+.user-edit .form-actions{
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.user-edit .help{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+  margin-top: 6px;
+}
+
+.user-edit .btn--danger{
+  color: #dc2626;
+  background: rgba(220,38,38,.10);
+  border: 1px solid rgba(220,38,38,.25);
+}
+
+@media (max-width: 900px){
+  .user-edit .form--edit{grid-template-columns: 1fr;}
+  .user-edit .form-actions{flex-direction: column; align-items: stretch;}
+}

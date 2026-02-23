@@ -7,6 +7,8 @@ require_once __DIR__ . '/../app/permissions.php';
 require_admin();
 
 $me = current_user();
+$u = $me;              // garante compatibilidade com header.php
+$activePage = 'admin'; // destaca no header
 
 try {
   $dashboards = db()
@@ -25,19 +27,20 @@ if (($_GET['deleted'] ?? '') === '1') {
 
 $allowedPerms = array_keys(PERMISSION_CATALOG);
 
-function upload_profile_photo(int $userId, string $uploadBaseDirAbs, string $uploadBaseUrl): array {
+function upload_profile_photo(int $userId, string $uploadBaseDirAbs, string $uploadBaseUrl): array
+{
   if (!isset($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
     return ['ok' => true, 'path' => null, 'error' => null];
   }
 
   $file = $_FILES['profile_photo'];
-  $err = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
+  $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
 
   if ($err === UPLOAD_ERR_NO_FILE) return ['ok' => true, 'path' => null, 'error' => null];
   if ($err !== UPLOAD_ERR_OK) return ['ok' => false, 'path' => null, 'error' => 'Erro no upload da foto.'];
 
-  $tmp = (string)($file['tmp_name'] ?? '');
-  $size = (int)($file['size'] ?? 0);
+  $tmp = (string) ($file['tmp_name'] ?? '');
+  $size = (int) ($file['size'] ?? 0);
 
   if ($size <= 0) return ['ok' => false, 'path' => null, 'error' => 'Arquivo de foto inválido.'];
   if ($size > 2 * 1024 * 1024) return ['ok' => false, 'path' => null, 'error' => 'A foto deve ter no máximo 2MB.'];
@@ -46,14 +49,16 @@ function upload_profile_photo(int $userId, string $uploadBaseDirAbs, string $upl
   if ($imgInfo === false || empty($imgInfo['mime'])) {
     return ['ok' => false, 'path' => null, 'error' => 'Arquivo não é uma imagem válida.'];
   }
-  $mime = (string)$imgInfo['mime'];
+  $mime = (string) $imgInfo['mime'];
 
   $ext = null;
   if ($mime === 'image/jpeg') $ext = 'jpg';
   if ($mime === 'image/png')  $ext = 'png';
   if ($mime === 'image/webp') $ext = 'webp';
 
-  if ($ext === null) return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
+  if ($ext === null) {
+    return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
+  }
 
   if (!is_dir($uploadBaseDirAbs)) {
     @mkdir($uploadBaseDirAbs, 0775, true);
@@ -70,16 +75,16 @@ function upload_profile_photo(int $userId, string $uploadBaseDirAbs, string $upl
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $name       = trim($_POST['name'] ?? '');
-  $email      = trim($_POST['adm_email'] ?? ($_POST['email'] ?? ''));
-  $pass       = (string)($_POST['adm_pass'] ?? ($_POST['pass'] ?? ''));
-  $role       = trim($_POST['role'] ?? 'user');
-  $setor      = trim($_POST['setor'] ?? '');
+  $name = trim($_POST['name'] ?? '');
+  $email = trim($_POST['adm_email'] ?? ($_POST['email'] ?? ''));
+  $pass = (string) ($_POST['adm_pass'] ?? ($_POST['pass'] ?? ''));
+  $role = trim($_POST['role'] ?? 'user');
+  $setor = trim($_POST['setor'] ?? '');
   $hierarquia = trim($_POST['hierarquia'] ?? 'Assistente');
 
-  $phone      = trim($_POST['phone'] ?? '');
+  $phone = trim($_POST['phone'] ?? '');
   $birth_date = trim($_POST['birth_date'] ?? '');
-  $gender     = trim($_POST['gender'] ?? '');
+  $gender = trim($_POST['gender'] ?? '');
 
   $perms = $_POST['perms'] ?? [];
   if (!is_array($perms)) $perms = [];
@@ -90,16 +95,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Formato de e-mail inválido.';
   if ($pass === '' || strlen($pass) < 6) $errors[] = 'A senha deve ter pelo menos 6 caracteres.';
   if ($setor === '') $errors[] = 'Setor é obrigatório.';
-  if (!in_array($role, ['user','admin'], true)) $errors[] = 'Perfil inválido.';
-  if (!in_array($hierarquia, ['Diretor','Gerente','Gestor','Supervisor','Analista','Assistente'], true)) $errors[] = 'Hierarquia inválida.';
+  if (!in_array($role, ['user', 'admin'], true)) $errors[] = 'Perfil inválido.';
+  if (!in_array($hierarquia, ['Diretor', 'Gerente', 'Gestor', 'Supervisor', 'Analista', 'Assistente'], true)) $errors[] = 'Hierarquia inválida.';
   if ($phone !== '' && strlen($phone) > 20) $errors[] = 'Telefone muito longo.';
   if ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) $errors[] = 'Data de nascimento inválida.';
-  if ($gender !== '' && !in_array($gender, ['M','F','O','N'], true)) $errors[] = 'Gênero inválido.';
+  if ($gender !== '' && !in_array($gender, ['M', 'F', 'O', 'N'], true)) $errors[] = 'Gênero inválido.';
 
   if (!$errors) {
     try {
       $stmt = db()->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
       $stmt->execute([$email]);
+
       if ($stmt->fetch()) {
         $errors[] = 'Este e-mail já está cadastrado.';
       } else {
@@ -124,13 +130,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $permsJson
           ]);
 
-          $newUserId = (int)db()->lastInsertId();
+          $newUserId = (int) db()->lastInsertId();
 
           $uploadDirAbs = __DIR__ . '/../uploads/profile_photos';
           $uploadBaseUrl = '/uploads/profile_photos';
           $up = upload_profile_photo($newUserId, $uploadDirAbs, $uploadBaseUrl);
 
-          if (!$up['ok']) throw new Exception((string)$up['error']);
+          if (!$up['ok']) throw new Exception((string) $up['error']);
           if (!empty($up['path'])) {
             $stmt = db()->prepare("UPDATE users SET profile_photo_path=? WHERE id=?");
             $stmt->execute([$up['path'], $newUserId]);
@@ -158,44 +164,33 @@ try {
 } catch (Throwable $e) {
   $users = [];
 }
-
-function gender_label(?string $g): string {
-  if ($g === 'M') return 'M';
-  if ($g === 'F') return 'F';
-  if ($g === 'O') return 'O';
-  if ($g === 'N') return 'N/I';
-  return '—';
-}
 ?>
 <!doctype html>
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin: Usuários — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
+  <title>Admin: Usuários — <?= htmlspecialchars((string) APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
+  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/admin-users.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin-users.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 
   <style>
-    .offscreen-bait{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important;}
-    .perm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;padding-top:6px;}
-    .perm-item{display:inline-flex;align-items:center;gap:8px;margin:0;user-select:none;}
-    .perm-help{margin-top:8px;font-size:12px;opacity:.8;}
-    @media (max-width: 720px){.perm-grid{grid-template-columns:1fr;}}
-
-    .avatar{width:34px;height:34px;border-radius:999px;object-fit:cover;border:1px solid rgba(15,23,42,.12);display:block;}
-    .file-control{padding-top:10px;height:auto;}
+    .users-table-scroll{max-height:600px;overflow-y:auto;border:1px solid rgba(15,23,42,0.10);border-radius:8px}
+    .users-table-scroll thead th{position:sticky;top:0;background:#fff;z-index:2}
   </style>
 </head>
-<body class="page">
 
+<body class="page">
   <?php require_once __DIR__ . '/../app/header.php'; ?>
 
-  <main class="container">
+  <main class="container admin-users">
     <h2 class="page-title">Gerenciar Usuários</h2>
 
+    <!-- (Mantém sua seção de cadastro exatamente como estava) -->
     <section class="card">
       <div class="card__header">
         <h3 class="card__title">Cadastrar Novo Usuário</h3>
@@ -203,7 +198,7 @@ function gender_label(?string $g): string {
       </div>
 
       <?php if ($success): ?>
-        <div class="alert alert--ok"><?= $success ?></div>
+        <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
       <?php endif; ?>
 
       <?php if (!empty($errors)): ?>
@@ -256,11 +251,27 @@ function gender_label(?string $g): string {
           </select>
         </label>
 
-        <label class="field" for="profile_photo">
-          <span class="field__label">Foto de Perfil</span>
-          <input class="field__control file-control" id="profile_photo" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
-          <div class="perm-help">PNG/JPG/WEBP. Máx: 2MB.</div>
-        </label>
+        <div class="field field--full">
+          <label class="field__label">Foto de Perfil</label>
+          <div class="photo-row">
+            <img class="avatar-lg" id="userPhotoPreviewImg" alt="Foto" style="display:none;" />
+            <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" aria-label="Sem foto">👤</div>
+
+            <div style="min-width:260px;flex:1;">
+              <div class="file-field__row">
+                <input class="file-input" id="userProfilePhoto" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
+                <label class="file-btn" for="userProfilePhoto">🖼️ Escolher foto</label>
+
+                <div class="file-meta">
+                  <span class="file-name" id="userProfilePhotoName">Nenhum arquivo selecionado</span>
+                  <span class="file-hint">PNG/JPG/WEBP • Máx: 2MB</span>
+                </div>
+              </div>
+
+              <div class="help help-row">Escolha uma foto e clique em salvar.</div>
+            </div>
+          </div>
+        </div>
 
         <label class="field" for="setor">
           <span class="field__label">Setor</span>
@@ -304,7 +315,7 @@ function gender_label(?string $g): string {
             <?php foreach (PERMISSION_CATALOG as $perm => $meta): ?>
               <label class="perm-item">
                 <input type="checkbox" name="perms[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>">
-                <span><?= htmlspecialchars((string)($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
+                <span><?= htmlspecialchars((string) ($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
               </label>
             <?php endforeach; ?>
           </div>
@@ -318,93 +329,85 @@ function gender_label(?string $g): string {
     <section class="card card--mt">
       <div class="card__header">
         <h3 class="card__title">Usuários Cadastrados</h3>
-        <p class="card__subtitle">Lista atual de usuários e acesso rápido à edição.</p>
+        <p class="card__subtitle">Lista completa de usuários e acesso rápido à edição.</p>
       </div>
 
-      <div class="table-wrap">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Foto</th>
-              <th>Nome</th>
-              <th>E-mail</th>
-              <th>Telefone</th>
-              <th>Nascimento</th>
-              <th>Gênero</th>
-              <th>Setor</th>
-              <th>Hierarquia</th>
-              <th>Perfil</th>
-              <th>Ativo</th>
-              <th>Último login</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>
-            <?php foreach ($users as $row): ?>
+      <div style="margin-bottom: 15px;">
+        <input type="text" id="userSearch" placeholder="Pesquisar usuário por nome ou e-mail..."
+               style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
+      </div>
+
+      <div class="users-table-scroll">
+        <div class="table-wrap">
+          <table class="table" id="usersTable">
+            <thead>
               <tr>
-                <td>
-                  <?php if (!empty($row['profile_photo_path'])): ?>
-                    <img class="avatar" src="<?= htmlspecialchars((string)$row['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
-                  <?php else: ?>
-                    <span class="muted">—</span>
-                  <?php endif; ?>
-                </td>
-                <td><?= htmlspecialchars((string)$row['name'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars((string)$row['email'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars((string)($row['phone'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars((string)($row['birth_date'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars(gender_label($row['gender'] ?? null), ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars((string)$row['setor'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td><?= htmlspecialchars((string)$row['hierarquia'], ENT_QUOTES, 'UTF-8') ?></td>
-                <td>
-                  <?php if (($row['role'] ?? '') === 'admin'): ?>
-                    <span class="badge badge--admin">Admin</span>
-                  <?php else: ?>
-                    <span class="badge badge--user">User</span>
-                  <?php endif; ?>
-                </td>
-                <td>
-                  <?php if ((int)($row['is_active'] ?? 0) === 1): ?>
-                    <span class="badge badge--ok">Sim</span>
-                  <?php else: ?>
-                    <span class="badge badge--no">Não</span>
-                  <?php endif; ?>
-                </td>
-                <td><?= htmlspecialchars((string)($row['last_login_at'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-                <td>
-                  <a class="link link--pill" href="/admin/user_edit.php?id=<?= (int)$row['id'] ?>">Editar</a>
-                </td>
+                <th class="col-photo">Foto</th>
+                <th class="col-name">Nome</th>
+                <th class="col-email">E-mail</th>
+                <th class="col-setor">Setor</th>
+                <th class="col-hier">Hierarquia</th>
+                <th class="col-role">Perfil</th>
+                <th class="col-last">Último login</th>
+                <th class="col-actions">Ações</th>
               </tr>
-            <?php endforeach; ?>
-            <?php if (!$users): ?>
-              <tr><td colspan="12" class="muted">Nenhum usuário cadastrado.</td></tr>
-            <?php endif; ?>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              <?php foreach ($users as $row): ?>
+                <tr>
+                  <td>
+                    <?php if (!empty($row['profile_photo_path'])): ?>
+                      <img class="avatar" src="<?= htmlspecialchars((string) $row['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
+                    <?php else: ?>
+                      <span class="avatar avatar--placeholder" aria-label="Sem foto" title="Sem foto"><span aria-hidden="true">👤</span></span>
+                    <?php endif; ?>
+                  </td>
+                  <td><?= htmlspecialchars((string) $row['name'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string) $row['email'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string) $row['setor'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string) $row['hierarquia'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td>
+                    <?php if (($row['role'] ?? '') === 'admin'): ?>
+                      <span class="badge badge--admin">Admin</span>
+                    <?php else: ?>
+                      <span class="badge badge--user">User</span>
+                    <?php endif; ?>
+                  </td>
+                  <td><?= htmlspecialchars((string) ($row['last_login_at'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><a class="link link--pill" href="/admin/user_edit.php?id=<?= (int) $row['id'] ?>">Editar</a></td>
+                </tr>
+              <?php endforeach; ?>
+
+              <?php if (!$users): ?>
+                <tr><td colspan="9" class="muted">Nenhum usuário cadastrado.</td></tr>
+              <?php endif; ?>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   </main>
 
+  <?php require_once __DIR__ . '/../app/footer.php'; ?>
+
+  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+  <script src="/assets/js/users.js?v=<?= filemtime(__DIR__ . '/../assets/js/users.js') ?>"></script>
 
   <script>
-    (function () {
-      function arm(id) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        try { el.value = ''; } catch (e) {}
-        var unfreeze = function () {
-          if (el.hasAttribute('readonly')) el.removeAttribute('readonly');
-          el.removeEventListener('focus', unfreeze);
-          el.removeEventListener('pointerdown', unfreeze);
-          el.removeEventListener('keydown', unfreeze);
-        };
-        el.addEventListener('focus', unfreeze, { once: true });
-        el.addEventListener('pointerdown', unfreeze, { once: true });
-        el.addEventListener('keydown', unfreeze, { once: true });
-      }
-      arm('adm_email');
-      arm('adm_pass');
+    (function(){
+      const input = document.getElementById('userSearch');
+      const tbody = document.querySelector('#usersTable tbody');
+      if (!input || !tbody) return;
+
+      input.addEventListener('input', function(e){
+        const term = (e.target.value || '').toLowerCase();
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach((tr) => {
+          const text = (tr.innerText || '').toLowerCase();
+          tr.style.display = text.includes(term) ? '' : 'none';
+        });
+      });
     })();
   </script>
 </body>

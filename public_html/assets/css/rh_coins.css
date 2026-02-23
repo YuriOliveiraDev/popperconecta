@@ -1,0 +1,309 @@
+/* =========================
+   rh_coins.css (Admin / RH Coins)
+   ========================= */
+
+.rh-coins .grid2 {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) minmax(0,1.45fr) !important;
+  gap: 20px !important;
+  align-items: start !important;
+}
+
+@media (max-width: 900px) {
+  .rh-coins .grid2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.rh-coins .grid2 > .card {
+  min-width: 0 !important;
+}
+
+/* ✅ evita texto "vazar" do card (principalmente subtítulos) */
+.rh-coins .card, .rh-coins .card * {
+  min-width: 0;
+}
+
+.rh-coins .card__title, .rh-coins .card__subtitle {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.rh-coins .small {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.rh-coins .pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+}
+
+.rh-coins .pill--pos {
+  background: rgba(22,163,74,.12);
+  color: #166534;
+}
+
+.rh-coins .pill--neg {
+  background: rgba(220,38,38,.12);
+  color: #991b1b;
+}
+
+.rh-coins .right {
+  text-align: right !important;
+}
+
+/* ✅ sem rolagem horizontal: garante que tabela nunca exceda o card */
+.rh-coins .table-wrap {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+/* ✅ tabela ajustada: colunas fixas e texto truncado para não gerar scroll */
+.rh-coins .balances-table {
+  width: 100% !important;
+  table-layout: fixed !important;
+}
+
+.rh-coins .balances-table th, .rh-coins .balances-table td {
+  vertical-align: top !important;
+}
+
+/* Colunas: aproxima SETOR do usuário (sem "buraco"), mas sem causar scroll */
+.rh-coins .balances-table th:nth-child(1), .rh-coins .balances-table td:nth-child(1) {
+  width: 66% !important;
+}
+
+.rh-coins .balances-table th:nth-child(2), .rh-coins .balances-table td:nth-child(2) {
+  width: 22% !important;
+}
+
+.rh-coins .balances-table th:nth-child(3), .rh-coins .balances-table td:nth-child(3) {
+  width: 12% !important;
+}
+
+/* Truncagem segura (sem empurrar layout) */
+.rh-coins .truncate {
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+
+@media (max-width: 520px) {
+  .rh-coins .balances-table th:nth-child(1), .rh-coins .balances-table td:nth-child(1) {
+    width: 62% !important;
+  }
+
+  .rh-coins .balances-table th:nth-child(2), .rh-coins .balances-table td:nth-child(2) {
+    width: 26% !important;
+  }
+
+  .rh-coins .balances-table th:nth-child(3), .rh-coins .balances-table td:nth-child(3) {
+    width: 12% !important;
+  }
+}
+
+/* ===== Últimos lançamentos: 10 linhas visíveis + scroll ===== */
+.rh-coins .ledger-wrap{
+  overflow-y: auto !important;
+  max-height: 460px; /* ~10 linhas (ajuste fino se quiser) */
+}
+
+/* opcional: deixa o header da tabela grudado enquanto rola */
+.rh-coins .ledger-wrap thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* ===== Alert OK roxo (Popper Coins) ===== */
+.rh-coins .alert.alert--ok.alert--purple{
+  background: rgba(92,44,140,1) !important;
+  border-color: rgba(92,44,140,1) !important;
+  color: #fff !important;
+}
+
+.rh-coins .alert.alert--ok.alert--purple *{
+  color: #fff !important;
+}
+
+/* ===== Alert OK roxo (borda roxa + fundo suave) ===== */
+.rh-coins .alert.alert--ok.alert--purple{
+  border: 1px solid rgba(92,44,140,1) !important;
+  background: rgba(92,44,140,.10) !important; /* mais claro/transparente */
+  color: rgba(15,23,42,.92) !important;       /* texto escuro por legibilidade */
+  box-shadow: 0 10px 22px rgba(92,44,140,.08) !important;
+  transition: background .18s ease, box-shadow .18s ease, transform .18s ease !important;
+}
+
+/* Se você QUER texto branco mesmo com fundo claro, descomente o bloco abaixo
+.rh-coins .alert.alert--ok.alert--purple{
+  color: #fff !important;
+}
+.rh-coins .alert.alert--ok.alert--purple *{
+  color: #fff !important;
+}
+*/
+
+/* Hover mais suave */
+.rh-coins .alert.alert--ok.alert--purple:hover{
+  background: rgba(92,44,140,.14) !important;
+  box-shadow: 0 14px 28px rgba(92,44,140,.12) !important;
+  transform: translateY(-1px);
+}
+
+/* Catálogo em cards (ecommerce) */
+.reward-grid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap:16px;
+}
+
+@media (max-width: 1100px){
+  .reward-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 850px){
+  .reward-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px){
+  .reward-grid{ grid-template-columns: 1fr; }
+}
+
+.reward-card{
+  border: 1px solid rgba(15,23,42,.10);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(15,23,42,.06);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  display:flex;
+  flex-direction: column;
+}
+
+.reward-card:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 26px rgba(15,23,42,.10);
+}
+
+.reward-card.is-disabled{
+  opacity: .65;
+}
+
+.reward-media{
+  background: rgba(15,23,42,.04);
+  height: 160px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.reward-media img{
+  width:100%;
+  height:100%;
+  object-fit: cover;
+  display:block;
+}
+
+.reward-fallback{
+  width: 100%;
+  height: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size: 44px;
+}
+
+.reward-body{
+  padding: 14px 14px 16px;
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reward-title{
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(15,23,42,.92);
+  line-height: 1.2;
+}
+
+.reward-desc{
+  font-size: 13px;
+  color: rgba(15,23,42,.72);
+  line-height: 1.35;
+  min-height: 34px;
+}
+
+.reward-meta{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.reward-price{
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+}
+
+.reward-price-num{
+  font-size: 18px;
+  font-weight: 800;
+  color: rgba(92,44,140,1);
+}
+
+.reward-price-unit{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+}
+
+.reward-stock{
+  font-size: 12px;
+  color: rgba(15,23,42,.60);
+}
+
+.reward-form{
+  display:flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.reward-note{
+  width:100%;
+  padding: 10px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(15,23,42,.12);
+  font-size: 13px;
+}
+
+.reward-btn{
+  width:100%;
+  border-radius: 10px;
+}
+
+.reward-hint{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+  margin-top: -6px;
+}
+
+.table-scroll-container {
+    max-height: 500px; /* Altura máxima antes de aparecer o scroll */
+    overflow-y: auto;
+    border: 1px solid rgba(15,23,42,0.1);
+    border-radius: 8px;
+}
+.table-scroll-container thead th {
+    position: sticky;
+    top: 0;
+    background: #fff; /* Mantém o cabeçalho fixo no topo ao rolar */
+    z-index: 1;
+}

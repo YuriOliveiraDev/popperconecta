@@ -1,0 +1,684 @@
+/* =========================
+   coins.css (Popper Coins)
+   ========================= */
+
+.coins .pc-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.coins .pc-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.coins .pc-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--ink);
+  margin: 0;
+}
+
+.coins .pc-subtitle {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.coins .pc-card {
+  background: var(--card);
+  border: 1px solid rgba(15,23,42,0.08);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(15,23,42,0.06);
+  padding: 24px;
+}
+
+.coins .pc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 900px) {
+  .coins .pc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.coins .pc-card--balance {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 24px;
+}
+
+.coins .pc-balance {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.coins .pc-balance__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.coins .pc-balance__num {
+  font-size: 2.6rem;
+  font-weight: 950;
+  letter-spacing: -1px;
+  color: var(--accent,#5c2d91);
+}
+
+.coins .pc-balance__meta {
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.coins .table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.coins .table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.coins .table th,
+.coins .table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(15,23,42,0.06);
+}
+
+.coins .table thead th {
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(15,23,42,0.02);
+}
+
+.coins .table tbody tr:hover {
+  background: rgba(92,44,140,0.04);
+}
+
+.coins .table .right {
+  text-align: right;
+}
+
+.coins .pc-form {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.coins .pc-form input {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid rgba(15,23,42,0.12);
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.coins .pc-form button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.coins .btn:disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+
+.coins .pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(15,23,42,0.1);
+}
+
+.coins .pill--pending {
+  background: rgba(245,158,11,0.12);
+  color: #92400e;
+}
+
+.coins .pill--approved {
+  background: rgba(22,163,74,0.12);
+  color: #166534;
+}
+
+.coins .pill--rejected {
+  background: rgba(220,38,38,0.12);
+  color: #991b1b;
+}
+
+@media (max-width: 768px) {
+  .coins .pc-title {
+    font-size: 1.8rem;
+  }
+  .coins .pc-card--balance {
+    min-height: 170px;
+  }
+  .coins .pc-balance__icon {
+    font-size: 2rem;
+  }
+  .coins .pc-balance__num {
+    font-size: 2.2rem;
+  }
+  .coins .pc-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .coins .pc-form input {
+    min-width: auto;
+  }
+}
+
+/* =========================
+   Coins - Tabela com rolagem (Seus pedidos)
+   ========================= */
+
+.coins .pc-table-scroll{
+  overflow: auto;
+  border-radius: 12px;
+}
+
+/* Mostra ~5 linhas e o resto rola
+   Ajuste o 260px se suas linhas forem mais altas/baixas */
+.coins .pc-table-scroll--requests{
+  max-height: 260px;
+}
+
+/* Mantém o header visível enquanto rola */
+.coins .pc-table-scroll--requests thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* =========================
+   Card "Seu saldo" - redesign moderno (sem emoji)
+   ========================= */
+
+.coins .pc-card--balance{
+  min-height: 210px;
+  padding: 24px;
+  border-radius: 18px;
+
+  background: linear-gradient(135deg, rgba(92,44,140,.10), rgba(172,204,54,.10));
+  border: 1px solid rgba(92,44,140,.18);
+  box-shadow: 0 18px 40px rgba(15,23,42,.06);
+}
+
+/* topo */
+.coins .pc-balance-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.coins .pc-balance-title{
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(15,23,42,.78);
+}
+
+.coins .pc-balance-pill{
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+
+  background: rgba(92,44,140,.14);
+  border: 1px solid rgba(92,44,140,.22);
+  color: rgba(92,44,140,1);
+
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+/* valor */
+.coins .pc-balance-value{
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 8px 0 18px;
+}
+
+.coins .pc-balance-num{
+  font-size: 48px;
+  font-weight: 950;
+  letter-spacing: -1.2px;
+  line-height: 1;
+  color: rgba(15,23,42,.92);
+}
+
+.coins .pc-balance-unit{
+  font-size: 14px;
+  font-weight: 900;
+  color: rgba(15,23,42,.58);
+  text-transform: lowercase;
+}
+
+/* rodapé */
+.coins .pc-balance-foot{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  padding-top: 14px;
+  border-top: 1px solid rgba(15,23,42,.10);
+}
+
+.coins .pc-balance-label{
+  font-size: 12px;
+  font-weight: 900;
+  color: rgba(15,23,42,.55);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+}
+
+.coins .pc-balance-user{
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(15,23,42,.86);
+  text-align: right;
+}
+
+/* mobile */
+@media (max-width: 768px){
+  .coins .pc-balance-num{ font-size: 40px; }
+  .coins .pc-card--balance{ min-height: 190px; }
+}
+
+/* =========================
+   Coins - Card head moderno + badge
+   ========================= */
+
+.coins .pc-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+
+.coins .pc-card-title{
+  margin:0;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:.2px;
+  color:rgba(15,23,42,.86);
+}
+
+.coins .pc-card-badge{
+  display:inline-flex;
+  align-items:center;
+  height:28px;
+  padding:0 12px;
+  border-radius:999px;
+  background:rgba(15,23,42,.04);
+  border:1px solid rgba(15,23,42,.10);
+  color:rgba(15,23,42,.72);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+/* =========================
+   Coins - Scroll da tabela (5 itens visíveis)
+   ========================= */
+
+.coins .pc-table-scroll{
+  overflow:auto;
+  border-radius:12px;
+  border:1px solid rgba(15,23,42,.08);
+}
+
+/* ~5 linhas (ajuste fino aqui se quiser) */
+.coins .pc-table-scroll--requests{
+  max-height: 260px;
+}
+
+/* Header fixo durante rolagem */
+.coins .pc-table-scroll--requests thead th{
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Tabela mais “clean” */
+.coins .pc-card--requests .table{
+  width:100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background:#fff;
+}
+
+.coins .pc-card--requests .table th,
+.coins .pc-card--requests .table td{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(15,23,42,.06);
+}
+
+.coins .pc-card--requests .table thead th{
+  background:rgba(15,23,42,.02);
+}
+
+/* ===== Popper Coins (Resgatar) - imagens com tamanho fixo ===== */
+
+/* área da imagem com tamanho fixo */
+.reward-media{
+  height: 200px;        /* ajuste aqui: 140 / 160 / 180 */
+  width: 200px;
+  aspect-ratio: 1 / 1;
+  background: rgba(15,23,42,.04);
+  overflow: hidden;       /* corta excesso */
+  border-bottom: 1px solid rgba(15,23,42,.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5%;
+  
+}
+
+/* imagem sempre “encaixada” no mesmo tamanho */
+.reward-media img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;      /* mantém proporção e recorta */
+  object-position: center;
+  display: block;
+}
+
+/* fallback (emoji) também fica no mesmo tamanho */
+.reward-fallback{
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44px;
+}
+.reward-media img{ aspect-ratio: 1 / 1; }s
+
+/* ===== Catálogo (Resgatar) - cards ecommerce (5 por linha) ===== */
+
+.reward-grid{
+  display:grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr)); /* ✅ 5 por linha */
+  gap:16px;
+  align-items: stretch;
+}
+
+/* Responsivo */
+@media (max-width: 1200px){
+  .reward-grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 980px){
+  .reward-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 720px){
+  .reward-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px){
+  .reward-grid{ grid-template-columns: 1fr; }
+}
+
+.reward-card{
+  background:#fff;
+  border:1px solid rgba(15,23,42,.10);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow: 0 10px 24px rgba(15,23,42,.06);
+  transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  display:flex;
+  flex-direction:column;
+  min-height: 100%;
+}
+
+.reward-card:hover{
+  transform: translateY(-3px);
+  border-color: rgba(92,44,140,.25);
+  box-shadow: 0 18px 38px rgba(15,23,42,.10);
+}
+
+.reward-card.is-disabled{
+  opacity:.60;
+  filter: grayscale(.10);
+}
+
+.reward-media{
+  height: 150px;                 /* ✅ tamanho fixo da foto */
+  width: 100%;
+  background: linear-gradient(180deg, rgba(15,23,42,.03), rgba(15,23,42,.06));
+  overflow:hidden;
+  position:relative;
+}
+
+.reward-media img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+  transform: scale(1.01);
+}
+
+.reward-fallback{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:48px;
+}
+
+.reward-body{
+  padding: 12px 12px 14px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  flex:1;
+}
+
+.reward-title{
+  font-size:14px;
+  font-weight:700;
+  color: rgba(15,23,42,.92);
+  line-height:1.2;
+  display:-webkit-box;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+  min-height: 34px;
+}
+
+.reward-desc{
+  font-size:12.5px;
+  color: rgba(15,23,42,.68);
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-box-orient: vertical;
+  overflow:hidden;
+  min-height: 34px;
+}
+
+.reward-meta{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:10px;
+  margin-top: 2px;
+}
+
+.reward-price{
+  display:flex;
+  align-items:baseline;
+  gap:6px;
+}
+
+.reward-price-num{
+  font-size:18px;
+  font-weight:800;
+  color: rgba(92,44,140,1);
+}
+
+.reward-price-unit{
+  font-size:12px;
+  color: rgba(15,23,42,.55);
+}
+
+.reward-stock{
+  font-size:12px;
+  color: rgba(15,23,42,.60);
+  white-space: nowrap;
+}
+
+/* Form */
+.reward-form{
+  margin-top:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.reward-note{
+  width:100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  border:1px solid rgba(15,23,42,.12);
+  font-size: 12.5px;
+  outline:none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.reward-note:focus{
+  border-color: rgba(92,44,140,.45);
+  box-shadow: 0 0 0 3px rgba(92,44,140,.12);
+}
+
+.reward-btn{
+  width:100%;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+/* Mensagens pequenas abaixo do botão */
+.reward-hint{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+  margin-top: -4px;
+}
+
+/* (Opcional) melhora o botão disabled */
+.reward-form button:disabled{
+  opacity: .7;
+  cursor: not-allowed;
+}
+
+/* FORÇA 5 por linha (desktop) */
+.pc-card .reward-grid{
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+/* Responsivo */
+@media (max-width: 1200px){
+  .pc-card .reward-grid{ grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 980px){
+  .pc-card .reward-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 720px){
+  .pc-card .reward-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 480px){
+  .pc-card .reward-grid{ grid-template-columns: 1fr !important; }
+}
+
+/* Garantia: card ocupa 1 coluna (não “estica” sozinho) */
+.pc-card .reward-card{
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* FORÇA 4 por linha (desktop) */
+.pc-card .reward-grid{
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+}
+
+/* Responsivo */
+@media (max-width: 1200px){
+  .pc-card .reward-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 850px){
+  .pc-card .reward-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 520px){
+  .pc-card .reward-grid{ grid-template-columns: 1fr !important; }
+}
+
+/* Garante que os cards não “estiquem” a linha */
+.pc-card .reward-card{
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Imagem do card com altura fixa de 250px */
+.pc-card .reward-media{
+  height: 250px !important;
+  width: 100%;
+  overflow: hidden;
+}
+
+.pc-card .reward-media img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.pc-card .reward-fallback{
+  height: 250px !important;
+}
+
+.reward-hint{
+  min-height: 18px;      /* reserva 1 linha sempre */
+  margin: 0 0 10px 0;    /* espaço entre aviso e botão */
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(239,68,68,.95);
+}
+
+.reward-hint:not(.is-on){
+  color: transparent;    /* ocupa espaço sem aparecer */
+}
