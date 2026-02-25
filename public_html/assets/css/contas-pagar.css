@@ -505,3 +505,13 @@ modal-forn-title {
 .modal-table tbody tr{
   transition: background-color .2s ease;
 }
+/* Modal (Centro de Custo) mais largo */
+#modal-overlay .modal-container{
+  width:96vw !important;
+  max-width:1100px !important;
+}
+
+/* (Opcional) mais espaço nas células e permite quebrar texto do fornecedor */
+#modal-overlay .modal-table td:first-child{
+  white-space:normal !important;
+}
