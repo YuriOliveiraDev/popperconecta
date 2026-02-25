@@ -682,3 +682,200 @@
 .reward-hint:not(.is-on){
   color: transparent;    /* ocupa espaço sem aparecer */
 }
+
+@media (max-width: 1366px) and (max-height: 768px) {
+
+  /* 0. Reset Global para garantir que não haja margens/paddings externos */
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important; /* Impede scroll na página principal */
+  }
+
+  /* 1. Container principal da página Coins */
+  .coins.container {
+    padding-top: 16px !important; /* Reduz padding superior */
+    padding-bottom: 16px !important; /* Reduz padding inferior */
+    max-width: 1300px !important; /* Usa mais largura disponível */
+  }
+
+  /* 2. Cabeçalho da página Coins */
+  .coins .pc-header {
+    margin-bottom: 16px !important; /* Reduz margem inferior */
+  }
+  .coins .pc-title {
+    font-size: 1.8rem !important; /* Reduz tamanho do título */
+  }
+  .coins .pc-subtitle {
+    font-size: 0.95rem !important; /* Reduz tamanho do subtítulo */
+    margin-top: 6px !important;
+  }
+
+  /* 3. Layout principal: pc-container */
+  .coins .pc-container {
+    gap: 16px !important; /* Reduz espaçamento entre os blocos */
+  }
+
+  /* 4. Grid de Saldo e Pedidos: muda para 1 coluna */
+  .coins .pc-grid {
+    grid-template-columns: 1fr !important; /* Força 1 coluna */
+    gap: 16px !important; /* Reduz espaçamento */
+  }
+
+  /* 5. Cards em geral */
+  .coins .pc-card {
+    padding: 18px !important; /* Reduz padding interno dos cards */
+    border-radius: 12px !important; /* Arredondamento um pouco menor */
+  }
+  .coins .pc-card-head {
+    margin-bottom: 10px !important; /* Reduz margem do cabeçalho do card */
+  }
+  .coins .pc-card-title {
+    font-size: 13px !important; /* Reduz título do card */
+  }
+  .coins .pc-card-badge {
+    font-size: 11px !important; /* Reduz badge do card */
+    height: 24px !important;
+    padding: 0 10px !important;
+  }
+
+  /* 6. Card de Saldo */
+  .coins .pc-card--balance {
+    min-height: 180px !important; /* Reduz altura mínima */
+    padding: 24px 18px !important; /* Ajusta padding */
+  }
+  .coins .pc-balance-head {
+    margin-bottom: 10px !important;
+  }
+  .coins .pc-balance-title {
+    font-size: 13px !important;
+  }
+  .coins .pc-balance-pill {
+    font-size: 11px !important;
+    height: 24px !important;
+    padding: 0 10px !important;
+  }
+  .coins .pc-balance-value {
+    margin: 6px 0 14px !important; /* Reduz margem */
+  }
+  .coins .pc-balance-num {
+    font-size: 40px !important; /* Reduz número do saldo */
+  }
+  .coins .pc-balance-unit {
+    font-size: 13px !important; /* Reduz unidade do saldo */
+  }
+  .coins .pc-balance-foot {
+    padding-top: 10px !important; /* Reduz padding superior */
+  }
+  .coins .pc-balance-label {
+    font-size: 11px !important;
+  }
+  .coins .pc-balance-user {
+    font-size: 12px !important;
+  }
+
+  /* 7. Tabelas (Pedidos, Extrato, Aprovações) */
+  .coins .table-wrap {
+    border-radius: 10px !important; /* Arredondamento menor */
+  }
+  .coins .table th,
+  .coins .table td {
+    padding: 10px 12px !important; /* Reduz padding das células */
+    font-size: 12px !important; /* Reduz fonte das células */
+  }
+  .coins .table thead th {
+    font-size: 10px !important; /* Reduz fonte do cabeçalho da tabela */
+  }
+  .coins .pc-table-scroll--requests {
+    max-height: 200px !important; /* Reduz altura máxima para pedidos */
+  }
+
+  /* 8. Pills de status */
+  .coins .pill {
+    padding: 4px 10px !important; /* Reduz padding da pill */
+    font-size: 11px !important; /* Reduz fonte da pill */
+  }
+
+  /* 9. Catálogo de Recompensas (se presente na página) */
+  .reward-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important; /* 4 colunas */
+    gap: 12px !important; /* Reduz espaçamento */
+  }
+  .reward-media {
+    height: 120px !important; /* Reduz altura da imagem do card */
+  }
+  .reward-fallback {
+    height: 120px !important;
+    font-size: 40px !important;
+  }
+  .reward-body {
+    padding: 10px !important; /* Reduz padding do corpo do card */
+    gap: 8px !important;
+  }
+  .reward-title {
+    font-size: 13px !important; /* Reduz título da recompensa */
+    min-height: 32px !important;
+  }
+  .reward-desc {
+    font-size: 11.5px !important; /* Reduz descrição da recompensa */
+    min-height: 32px !important;
+  }
+  .reward-price-num {
+    font-size: 16px !important; /* Reduz preço da recompensa */
+  }
+  .reward-price-unit {
+    font-size: 11px !important;
+  }
+  .reward-stock {
+    font-size: 11px !important;
+  }
+  .reward-note {
+    padding: 8px 9px !important; /* Reduz padding do input de nota */
+    font-size: 11.5px !important;
+  }
+  .reward-btn {
+    padding: 9px 10px !important; /* Reduz padding do botão */
+  }
+  .reward-hint {
+    font-size: 11px !important; /* Reduz fonte da dica */
+    min-height: 16px !important;
+  }
+
+  /* 10. Ajustes para formulários (se houver) */
+  .coins .pc-form input {
+    padding: 8px 10px !important; /* Reduz padding */
+    font-size: 13px !important;
+  }
+  .coins .pc-form button {
+    padding: 8px 14px !important; /* Reduz padding */
+    font-size: 13px !important;
+  }
+  /* COINS 1366x768: permitir rolagem da página (não sumir seções) */
+@media (max-width: 1366px) and (max-height: 768px){
+  html, body{
+    overflow-y: auto !important;   /* libera rolagem vertical */
+    overflow-x: hidden !important; /* evita barra horizontal */
+  }
+
+  /* garante que o main não esteja travando */
+  body.page > main{
+    overflow: visible !important;
+  }
+}
+  /* garante rolagem da página */
+  html, body{
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  /* dá “respiro” no final do conteúdo para não ficar atrás do footer */
+  body.page > main.container.coins{
+    padding-bottom: calc(var(--footer-h, 56px) + 16px) !important;
+  }
+
+  /* se o footer for fixed, isso também ajuda a não “morder” o conteúdo */
+  body.page{
+    padding-bottom: calc(var(--footer-h, 56px) + 16px) !important;
+  }
+}

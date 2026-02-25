@@ -19,11 +19,6 @@
 }
 
 /* Viewport (ALTURA DEFINITIVA AQUI) */
-#mainCarousel .carousel__viewport{
-  overflow: hidden;
-  height: min(92vh, 720px); /* quase toda a tela */
-  border-radius: 0;
-}
 
 /* Track */
 .carousel__track{
@@ -89,13 +84,6 @@
   padding: 24px;
 }
 
-/* Slide insight */
-.slide--insight .insight{
-  height: 100%;
-  min-height: 0;
-  display: flex;
-  justify-content: center;
-}
 
 /* Setas */
 .carousel__arrow{
@@ -156,14 +144,4 @@
 .carousel__dot.is-active{
   width: 30px;
   background: var(--primary-color);
-}
-
-/* Responsivo */
-@media (max-width: 768px){
-  .carousel__arrow{ display: none; }
-  #mainCarousel .carousel__viewport{ height: 82vh; }
-}
-
-@media (max-width: 420px){
-  #mainCarousel .carousel__viewport{ height: 78vh; }
 }
