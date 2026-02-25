@@ -1,5 +1,17 @@
 <?php
-require_once __DIR__ . '/app/config-totvs.php';
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/permissions.php';
+require_once __DIR__ . '/../app/config-totvs.php';
+
+require_admin();
+
+$me = current_user();
+$u = $me;              // garante compatibilidade com header.php
+$activePage = 'admin'; // destaca no header
 
 // =========================
 // PERÍODOS
@@ -155,19 +167,20 @@ $mkActive = fn($a) => $a === $active ? 'active' : '';
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Dashboard - Contas a Pagar</title>
-<link rel="stylesheet" href="/assets/css/base.css">
-<link rel="stylesheet" href="/assets/css/header.css">
-<link rel="stylesheet" href="/assets/css/dropdowns.css">
-<link rel="stylesheet" href="/assets/css/util.css">
-<link rel="stylesheet" href="assets/css/contas-pagar.css">
-<link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
-<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
+<link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
+<link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard.css') ?>" />
+<link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+<link rel="stylesheet" href="/assets/css/rh_rewards.css?v=<?= filemtime(__DIR__ . '/../assets/css/rh_rewards.css') ?>" />
+<link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
+<link rel="stylesheet" href="/assets/css/util.css?v=<?= filemtime(__DIR__ . '/../assets/css/util.css') ?>" />
+<link rel="stylesheet" href="/assets/css/contas-pagar.css?v=<?= filemtime(__DIR__ . '/../assets/css/contas-pagar.css') ?>" />
 </head>
 <body>
    
     <?php
 $activePage = 'financeiro'; // ou 'home', 'coins' etc. conforme seu header usa
-require_once __DIR__ . '/app/header.php';
+require_once __DIR__ . '/../app/header.php';
 ?>
 <div class="wrap">
 <?php if (!$result['success']): ?>
@@ -375,11 +388,12 @@ require_once __DIR__ . '/app/header.php';
         </div>
     </div>
 </div>
-  <?php require_once __DIR__ . '/app/footer.php'; ?>
-
-  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
-  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
-  <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
+<!-- Scripts necessários (caminhos absolutos da raiz) -->
+<script src="/assets/js/contas-pagar.js?v=<?= filemtime(__DIR__ . '/../assets/js/contas-pagar.js') ?>"></script>
+<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
+<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
+<!-- index-carousel.js só se for usado neste dashboard; remova se não precisar -->
+<script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/../assets/js/index-carousel.js') ?>"></script>
 <!-- MODAL: DETALHES DO FORNECEDOR (Top gastos por fornecedor) -->
 <div id="modal-forn-overlay" class="modal-overlay">
   <div class="modal-container" style="max-width: 1000px;">
@@ -496,9 +510,6 @@ require_once __DIR__ . '/app/header.php';
   });
 })();
 </script>
-<script src="/assets/js/contas-pagar.js?v=<?= filemtime(__DIR__ . '/assets/js/contas-pagar.js') ?>"></script>
-<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
-<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
-<script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
+
 </body>
 </html>

@@ -505,6 +505,7 @@ modal-forn-title {
 .modal-table tbody tr{
   transition: background-color .2s ease;
 }
+
 /* Modal (Centro de Custo) mais largo */
 #modal-overlay .modal-container{
   width:96vw !important;
