@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
-$TOKEN = getenv('26462126') ?: 'troque_isto';
+$TOKEN = getenv('POPPER_API_TOKEN') ?: '26462126';
 if (($_SERVER['HTTP_X_TOKEN'] ?? '') !== $TOKEN) {
   http_response_code(401);
   echo json_encode(['error' => 'unauthorized']);
