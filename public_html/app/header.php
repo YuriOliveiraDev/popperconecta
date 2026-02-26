@@ -63,7 +63,7 @@ if ($userName !== '') {
   }
 }
 
-// Saudação dinâmica (Brasília)
+// Saudação dinâmica (SP)
 date_default_timezone_set('America/Sao_Paulo');
 
 $h = (int)date('H');
@@ -87,8 +87,8 @@ if ($h >= 5 && $h < 12) {
 
     <?php if (!empty($adminItems)): ?>
       <div class="topbar__dropdown" style="margin-left:12px;">
-        <a class="topbar__dropdown-trigger" href="#" id="adminTrigger">Administração</a>
-        <div class="topbar__dropdown-menu" id="adminMenu">
+        <a class="topbar__dropdown-trigger" href="#" id="adminTrigger" aria-haspopup="true" aria-expanded="false">Administração</a>
+        <div class="topbar__dropdown-menu" id="adminMenu" role="menu">
           <?php foreach ($adminItems as $item): ?>
             <a class="topbar__dropdown-item" href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>">
               <span class="topbar__dropdown-icon"><?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?></span>
@@ -99,43 +99,77 @@ if ($h >= 5 && $h < 12) {
       </div>
     <?php endif; ?>
 
-    <div class="topbar__dropdown" style="margin-left:8px;">
-      <a class="topbar__dropdown-trigger" href="#" id="dashTrigger">Dashboards</a>
-      <div class="topbar__dropdown-menu" id="dashMenu">
-        <a class="topbar__dropdown-item" href="/dashboard.php">
-          <span class="topbar__dropdown-icon">📊</span>
-          <span class="topbar__dropdown-label">Faturamento</span>
-        </a>
-        <a class="topbar__dropdown-item" href="/financeiro.php">
-          <span class="topbar__dropdown-icon">💰</span>
-          <span class="topbar__dropdown-label">Financeiro</span>
-        </a>
-        
-        <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
-          <span class="topbar__dropdown-icon">💰</span>
-          <span class="topbar__dropdown-label">Executivo</span>
-        </a>
+    <!-- DASHBOARD (com submenus Comercial e Financeiro) -->
+    <div class="topbar__dropdown" style="margin-left:8px;" id="dashWrap">
+      <a class="topbar__dropdown-trigger" href="#" id="dashTrigger" aria-haspopup="true" aria-expanded="false">Dashboard</a>
 
-        <?php if (isset($dashboards) && is_array($dashboards)): ?>
-          <?php foreach ($dashboards as $dash): ?>
-            <?php
-              $slug = isset($dash['slug']) ? (string)$dash['slug'] : '';
-              if ($slug === '' || $slug === 'executivo' || $slug === 'financeiro') continue;
-              $name = isset($dash['name']) ? (string)$dash['name'] : $slug;
-              $icon = isset($dash['icon']) ? (string)$dash['icon'] : '📊';
-            ?>
-            <a class="topbar__dropdown-item" href="/<?= htmlspecialchars($slug, ENT_QUOTES, 'UTF-8') ?>.php">
-              <span class="topbar__dropdown-icon"><?= htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="topbar__dropdown-label"><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></span>
+      <div class="topbar__dropdown-menu" id="dashMenu" role="menu" aria-label="Dashboard">
+        <!-- Grupo: Comercial -->
+        <div class="topbar__dropdown-group" data-submenu>
+          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="topbar__dropdown-icon">📈</span>
+            <span class="topbar__dropdown-label">Comercial</span>
+            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+          </button>
+
+          <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
+            <a class="topbar__dropdown-item" href="/dashboard.php">
+              <span class="topbar__dropdown-icon">📊</span>
+              <span class="topbar__dropdown-label">Faturamento</span>
             </a>
-          <?php endforeach; ?>
-        <?php endif; ?>
+
+            <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
+              <span class="topbar__dropdown-icon">📌</span>
+              <span class="topbar__dropdown-label">Executivo</span>
+            </a>
+
+            <a class="topbar__dropdown-item" href="/insight_comercial.php">
+              <span class="topbar__dropdown-icon">💡</span>
+              <span class="topbar__dropdown-label">Insight</span>
+            </a>
+
+            <?php if (isset($dashboards) && is_array($dashboards)): ?>
+              <?php foreach ($dashboards as $dash): ?>
+                <?php
+                  $slug = isset($dash['slug']) ? (string)$dash['slug'] : '';
+                  if ($slug === '' || $slug === 'executivo' || $slug === 'financeiro') continue;
+
+                  // evita duplicar fixos
+                  if (in_array($slug, ['dashboard', 'dashboard-executivo', 'insight_comercial', 'insight-comercial'], true)) continue;
+
+                  $name = isset($dash['name']) ? (string)$dash['name'] : $slug;
+                  $icon = isset($dash['icon']) ? (string)$dash['icon'] : '📊';
+                ?>
+                <a class="topbar__dropdown-item" href="/<?= htmlspecialchars($slug, ENT_QUOTES, 'UTF-8') ?>.php">
+                  <span class="topbar__dropdown-icon"><?= htmlspecialchars($icon, ENT_QUOTES, 'UTF-8') ?></span>
+                  <span class="topbar__dropdown-label"><?= htmlspecialchars($name, ENT_QUOTES, 'UTF-8') ?></span>
+                </a>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        </div>
+
+        <!-- Grupo: Financeiro -->
+        <div class="topbar__dropdown-group" data-submenu>
+          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="topbar__dropdown-icon">💰</span>
+            <span class="topbar__dropdown-label">Financeiro</span>
+            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+          </button>
+
+          <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
+            <a class="topbar__dropdown-item" href="/admin/dashboardContasP.php">
+              <span class="topbar__dropdown-icon">🧾</span>
+              <span class="topbar__dropdown-label">Contas a Pagar</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="topbar__dropdown" style="margin-left:8px;">
-      <a class="topbar__dropdown-trigger<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php" id="coinsTrigger">Popper Coins</a>
-      <div class="topbar__dropdown-menu" id="coinsMenu">
+      <a class="topbar__dropdown-trigger<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php" id="coinsTrigger" aria-haspopup="true" aria-expanded="false">Popper Coins</a>
+      <div class="topbar__dropdown-menu" id="coinsMenu" role="menu">
         <a class="topbar__dropdown-item" href="/coins.php">
           <span class="topbar__dropdown-label">Meus Poppercoins</span>
         </a>
@@ -178,27 +212,23 @@ if ($h >= 5 && $h < 12) {
 
               $href = trim((string)($n['link'] ?? ''));
 
-              // Se vazio, não navega
               if ($href === '' || $href === '#') {
                 $href = '#';
                 $isClickable = false;
               } else {
                 $isClickable = true;
 
-                // Externo?
                 if (preg_match('/^https?:\/\//i', $href)) {
-                  // Mantém como está
+                  // externo
                 } else {
-                  // Remove ./ e ../ do começo
                   $href = preg_replace('#^(\./|\.\./)+#', '', $href);
 
-                  // ✅ CORREÇÃO: se vier "/rh_redemptions.php", transforma em "/admin/rh_redemptions.php"
                   if (strpos($href, '/admin/') === 0) {
-                    // já está certo
+                    // ok
                   } elseif (strpos($href, '/') === 0) {
-                    $href = '/admin' . $href; // "/rh_redemptions.php" -> "/admin/rh_redemptions.php"
+                    $href = '/admin' . $href;
                   } else {
-                    $href = '/admin/' . $href; // "rh_redemptions.php" -> "/admin/rh_redemptions.php"
+                    $href = '/admin/' . $href;
                   }
                 }
               }

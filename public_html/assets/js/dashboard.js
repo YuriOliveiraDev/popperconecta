@@ -185,6 +185,9 @@ function int(v) { v = Number(v); return Number.isFinite(v) ? Math.trunc(v) : 0; 
     const v = payload.values || {};
     const updatedAt = payload.updated_at || '—';
     const ref = buildRefLabels(updatedAt);
+    const fatMes = num(v.mes_faturado);
+const agMes  = num(v.mes_agendado);
+const totalMes = (fatMes + agMes) || num(v.realizado_ate_hoje);
 
     setText('titleProgressMonth', `Progresso (Mês) — ${ref.mesAno}`);
     setText('titleProgressYear', `Progresso (Ano) — ${ref.ano}`);
@@ -195,6 +198,11 @@ function int(v) { v = Number(v); return Number.isFinite(v) ? Math.trunc(v) : 0; 
     setText('kpi-realizado-mes', brl.format(num(v.realizado_ate_hoje)));
     setText('kpi-falta-mes', brl.format(num(v.falta_meta_mes)));
     setText('kpi-mes-atual', brl.format(num(v.realizado_ate_hoje)));
+    setText('kpi-mes-atual', brl.format(totalMes));
+setText('kpi-realizado-mes', brl.format(totalMes)); // mantém "Realizado" do card meta mês
+
+setText('kpi-mes-fat', brl.format(fatMes));
+setText('kpi-mes-ag', brl.format(agMes));
     // Ano
     setText('kpi-meta-ano', brl.format(num(v.meta_ano)));
     setText('kpi-realizado-ano', brl.format(num(v.realizado_ano_acum)));
@@ -282,16 +290,20 @@ function int(v) { v = Number(v); return Number.isFinite(v) ? Math.trunc(v) : 0; 
 
   // --- Diário (HOJE)
   function renderDailyToday(basePayload, dailyPayload) {
+  
   const v = basePayload.values || {};
   const updatedAt = basePayload.updated_at || '—';
 
-  // HOJE (vem do dashboard-data.php)
-  const totalHoje = num(v.hoje_total);
 
-  setText('kpi-hoje-total', brl.format(totalHoje));
-  setText('kpi-hoje-fat', brl.format(totalHoje)); // por enquanto sem split
-  setText('kpi-hoje-ag', brl.format(0));
-  setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
+// HOJE (vem do dashboard-data.php)
+const fatHoje = num(v.hoje_faturado);
+const agHoje  = num(v.hoje_agendado);
+const totalHoje = (fatHoje + agHoje) || num(v.hoje_total); // fallback
+
+setText('kpi-hoje-total', brl.format(totalHoje));
+setText('kpi-hoje-fat', brl.format(fatHoje));
+setText('kpi-hoje-ag', brl.format(agHoje));
+setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
 
   // ---- META DO DIA (teórica) e GAP hoje ----
   const diasTotais = int(v.dias_uteis_trabalhar);

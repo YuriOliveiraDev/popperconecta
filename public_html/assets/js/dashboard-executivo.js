@@ -1,9 +1,10 @@
 /**
  * /assets/js/dashboard-executivo.js
- * - Presets Jan–Dez/2026 via chips (data-ym="2026-02")
- * - Default: window.EXEC_DEFAULT_YM (setado no PHP)
- * - Atualização em tempo real (sem botão aplicar)
- * - TOP 10 destacado + lista completa com scroll (CSS faz o scroll via .top-list {max-height...; overflow:auto})
+ * - Chips Jan–Dez/2026 via data-ym="2026-02"
+ * - Default: window.EXEC_DEFAULT_YM
+ * - Carrega /api/dashboard-executivo-save.php?ym=YYYY-MM
+ * - Renderiza 3 cards: Hoje / Mês / Ano (Total + Faturado + Agendado)
+ * - Renderiza gráfico diário + Tops
  */
 
 const CACHE_URL = '/api/dashboard-executivo-save.php';
@@ -12,27 +13,27 @@ let chart;
 const TOP_N = 10;
 
 // ---------- helpers ----------
-function asNumber(v){
+function asNumber(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
 
-function moneyBR(v){
-  return asNumber(v).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+function moneyBR(v) {
+  return asNumber(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-function setText(id, text){
+function setText(id, text) {
   const el = document.getElementById(id);
   if (el) el.textContent = text;
 }
 
-function escapeHtml(str){
+function escapeHtml(str) {
   return String(str ?? '')
-    .replaceAll('&','&amp;')
-    .replaceAll('<','&lt;')
-    .replaceAll('>','&gt;')
-    .replaceAll('"','&quot;')
-    .replaceAll("'","&#039;");
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 /**
@@ -41,10 +42,9 @@ function escapeHtml(str){
  * - array [ ["A", 123], ["B", 456] ]
  * - array de objetos [ {name:"A", value:123}, ... ]
  */
-function normalizeEntries(input){
+function normalizeEntries(input) {
   if (!input) return [];
 
-  // array
   if (Array.isArray(input)) {
     return input
       .map(it => {
@@ -55,7 +55,6 @@ function normalizeEntries(input){
       .filter(([n]) => n != null && String(n).trim() !== '');
   }
 
-  // objeto
   if (typeof input === 'object') return Object.entries(input);
 
   return [];
@@ -66,69 +65,61 @@ let currentYm = (typeof window.EXEC_DEFAULT_YM === 'string' && /^\d{4}-\d{2}$/.t
   ? window.EXEC_DEFAULT_YM
   : '2026-02';
 
-function setActiveChip(ym){
+function setActiveChip(ym) {
   const chipsWrap = document.getElementById('chipsMeses');
   if (!chipsWrap) return;
 
-  const chips = chipsWrap.querySelectorAll('.chip');
-  chips.forEach(btn => {
+  chipsWrap.querySelectorAll('.chip').forEach(btn => {
     const bYm = btn.getAttribute('data-ym');
-    if (bYm === ym) btn.classList.add('is-active');
-    else btn.classList.remove('is-active');
+    btn.classList.toggle('is-active', bYm === ym);
   });
 }
 
-function fmtPeriodLabel(ym){
-  // ym = YYYY-MM
+function fmtPeriodLabel(ym) {
   const [Y, M] = ym.split('-').map(Number);
-  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const mm = Number.isFinite(M) ? meses[M-1] : '—';
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const mm = Number.isFinite(M) ? meses[M - 1] : '—';
   return `${mm}/${String(Y).slice(-2)}`;
 }
 
-function applyYm(ym){
+function applyYm(ym) {
   if (!/^\d{4}-\d{2}$/.test(ym)) return;
-  currentYm = ym;
 
+  currentYm = ym;
   setActiveChip(ym);
 
-  // títulos
-  setText('lblPeriodo', `Mês (${fmtPeriodLabel(ym)})`);
   setText('ttlChart', `Faturamento Diário (${fmtPeriodLabel(ym)})`);
 
   const pl = document.getElementById('periodLabel');
   if (pl) pl.textContent = `Período: ${fmtPeriodLabel(ym)}`;
 
-  // carrega na hora
   refresh();
 }
 
-function bindChips(){
+function bindChips() {
   const chipsWrap = document.getElementById('chipsMeses');
   if (!chipsWrap) return;
 
   chipsWrap.addEventListener('click', (ev) => {
     const btn = ev.target?.closest?.('.chip');
     if (!btn) return;
-
     const ym = btn.getAttribute('data-ym');
     if (!ym) return;
-
     applyYm(ym);
   });
 }
 
 // ---------- TOP LIST ----------
-function renderTopList(containerId, badgeId, input){
+function renderTopList(containerId, badgeId, input) {
   const wrap = document.getElementById(containerId);
   if (!wrap) return;
 
   const entries = normalizeEntries(input)
     .map(([name, val]) => [String(name), asNumber(val)])
     .filter(([name]) => name.trim() !== '')
-    .sort((a,b) => b[1] - a[1]);
+    .sort((a, b) => b[1] - a[1]);
 
-  const total = entries.reduce((acc, [,v]) => acc + v, 0);
+  const total = entries.reduce((acc, [, v]) => acc + v, 0);
   const max = entries.length ? entries[0][1] : 0;
 
   const badge = document.getElementById(badgeId);
@@ -141,8 +132,7 @@ function renderTopList(containerId, badgeId, input){
     return;
   }
 
-  // Lista completa (scroll é CSS). TOP_N apenas destacado com .is-top
-  for (let idx = 0; idx < entries.length; idx++){
+  for (let idx = 0; idx < entries.length; idx++) {
     const [name, val] = entries[idx];
     const rank = idx + 1;
 
@@ -169,11 +159,11 @@ function renderTopList(containerId, badgeId, input){
 }
 
 // ---------- CHART ----------
-function renderChart(diario_mes){
+function renderChart(diario_mes) {
   const diario = (diario_mes && typeof diario_mes === 'object') ? diario_mes : {};
 
-  // keys esperadas: "01","02"... ou "1","2" etc
-  const labels = Object.keys(diario).sort((a,b) => Number(a) - Number(b));
+  // Ordena por dia numérico (chaves "02","3","26"...)
+  const labels = Object.keys(diario).sort((a, b) => Number(a) - Number(b));
   const values = labels.map(k => asNumber(diario[k]));
 
   const canvas = document.getElementById('chartDiario');
@@ -204,53 +194,64 @@ function renderChart(diario_mes){
 }
 
 // ---------- DATA LOAD ----------
-function buildUrl(){
+function buildUrl() {
   const u = new URL(CACHE_URL, window.location.origin);
-  // filtro mês 2026-02
   u.searchParams.set('ym', currentYm);
-  // cache-bust
-  u.searchParams.set('v', String(Date.now()));
+  u.searchParams.set('v', String(Date.now())); // cache-bust
   return u.toString();
 }
 
-async function load(){
+async function load() {
   const res = await fetch(buildUrl(), { cache: 'no-store' });
-  if (!res.ok) throw new Error('cache not ok');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-  const kpi = await res.json();
+  const payload = await res.json();
+  if (!payload || payload.success === false) throw new Error('payload inválido');
 
-  setText('updatedAt', 'Atualizado em: ' + (kpi.updated_at || '—'));
+  const v = payload.values || {};
+  const updatedAt = payload.updated_at || '—';
 
-  // KPIs (hoje/ano podem vir independentes do filtro, depende do seu PHP API)
-  setText('kpiHoje', moneyBR(kpi.hoje));
-  setText('kpiMes',  moneyBR(kpi.mes));
-  setText('kpiAno',  moneyBR(kpi.ano));
+  // Header
+  setText('updatedAt', `Atualizado em: ${updatedAt}`);
 
-  setText('kpiNfHoje', `${kpi.qtd_nf_hoje || 0} NF`);
-  setText('kpiNfMes',  `${kpi.qtd_nf_mes || 0} NF no mês`);
-  setText('kpiClientesMes', `${kpi.clientes_mes || 0} clientes`);
+  // HOJE
+  setText('kpiHojeTotal', moneyBR(v.hoje_total));
+  setText('kpiHojeFat', moneyBR(v.hoje_faturado));
+  setText('kpiHojeAg', moneyBR(v.hoje_agendado));
+  setText('kpiHojeTrend', `Atualizado: ${updatedAt}`);
 
-  renderTopList('listTopProdutos', 'badgeTopProdutos', kpi.top_produtos);
-  renderTopList('listTopVendedores', 'badgeTopVendedores', kpi.top_vendedores);
+  // MÊS
+  setText('kpiMesTotal', moneyBR(v.mes_total));
+  setText('kpiMesFat', moneyBR(v.mes_faturado));
+  setText('kpiMesAg', moneyBR(v.mes_agendado));
+  setText('kpiMesTrend', `Atualizado: ${updatedAt}`);
 
-  renderChart(kpi.diario_mes);
+  // ANO
+  setText('kpiAnoTotal', moneyBR(v.ano_total));
+  setText('kpiAnoFat', moneyBR(v.ano_faturado));
+  setText('kpiAnoAg', moneyBR(v.ano_agendado));
+  setText('kpiAnoTrend', `Atualizado: ${updatedAt}`);
+
+  // Tops + gráfico
+  renderTopList('listTopProdutos', 'badgeTopProdutos', payload.top_produtos);
+  renderTopList('listTopVendedores', 'badgeTopVendedores', payload.top_vendedores);
+  renderChart(payload.diario_mes);
 }
 
-async function refresh(){
+async function refresh() {
   try {
     await load();
-  } catch (e){
+  } catch (e) {
     console.error(e);
-    setText('updatedAt', 'Sem dados (cache não encontrado/erro)');
+    setText('updatedAt', 'Sem dados (erro ao carregar)');
     renderTopList('listTopProdutos', 'badgeTopProdutos', null);
     renderTopList('listTopVendedores', 'badgeTopVendedores', null);
   }
 }
 
 // ---------- init ----------
-(function init(){
+(function init() {
   bindChips();
-  applyYm(currentYm); // isso já chama refresh()
-  // TV: atualiza a cada 60s mantendo o mês selecionado
+  applyYm(currentYm);        // já chama refresh()
   setInterval(refresh, 60_000);
 })();

@@ -24,7 +24,7 @@
   }
 
   function close(){
-    if (pinned) return; // se clicou, fica fixo até clicar fora/esc
+    if (pinned) return;
     setOpen(false);
   }
 
@@ -34,46 +34,37 @@
     closeT = setTimeout(close, 220);
   }
 
-  // Hover no DESKTOP: abre e não fecha ao entrar no menu
   var isDesktop = window.matchMedia('(hover:hover) and (pointer:fine)').matches;
   if (isDesktop) {
-    // entra no sino/container => abre
     trigger.addEventListener('mouseenter', open);
-    // sai do container => agenda fechar
     wrap.addEventListener('mouseleave', scheduleClose);
-    // entra no menu => cancela fechar (fica aberto)
     menu.addEventListener('mouseenter', open);
-    // sai do menu => agenda fechar
     menu.addEventListener('mouseleave', scheduleClose);
   }
 
-  // Clique: fixa/solta (desktop e mobile)
   trigger.addEventListener('click', function(e){
     e.preventDefault();
     e.stopPropagation();
 
-    pinned = !pinned; // alterna o estado
+    pinned = !pinned;
     if (pinned) open();
-    else close(); // solta e deixa fechar pelo comportamento normal
+    else { pinned = false; setOpen(false); }
   });
 
-  // Clicar fora: fecha e tira o pinned
   document.addEventListener('click', function(e){
     if (!wrap.contains(e.target)) {
       pinned = false;
-      close();
+      setOpen(false);
     }
   });
 
-  // ESC: fecha e tira o pinned
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape') {
       pinned = false;
-      close();
+      setOpen(false);
     }
   });
 
-  // Marcar todas como lidas (AJAX)
   var markAll = document.getElementById('notifMarkAll');
   if (markAll) {
     markAll.addEventListener('click', function(e){
@@ -94,7 +85,6 @@
     });
   }
 
-  // Marcar individual como lida (sem travar o link)
   wrap.querySelectorAll('.notif__item[data-id]').forEach(function(a){
     a.addEventListener('click', function(){
       var id = a.getAttribute('data-id');
@@ -103,3 +93,85 @@
     });
   });
 })();
+
+
+// DASHBOARD: hover no desktop (CSS), clique no mobile (JS)
+document.addEventListener('DOMContentLoaded', function () {
+  var dashWrap = document.getElementById('dashWrap');
+  var dashTrigger = document.getElementById('dashTrigger');
+  var dashMenu = document.getElementById('dashMenu');
+  if (!dashWrap || !dashTrigger || !dashMenu) return;
+
+  var groups = dashMenu.querySelectorAll('[data-submenu]');
+
+  function isMobile(){
+    return window.matchMedia('(max-width: 720px)').matches;
+  }
+
+  function closeAllGroups(){
+    groups.forEach(function(g){
+      g.classList.remove('is-open');
+      var b = g.querySelector('.topbar__dropdown-item--group');
+      if (b) b.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function closeDash(){
+    dashWrap.classList.remove('is-open');
+    dashTrigger.setAttribute('aria-expanded', 'false');
+    closeAllGroups();
+  }
+
+  function openDash(){
+    dashWrap.classList.add('is-open');
+    dashTrigger.setAttribute('aria-expanded', 'true');
+  }
+
+  // Clique no "Dashboard" abre/fecha (mantém comportamento padrão)
+  dashTrigger.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+
+    var isOpen = dashWrap.classList.contains('is-open');
+    if (isOpen) closeDash();
+    else openDash();
+  });
+
+  // Mobile: clique nos grupos abre/fecha submenu
+  groups.forEach(function(group){
+    var btn = group.querySelector('.topbar__dropdown-item--group');
+    if (!btn) return;
+
+    btn.addEventListener('click', function(e){
+      if (!isMobile()) return; // desktop: hover CSS cuida
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      var open = group.classList.contains('is-open');
+      closeAllGroups();
+
+      if (!open) {
+        group.classList.add('is-open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  // clicar fora fecha dashboard
+  document.addEventListener('click', function(e){
+    if (!dashWrap.contains(e.target)) {
+      closeDash();
+    }
+  });
+
+  // ESC fecha dashboard
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') closeDash();
+  });
+
+  // clique dentro do menu não fecha pelo clique global
+  dashMenu.addEventListener('click', function(e){
+    e.stopPropagation();
+  });
+});

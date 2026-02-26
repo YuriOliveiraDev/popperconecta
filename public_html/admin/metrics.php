@@ -371,29 +371,57 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
   const pct = (v) => new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:0}).format(Number(v||0));
 
   async function loadPreview(force=false){
-    const st = document.getElementById('previewStatus');
-    if (st) st.textContent = force ? 'Forçando TOTVS...' : 'Carregando...';
+  const st = document.getElementById('previewStatus');
+  if (st) st.textContent = force ? 'Forçando TOTVS...' : 'Carregando...';
 
+  try {
     const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${force ? '&force=1' : ''}`;
-    const res = await fetch(url, { cache: 'no-store' });
-    const payload = await res.json();
 
+    // timeout (10s)
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+
+    const res = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    clearTimeout(t);
+
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const payload = await res.json();
     const v = payload.values || {};
-    const rows = [
-      ['Atualizado em', payload.updated_at || '—'],
-      ['Hoje (faturado + agendado)', brl(v.hoje_total ?? 0)],
-      ['Realizado até hoje (mês)', brl(v.realizado_ate_hoje ?? 0)],
-      ['Realizado anual acumulado', brl(v.realizado_ano_acum ?? 0)],
-      ['Meta do mês', brl(v.meta_mes ?? 0)],
-      ['Falta para meta do mês', brl(v.falta_meta_mes ?? 0)],
-      ['Atingimento do mês', pct(v.atingimento_mes_pct ?? 0)],
-      ['Dias úteis', `${Number(v.dias_uteis_trabalhados||0)} / ${Number(v.dias_uteis_trabalhar||0)}`],
-      ['Meta por dia útil', brl(v.meta_dia_util ?? 0)],
-      ['Realizado por dia útil', brl(v.realizado_dia_util ?? 0)],
-      ['Vai bater meta?', v.vai_bater_meta ?? '—'],
-      ['Projeção de fechamento', brl(v.fechar_em ?? 0)],
-      ['Equivale a', pct(v.equivale_pct ?? 0)]
-    ];
+
+    const brlFmt = (x) => brl(x ?? 0);
+    const pctFmt = (x) => pct(x ?? 0);
+
+    const fatHoje = Number(v.hoje_faturado ?? 0);
+const agHoje  = Number(v.hoje_agendado ?? 0);
+const totalHoje = (fatHoje + agHoje) || Number(v.hoje_total ?? 0);
+
+const fatMes = Number(v.mes_faturado ?? 0);
+const agMes  = Number(v.mes_agendado ?? 0);
+const totalMes = (fatMes + agMes) || Number(v.realizado_ate_hoje ?? 0);
+
+const rows = [
+  ['Atualizado em', payload.updated_at || '—'],
+
+  ['Hoje (faturado)', brlFmt(fatHoje)],
+  ['Hoje (agendado)', brlFmt(agHoje)],
+  ['Hoje (total)', brlFmt(totalHoje)],
+
+  ['Mês (faturado)', brlFmt(fatMes)],
+  ['Mês (agendado)', brlFmt(agMes)],
+  ['Mês (total até hoje)', brlFmt(totalMes)],
+
+  ['Realizado anual acumulado', brlFmt(v.realizado_ano_acum)],
+  ['Meta do mês', brlFmt(v.meta_mes)],
+  ['Falta para meta do mês', brlFmt(v.falta_meta_mes)],
+  ['Atingimento do mês', pctFmt(v.atingimento_mes_pct)],
+  ['Dias úteis', `${Number(v.dias_uteis_trabalhados||0)} / ${Number(v.dias_uteis_trabalhar||0)}`],
+  ['Meta por dia útil', brlFmt(v.meta_dia_util)],
+  ['Realizado por dia útil', brlFmt(v.realizado_dia_util)],
+  ['Vai bater meta?', v.vai_bater_meta ?? '—'],
+  ['Projeção de fechamento', brlFmt(v.fechar_em)],
+  ['Equivale a', pctFmt(v.equivale_pct)]
+];
 
     const tbody = document.querySelector('#previewTable tbody');
     if (tbody) {
@@ -409,7 +437,11 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
     }
 
     if (st) st.textContent = 'OK ✅';
+  } catch (err) {
+    console.error(err);
+    if (st) st.textContent = `Erro ❌ ${err?.message || err}`;
   }
+}
 
   loadPreview(false);
 
