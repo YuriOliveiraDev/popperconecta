@@ -3,7 +3,8 @@
 
   const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const pct0 = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 });
-
+function clampMin(v, min) { return v < min ? min : v; }
+function int(v) { v = Number(v); return Number.isFinite(v) ? Math.trunc(v) : 0; }
   function setText(id, text) {
     const el = document.getElementById(id);
     if (el) el.textContent = text;
@@ -62,10 +63,7 @@
 
             const label = brl.format(val);
 
-            // posição padrão: um pouco acima da barra
-            let y = bar.y - 10; // aumentei para -10 para mais espaço
-
-            // impede o label de “invadir” o topo do chartArea (aumentei para +20)
+            let y = bar.y - 10;
             const minY = chartArea.top + 20;
             if (y < minY) y = minY;
 
@@ -96,7 +94,7 @@
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
-          layout: { padding: { top: 32 } }, // aumentei para 32
+          layout: { padding: { top: 32 } },
           plugins: {
             legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
             tooltip: {
@@ -107,11 +105,7 @@
             }
           },
           scales: {
-            y: {
-              beginAtZero: true,
-              grace: '20%', // aumentei para 20%
-              ticks: { callback: (v) => brl.format(v) }
-            }
+            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
           }
         },
         plugins: [valueLabelPlugin]
@@ -132,7 +126,7 @@
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
-          layout: { padding: { top: 32 } }, // aumentei para 32
+          layout: { padding: { top: 32 } },
           plugins: {
             legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
             tooltip: {
@@ -143,11 +137,7 @@
             }
           },
           scales: {
-            y: {
-              beginAtZero: true,
-              grace: '20%', // aumentei para 20%
-              ticks: { callback: (v) => brl.format(v) }
-            }
+            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
           }
         },
         plugins: [valueLabelPlugin]
@@ -160,14 +150,19 @@
         data: {
           labels: ['Meta/dia útil', 'Realizado/dia útil'],
           datasets: [
-            { label: `Ritmo (R$/dia) — ${ref.mesAno}`, data: [0, 0], backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'], borderRadius: 10 }
+            {
+              label: `Ritmo (R$/dia) — ${ref.mesAno}`,
+              data: [0, 0],
+              backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'],
+              borderRadius: 10
+            }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           animation: false,
-          layout: { padding: { top: 32 } }, // aumentei para 32
+          layout: { padding: { top: 32 } },
           plugins: {
             legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
             tooltip: {
@@ -178,11 +173,7 @@
             }
           },
           scales: {
-            y: {
-              beginAtZero: true,
-              grace: '20%', // aumentei para 20%
-              ticks: { callback: (v) => brl.format(v) }
-            }
+            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
           }
         },
         plugins: [valueLabelPlugin]
@@ -199,31 +190,42 @@
     setText('titleProgressYear', `Progresso (Ano) — ${ref.ano}`);
     setText('titlePace', `Ritmo (Dia útil) — ${ref.mesAno}`);
 
+    // Mês
     setText('kpi-meta-mes', brl.format(num(v.meta_mes)));
     setText('kpi-realizado-mes', brl.format(num(v.realizado_ate_hoje)));
     setText('kpi-falta-mes', brl.format(num(v.falta_meta_mes)));
-
+    setText('kpi-mes-atual', brl.format(num(v.realizado_ate_hoje)));
+    // Ano
     setText('kpi-meta-ano', brl.format(num(v.meta_ano)));
     setText('kpi-realizado-ano', brl.format(num(v.realizado_ano_acum)));
     setText('kpi-falta-ano', brl.format(num(v.falta_meta_ano)));
 
+    // Ritmo (mantém ids existentes)
     setText('kpi-ritmo', brl.format(num(v.realizado_dia_util)));
-    setText('kpi-meta-dia', brl.format(num(v.meta_dia_util)));
-    setText('kpi-a-faturar', brl.format(num(v.a_faturar_dia_util)));
 
+    // ✅ AGORA: "kpi-meta-dia" vira o número principal (meta dinâmica)
+    // (antes era meta_dia_util; agora será a_faturar_dia_util)
+    setText('kpi-meta-dia', brl.format(num(v.a_faturar_dia_util)));
+
+    // ✅ e "kpi-a-faturar" passa a mostrar a meta fixa (teórica), em menor destaque (mesmo id)
+    setText('kpi-a-faturar', brl.format(num(v.meta_dia_util)));
+
+    // Deveria / Atingimento
     setText('kpi-deveria', brl.format(num(v.deveria_ate_hoje)));
     setText('kpi-atingimento', pct0.format(num(v.atingimento_mes_pct)));
 
+    // Dias
     setText('kpi-dias', `${num(v.dias_uteis_trabalhados)} / ${num(v.dias_uteis_trabalhar)}`);
     setText('kpi-produtividade', pct0.format(num(v.realizado_dia_util_pct)));
 
+    // Trends
     setText('kpi-meta-trend', `Atualizado: ${updatedAt}`);
     setText('kpi-ano-trend', `Atualizado: ${updatedAt}`);
     setText('kpi-ritmo-trend', `Atualizado: ${updatedAt}`);
     setText('kpi-deveria-trend', `Atualizado: ${updatedAt}`);
     setText('kpi-dias-trend', `Atualizado: ${updatedAt}`);
 
-    // --- Novo 6º card: Projeção de fechamento do mês
+    // Projeção
     setText('kpi-projecao-mes', brl.format(num(v.fechar_em)));
     setText('kpi-projecao-mes-trend', `Proj: ${pct0.format(num(v.equivale_pct))} • Atualizado: ${updatedAt}`);
 
@@ -237,23 +239,29 @@
     chartProgressYear.data.datasets[1].data = [num(v.meta_ano)];
     chartProgressYear.update('none');
 
+    // ⚠️ Mantém o gráfico como estava (meta fixa x realizado)
     chartPace.data.datasets[0].label = `Ritmo (R$/dia) — ${ref.mesAno}`;
     chartPace.data.datasets[0].data = [num(v.meta_dia_util), num(v.realizado_dia_util)];
     chartPace.update('none');
 
     const tbody = document.getElementById('topProductsTable')?.querySelector('tbody');
     if (tbody) {
+      const diasRest = Math.max(0, num(v.dias_uteis_trabalhar) - num(v.dias_uteis_trabalhados));
       const rows = [
         ['Meta do ano', brl.format(num(v.meta_ano))],
         ['Falta para atingir a meta do ano', brl.format(num(v.falta_meta_ano))],
         ['Meta do mês', brl.format(num(v.meta_mes))],
-        ['Realizado até hoje (faturado + agendado)', brl.format(num(v.realizado_ate_hoje))],
+        ['Realizado até hoje (mês)', brl.format(num(v.realizado_ate_hoje))],
         ['Falta para atingir a meta do mês', brl.format(num(v.falta_meta_mes))],
-        ['Quanto já atingimos (faturado + agendado)', pct0.format(num(v.atingimento_mes_pct))],
+        ['Quanto já atingimos (mês)', pct0.format(num(v.atingimento_mes_pct))],
         ['Quanto deveria ter até hoje', brl.format(num(v.deveria_ate_hoje))],
         ['Realizado anual acumulado até hoje', brl.format(num(v.realizado_ano_acum))],
-        ['Meta por dia útil', brl.format(num(v.meta_dia_util))],
-        ['A faturar por dia útil', brl.format(num(v.a_faturar_dia_util))],
+
+        // ✅ Destaque conceitual no detalhamento
+        ['Meta fixa por dia útil (teórica)', brl.format(num(v.meta_dia_util))],
+        ['Meta necessária por dia útil (dinâmica)', brl.format(num(v.a_faturar_dia_util))],
+        ['Dias úteis restantes', String(diasRest)],
+
         ['Realizado por dia útil', brl.format(num(v.realizado_dia_util))],
         ['Realizado por dia útil (%)', pct0.format(num(v.realizado_dia_util_pct))],
         ['Dias úteis a trabalhar', String(num(v.dias_uteis_trabalhar))],
@@ -272,46 +280,90 @@
     }
   }
 
-  // --- Nova função: renderizar dados diários
+  // --- Diário (HOJE)
   function renderDailyToday(basePayload, dailyPayload) {
-    const v = basePayload.values || {};
-    const updatedAt = basePayload.updated_at || '—';
+  const v = basePayload.values || {};
+  const updatedAt = basePayload.updated_at || '—';
 
-    const t = (dailyPayload && dailyPayload.today) ? dailyPayload.today : null;
-    const faturadoDia = num(t ? Number(t.faturado_dia) : 0);
-    const agendadoHoje = num(t ? Number(t.agendado_hoje) : 0);
+  // HOJE (vem do dashboard-data.php)
+  const totalHoje = num(v.hoje_total);
 
-    const totalHoje = faturadoDia + agendadoHoje;
+  setText('kpi-hoje-total', brl.format(totalHoje));
+  setText('kpi-hoje-fat', brl.format(totalHoje)); // por enquanto sem split
+  setText('kpi-hoje-ag', brl.format(0));
+  setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
 
-    const metaDia = (num(v.dias_uteis_trabalhar) > 0)
-      ? (num(v.meta_mes) / num(v.dias_uteis_trabalhar))
-      : 0;
+  // ---- META DO DIA (teórica) e GAP hoje ----
+  const diasTotais = int(v.dias_uteis_trabalhar);
+  const diasPassados = int(v.dias_uteis_trabalhados);
+  const diasRestantes = clampMin(diasTotais - diasPassados, 0);
 
-    const gapHoje = totalHoje - metaDia;
+  const metaMes = num(v.meta_mes);
+  const realizadoMes = num(v.realizado_ate_hoje);
 
-    setText('kpi-hoje-total', brl.format(totalHoje));
-    setText('kpi-hoje-fat', brl.format(faturadoDia));
-    setText('kpi-hoje-ag', brl.format(agendadoHoje));
-    setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
+  const metaDiaTeorica = (diasTotais > 0) ? (metaMes / diasTotais) : 0;
+  const gapHoje = totalHoje - metaDiaTeorica;
 
-    setText('kpi-meta-hoje', brl.format(metaDia));
-    setText('kpi-gap-hoje', brl.format(gapHoje));
-    setText('kpi-meta-hoje-trend', gapHoje >= 0 ? 'Acima da meta do dia' : 'Abaixo da meta do dia');
-  }
+  // Mantém seus campos atuais (se você ainda usa eles em algum card)
+  setText('kpi-meta-hoje', brl.format(metaDiaTeorica));
+  setText('kpi-gap-hoje', brl.format(gapHoje));
+  setText('kpi-meta-hoje-trend', gapHoje >= 0 ? 'Acima da meta do dia' : 'Abaixo da meta do dia');
 
-  async function refresh() {
+  // ---- META NECESSÁRIA POR DIA (DINÂMICA) ----
+  const faltaMes = Math.max(0, metaMes - realizadoMes);
+  const metaDiaDinamica = (diasRestantes > 0) ? (faltaMes / diasRestantes) : 0;
+
+  // Card novo (principal)
+  setText('metaDinamica', brl.format(metaDiaDinamica));
+
+  // Subtexto (ex.: "Faltam 2 dias úteis • Restante no mês: R$ ...")
+  const labelDias = diasRestantes === 1 ? 'dia útil' : 'dias úteis';
+  setText('metaRestante', `Faltam ${diasRestantes} ${labelDias} • Restante no mês: ${brl.format(faltaMes)}`);
+
+  // Linhas pequenas (mantém as infos que você pediu em letras menores)
+  setText('metaTeorica', `Meta do dia (teórica): ${brl.format(metaDiaTeorica)} • ${gapHoje >= 0 ? 'Acima' : 'Abaixo'} da meta do dia`);
+  setText('gapHoje', `Gap hoje: ${brl.format(gapHoje)}`);
+}
+  async function refresh(forceTotvs = false) {
     const dash = (window.DASH_CURRENT || 'executivo');
+    const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
 
-    const res = await fetch(`/api/dashboard-data.php?dash=${encodeURIComponent(dash)}`, { cache: 'no-store' });
+    const res = await fetch(url, { cache: 'no-store' });
     const payload = await res.json();
-    renderFromValues(payload);
 
-    // Diário - hoje
-    const r2 = await fetch(`/api/dashboard-daily-today.php?dash=${encodeURIComponent(dash)}`, { cache: 'no-store' });
-    const daily = await r2.json();
-    renderDailyToday(payload, daily);
+    renderFromValues(payload);
+    renderDailyToday(payload); // ✅ HOJE vem do payload (totvs)
   }
 
-  refresh();
-  setInterval(refresh, 5000);
+/* =========================
+   AUTO REFRESH DASHBOARD
+   ========================= */
+
+// ✅ 1) Carrega rápido usando cache (sem force)
+refresh(false);
+
+// ✅ 2) Atualiza em background a cada 10 min (força TOTVS)
+setInterval(() => {
+  refresh(true);
+}, 10 * 60 * 1000);
+
+  // ===== botão manual
+  const btn = document.getElementById('btnForceTotvs');
+  if (btn) {
+    btn.addEventListener('click', async () => {
+      const st = document.getElementById('forceStatus');
+
+      btn.classList.add('is-loading');
+      if (st) { st.textContent = 'Atualizando...'; st.className = 'is-loading'; }
+
+      try {
+        await refresh(true); // ignora cache
+        if (st) { st.textContent = 'Atualizado'; st.className = 'is-ok'; }
+      } catch (e) {
+        if (st) { st.textContent = 'Falhou'; st.className = 'is-error'; }
+      } finally {
+        btn.classList.remove('is-loading');
+      }
+    });
+  }
 })();

@@ -1,8 +1,11 @@
 <?php
 declare(strict_types=1);
+
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
+
 require_login();
+
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
@@ -19,13 +22,12 @@ $current_dash = $_GET['dash'] ?? 'executivo';
 ?>
 <!doctype html>
 <html lang="pt-br">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard — <?= htmlspecialchars((string) APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
+  <title>Dashboard — <?= htmlspecialchars((string)APP_NAME, ENT_QUOTES, 'UTF-8') ?></title>
 
-  <!-- ✅ CSS global + específicos (igual aos outros) -->
+  <!-- CSS global + específicos -->
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/assets/css/users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/dashboard.css?v=<?= filemtime(__DIR__ . '/assets/css/dashboard.css') ?>" />
@@ -36,54 +38,50 @@ $current_dash = $_GET['dash'] ?? 'executivo';
 </head>
 
 <body class="page">
-
-  <!-- ✅ Header (igual aos outros) -->
   <?php require_once __DIR__ . '/app/header.php'; ?>
 
   <main class="container">
-    <h2 class="page-title">Métricas de Desempenho</h2>
-
+    <div class="dash-topbar">
+      <div class="dash-topbar__left">
+        <h2 class="page-title">Métricas de Desempenho</h2>
+        <p class="dash-subtitle">Atualização automática + botão para forçar a leitura do TOTVS.</p>
+ 
     <section class="dashboard-grid">
-      <!-- KPIs -->
+      <!-- KPI: Meta do mês -->
       <div class="kpi-card">
         <span class="kpi-label">Meta do mês</span>
         <strong class="kpi-value" id="kpi-meta-mes">R$ 0,00</strong>
         <span class="kpi-trend" id="kpi-meta-trend"></span>
-        <div class="kpi-detail">Realizado: <span id="kpi-realizado-mes">R$ 0,00</span> · Falta: <span
-            id="kpi-falta-mes">R$ 0,00</span></div>
+        <div class="kpi-detail">
+          Realizado: <span id="kpi-realizado-mes">R$ 0,00</span>
+          · Falta: <span id="kpi-falta-mes">R$ 0,00</span>
+        </div>
       </div>
-<!--
+    <!-- KPI: Dias úteis -->
       <div class="kpi-card">
-        <span class="kpi-label">Meta do ano</span>
-        <strong class="kpi-value" id="kpi-meta-ano">R$ 0,00</strong>
-        <span class="kpi-trend" id="kpi-ano-trend"></span>
-        <div class="kpi-detail">Realizado (acum.): <span id="kpi-realizado-ano">R$ 0,00</span> · Falta: <span
-            id="kpi-falta-ano">R$ 0,00</span></div>
-      </div>
+  <span class="kpi-label">Faturamento do mês (atual)</span>
+  <strong class="kpi-value" id="kpi-mes-atual">R$ 0,00</strong>
 
-      <div class="kpi-card">
-        <span class="kpi-label">Ritmo de dia útil</span>
-        <strong class="kpi-value" id="kpi-ritmo">R$ 0,00</strong>
-        <span class="kpi-trend" id="kpi-ritmo-trend"></span>
-        <div class="kpi-detail">Meta/dia útil: <span id="kpi-meta-dia">R$ 0,00</span> · A faturar/dia: <span
-            id="kpi-a-faturar">R$ 0,00</span></div>
-      </div>
--->
+  <span class="kpi-trend" id="kpi-dias-trend"></span>
+
+  <div class="kpi-detail">
+    Dias úteis: <span id="kpi-dias">0 / 0</span>
+    · Produtividade: <span id="kpi-produtividade">0%</span>
+  </div>
+</div>
+      <!-- KPI: Deveria ter -->
       <div class="kpi-card">
         <span class="kpi-label">Deveria ter até hoje</span>
         <strong class="kpi-value" id="kpi-deveria">R$ 0,00</strong>
         <span class="kpi-trend" id="kpi-deveria-trend"></span>
-        <div class="kpi-detail">Atingimento (mês): <span id="kpi-atingimento">0%</span></div>
+        <div class="kpi-detail">
+          Atingimento (mês): <span id="kpi-atingimento">0%</span>
+        </div>
       </div>
 
-      <div class="kpi-card">
-        <span class="kpi-label">Dias úteis</span>
-        <strong class="kpi-value" id="kpi-dias">0 / 0</strong>
-        <span class="kpi-trend" id="kpi-dias-trend"></span>
-        <div class="kpi-detail">Produtividade (%): <span id="kpi-produtividade">0%</span></div>
-      </div>
+  
 
-      <!-- Novo 6º card: Projeção de fechamento do mês -->
+      <!-- KPI: Projeção -->
       <div class="kpi-card">
         <span class="kpi-label">Projeção de fechamento (mês)</span>
         <strong class="kpi-value" id="kpi-projecao-mes">R$ 0,00</strong>
@@ -91,36 +89,43 @@ $current_dash = $_GET['dash'] ?? 'executivo';
         <div class="kpi-detail">Baseado no ritmo atual</div>
       </div>
 
+      <!-- KPI: Hoje -->
       <div class="kpi-card">
-        <span class="kpi-label">Hoje (faturado + agendado)</span>
+        <span class="kpi-label">Hoje (faturado)</span>
         <strong class="kpi-value" id="kpi-hoje-total">R$ 0,00</strong>
         <span class="kpi-trend" id="kpi-hoje-trend"></span>
-        <div class="kpi-detail">Faturado: <span id="kpi-hoje-fat">R$ 0,00</span> · Agendado p/ hoje: <span
-            id="kpi-hoje-ag">R$ 0,00</span></div>
+        <div class="kpi-detail">
+          Faturado: <span id="kpi-hoje-fat">R$ 0,00</span>
+          · Agendado p/ hoje: <span id="kpi-hoje-ag">R$ 0,00</span>
+        </div>
       </div>
 
-      <div class="kpi-card">
-        <span class="kpi-label">Meta do dia (calculada)</span>
-        <strong class="kpi-value" id="kpi-meta-hoje">R$ 0,00</strong>
-        <span class="kpi-trend" id="kpi-meta-hoje-trend"></span>
-        <div class="kpi-detail">Gap hoje: <span id="kpi-gap-hoje">R$ 0,00</span></div>
+      <!-- KPI: Meta dinâmica (card especial) -->
+      <div class="kpi-dynamic" role="group" aria-label="Meta dinâmica por dia">
+        <div class="kpi-dynamic__value" id="metaDinamica">R$ 0,00</div>
+        <div class="kpi-dynamic__label">Meta necessária por dia</div>
+        <div class="kpi-dynamic__sub" id="metaRestante">—</div>
+        <div class="kpi-dynamic__info">
+          <span id="metaTeorica"></span>
+          <span id="gapHoje"></span>
+        </div>
       </div>
 
       <!-- Gráficos -->
-<div class="chart-card">
-  <h3 class="chart-title" id="titleProgressMonth">Progresso (Mês)</h3>
-  <div class="chart-box"><canvas id="salesExpensesChartMonth"></canvas></div>
-</div>
+      <div class="chart-card">
+        <h3 class="chart-title" id="titleProgressMonth">Progresso (Mês)</h3>
+        <div class="chart-box"><canvas id="salesExpensesChartMonth"></canvas></div>
+      </div>
 
-<div class="chart-card">
-  <h3 class="chart-title" id="titleProgressYear">Progresso (Ano)</h3>
-  <div class="chart-box"><canvas id="salesExpensesChartYear"></canvas></div>
-</div>
+      <div class="chart-card">
+        <h3 class="chart-title" id="titleProgressYear">Progresso (Ano)</h3>
+        <div class="chart-box"><canvas id="salesExpensesChartYear"></canvas></div>
+      </div>
 
-<div class="chart-card">
-  <h3 class="chart-title" id="titlePace">Ritmo (Dia útil)</h3>
-  <div class="chart-box"><canvas id="salesBySectorChart"></canvas></div>
-</div>
+      <div class="chart-card">
+        <h3 class="chart-title" id="titlePace">Ritmo (Dia útil)</h3>
+        <div class="chart-box"><canvas id="salesBySectorChart"></canvas></div>
+      </div>
 
       <!-- Tabela -->
       <div class="data-table-card grid-col-span-3">
@@ -145,12 +150,10 @@ $current_dash = $_GET['dash'] ?? 'executivo';
   <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
 
-  <!-- ✅ Passa dados do PHP para o JS (sem PHP dentro do .js) -->
   <script>
     window.DASH_CURRENT = <?= json_encode($current_dash, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
   </script>
 
   <script src="/assets/js/dashboard.js?v=<?= filemtime(__DIR__ . '/assets/js/dashboard.js') ?>"></script>
 </body>
-
 </html>

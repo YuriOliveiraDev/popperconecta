@@ -467,3 +467,129 @@ body .topbar__dropdown-menu *{
   font-size:11px;
   margin-top:6px;
 }
+
+/* =========================
+   SUBMENU igual ao dropdown
+   ========================= */
+
+/* Item que tem submenu */
+.topbar__dropdown-item--has-sub{
+  position: relative;
+}
+
+/* Botão "Comercial" com o MESMO layout de um item normal */
+.topbar__dropdown-subtrigger{
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  padding:10px 12px;
+  border-radius:10px;
+
+  font: inherit;
+  text-align:left;
+}
+
+.topbar__dropdown-subtrigger:hover{
+  background: rgba(255,255,255,.10);
+}
+
+/* caret encostado à direita */
+.topbar__dropdown-caret{
+  margin-left:auto;
+  opacity:.75;
+}
+
+/* ✅ Submenu: usa o mesmo “card” do menu original porque tem .topbar__dropdown-menu */
+.topbar__dropdown-submenu{
+  position:absolute;
+  top: 0;
+  left: calc(100% + 10px); /* abre ao lado */
+  min-width: 240px;
+  z-index: 10000;
+
+  /* estado fechado (igual animação do menu) */
+  visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-8px) scale(.985);
+  transform-origin: top left;
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s;
+}
+
+
+
+/* ✅ abre no clique (mobile / seu JS já aplica is-open) */
+.topbar__dropdown-item--has-sub.is-open .topbar__dropdown-submenu{
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s;
+}
+
+/* Em telas pequenas, abre abaixo (fica mais usável) */
+@media (max-width: 720px){
+  .topbar__dropdown-submenu{
+    position: static;
+    margin-top: 6px;
+    left: auto;
+    top: auto;
+    transform: translateY(-8px) scale(.985);
+    transform-origin: top center;
+  }
+
+  .topbar__dropdown-item--has-sub:hover .topbar__dropdown-submenu{
+    /* no mobile a gente deixa o clique controlar */
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-8px) scale(.985);
+  }
+
+  .topbar__dropdown-item--has-sub.is-open .topbar__dropdown-submenu{
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+/* Abre SOMENTE quando passar o mouse no botão "Comercial" */
+.topbar__dropdown-subtrigger:hover + .topbar__dropdown-submenu,
+.topbar__dropdown-submenu:hover{
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}
+
+/* (Opcional) Também abre via teclado */
+.topbar__dropdown-item--has-sub:focus-within .topbar__dropdown-submenu{
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}
+
+/* Mantém o clique (seu JS) funcionando */
+.topbar__dropdown-item--has-sub.is-open .topbar__dropdown-submenu{
+  visibility: visible;
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: transform .18s ease, opacity .18s ease, visibility 0s;
+}

@@ -1,0 +1,586 @@
+/* =========================================================
+   DASHBOARD EXECUTIVO (CLEAN)
+   Objetivo:
+   - Tops na mesma linha (desktop)
+   - Gráfico com mais espaço para mostrar os dias no eixo X
+   - Scroll dentro dos tops
+   - Não brigar com base.css (tema claro)
+   ========================================================= */
+
+/* força fundo claro só nesta tela */
+html.dashboard-exec, html.dashboard-exec body{
+  background: #f6f7fb !important;
+  background-image: none !important;
+}
+
+/* container um pouco mais largo */
+.dashboard-exec.container{
+  width: min(100% - 32px, 1400px);
+}
+
+/* ========= GRID EXECUTIVO ========= */
+.dashboard-grid--exec{
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 28px;
+}
+
+.grid-col-span-3{ grid-column: 1 / -1; }
+.grid-col-span-2{ grid-column: span 2; }
+
+/* ========= FILTER (chips) ========= */
+.exec-filter__row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.exec-filter__chips{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.exec-filter__period{
+  margin-top: 10px;
+}
+
+.chip{
+  height:34px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid rgba(15,23,42,.14);
+  background: rgba(15,23,42,.06);
+  color: rgba(15,23,42,.92);
+  font-weight:800;
+  cursor:pointer;
+}
+.chip.is-active{
+  background: rgba(92,44,140,1);
+  border-color: rgba(92,44,140,1);
+  color:#fff;
+}
+
+/* ========= KPI ========= */
+.kpi-card{
+  min-height: 140px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+}
+
+/* ========= GRÁFICO ========= */
+.exec-chart{
+  grid-column: 1 / -1;
+}
+
+/* MAIS ESPAÇO pro eixo X (dias) */
+.chart-box{
+  height: 420px;          /* ↑ aumenta para mostrar os dias melhor */
+  width: 100%;
+  padding-bottom: 8px;    /* “respiro” p/ labels do eixo */
+}
+
+.chart-box canvas{
+  width: 100% !important;
+  height: 100% !important;
+  display:block;
+}
+
+/* ========= TOPS LADO A LADO ========= */
+.tops-row{
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* lado a lado */
+  gap: 20px;
+  align-items: start;
+}
+
+/* Cards tops no padrão branco */
+.top-card{
+  background: #fff;
+  border: 1px solid rgba(15,23,42,.08);
+  border-radius: 14px;
+  box-shadow: none;
+  padding: 16px;
+}
+
+/* Header do top */
+.top-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  margin-bottom: 10px;
+}
+
+.top-sub{
+  margin-top: 3px;
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+}
+
+/* badge */
+.top-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(59,130,246,.25);
+  background: rgba(59,130,246,.10);
+  color: rgba(29,78,216,1);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* scroll REAL dentro do card */
+.top-list{
+  max-height: 420px;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+/* scrollbar discreta */
+.top-list::-webkit-scrollbar{ width: 10px; }
+.top-list::-webkit-scrollbar-thumb{
+  background: rgba(15,23,42,.18);
+  border-radius: 999px;
+}
+.top-list::-webkit-scrollbar-track{
+  background: rgba(15,23,42,.06);
+  border-radius: 999px;
+}
+
+/* itens do ranking (gerados pelo JS) */
+.top-item{
+  display:grid;
+  grid-template-columns: 30px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 10px;
+  border-bottom:1px solid rgba(15,23,42,.08);
+}
+.top-item:last-child{ border-bottom:none; }
+
+.top-rank{
+  width:26px;height:26px;
+  border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:900;
+  color: rgba(15,23,42,.70);
+  background: rgba(15,23,42,.06);
+}
+.top-item.is-top .top-rank{
+  background: rgba(245,158,11,.20);
+  color: rgba(15,23,42,.92);
+}
+
+.top-main{ min-width:0; }
+
+.top-name{
+  font-weight:800;
+  font-size:13px;
+  color: rgba(15,23,42,.92);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.top-val{
+  font-weight:900;
+  font-size:13px;
+  color: rgba(29,78,216,1);
+  white-space:nowrap;
+}
+
+.top-bar{
+  grid-column: 2 / 3;
+  height:6px;
+  border-radius:999px;
+  background: rgba(15,23,42,.10);
+  overflow:hidden;
+  margin-top: 6px;
+}
+.top-bar i{
+  display:block;
+  height:100%;
+  background: rgba(29,78,216,1);
+  border-radius:999px;
+}
+
+/* ========= RESPONSIVO ========= */
+@media (max-width: 900px){
+  .dashboard-grid--exec{
+    grid-template-columns: 1fr;
+  }
+  .tops-row{
+    grid-template-columns: 1fr; /* empilha no mobile */
+  }
+  .chart-box{
+    height: 300px;
+  }
+  .top-list{
+    max-height: 340px;
+  }
+}
+
+/* =========================
+   FORCE: TOPS LADO A LADO + COMPACTO
+   Cole no FINAL do dashboard-executivo.css
+   ========================= */
+
+/* compacta o grid geral */
+.dashboard-grid--exec{
+  gap: 14px !important;
+}
+
+/* compacta cards padrão */
+.dashboard-exec .card,
+.dashboard-exec .kpi-card,
+.dashboard-exec .chart-card,
+.dashboard-exec .data-table-card,
+.dashboard-exec .top-card{
+  padding: 12px 14px !important;
+}
+
+/* compacta cabeçalho do filtro */
+.dashboard-exec .exec-filter{
+  padding: 12px 14px !important;
+}
+.dashboard-exec .exec-filter__row{
+  gap: 10px !important;
+}
+.dashboard-exec .exec-filter__period{
+  margin-top: 6px !important;
+}
+
+/* KPIs menores */
+.dashboard-exec .kpi-card{
+  min-height: 120px !important;
+}
+.dashboard-exec .kpi-value{
+  font-size: 2.0rem !important;
+}
+
+/* Gráfico mais baixo pra sobrar espaço pros TOPS */
+.dashboard-exec .chart-box{
+  height: 320px !important;   /* ajuste fino: 300~340 */
+  padding-bottom: 6px !important;
+}
+
+/* FORÇA TOPS em 2 colunas (mesmo se algum CSS tentar quebrar) */
+.dashboard-exec .tops-row{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+  width: 100% !important;
+}
+
+/* garante que cada card top não “estoure” e nem vire bloco */
+.dashboard-exec .tops-row > .top-card{
+  min-width: 0 !important;
+}
+
+/* scroll dentro dos tops menor pra caber na mesma linha */
+.dashboard-exec .top-list{
+  max-height: 320px !important; /* ajuste fino: 280~360 */
+}
+
+/* deixa títulos mais compactos */
+.dashboard-exec .table-title,
+.dashboard-exec .chart-title{
+  margin: 0 0 8px 0 !important;
+  font-size: 14px !important;
+}
+
+/* chips menores */
+.dashboard-exec .chip{
+  height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+}
+
+/* Só empilha no mobile de verdade */
+@media (max-width: 720px){
+  .dashboard-exec .tops-row{
+    grid-template-columns: 1fr !important;
+  }
+  .dashboard-exec .chart-box{
+    height: 260px !important;
+  }
+}
+
+/* =========================
+   FIX DEFINITIVO: TOPS LADO A LADO
+   (base.css força .data-table-card { grid-column: 1 / -1 })
+   Cole no FINAL do dashboard-executivo.css
+   ========================= */
+
+.dashboard-exec .tops-row{
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 14px !important;
+  width: 100% !important;
+  align-items: start !important;
+}
+
+/* >>> ISSO aqui é o que resolve: desfaz o "grid-column: 1/-1" do base.css */
+.dashboard-exec .tops-row > .data-table-card,
+.dashboard-exec .tops-row > .top-card{
+  grid-column: auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+}
+
+/* Mobile: empilha */
+@media (max-width: 720px){
+  .dashboard-exec .tops-row{
+    grid-template-columns: 1fr !important;
+  }
+}
+/* =========================
+   SUBMENU (abre só no Comercial)
+   ========================= */
+
+/* wrapper do item com submenu */
+.topbar__dropdown-item--has-sub{
+  position: relative;
+}
+
+/* botão "Comercial" com cara de item normal */
+.topbar__dropdown-subtrigger{
+  width:100%;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+
+  display:flex;
+  align-items:center;
+  gap:10px;
+
+  padding:10px 12px;
+  border-radius:10px;
+
+  font: inherit;
+  text-align:left;
+}
+
+.topbar__dropdown-subtrigger:hover{
+  background: rgba(255,255,255,.10);
+}
+
+/* caret à direita */
+.topbar__dropdown-caret{
+  margin-left:auto;
+  opacity:.75;
+}
+
+/* submenu: mesmo layout do dropdown (porque no HTML ele tem topbar__dropdown-menu) */
+.topbar__dropdown-submenu{
+  position:absolute;
+  top:0;
+  left: calc(100% + 10px);
+  min-width:240px;
+  z-index: 10000;
+
+  /* FECHADO por padrão */
+  visibility:hidden;
+  pointer-events:none;
+  opacity:0;
+  transform: translateX(-8px) scale(.985);
+  transform-origin: top left;
+
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s;
+}
+
+/* ✅ BLOQUEIA qualquer CSS antigo que abra no hover do wrapper */
+.topbar__dropdown-item--has-sub:hover > .topbar__dropdown-submenu{
+  visibility:hidden !important;
+  pointer-events:none !important;
+  opacity:0 !important;
+  transform: translateX(-8px) scale(.985) !important;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s !important;
+}
+
+/* ✅ ABRE SOMENTE quando o mouse estiver no botão "Comercial" */
+.topbar__dropdown-subtrigger:hover + .topbar__dropdown-submenu{
+  visibility:visible !important;
+  pointer-events:auto !important;
+  opacity:1 !important;
+  transform: translateX(0) scale(1) !important;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s !important;
+}
+
+/* ✅ mantém aberto quando o mouse entra no submenu */
+.topbar__dropdown-submenu:hover{
+  visibility:visible !important;
+  pointer-events:auto !important;
+  opacity:1 !important;
+  transform: translateX(0) scale(1) !important;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s !important;
+}
+
+/* ✅ clique (seu JS) continua funcionando */
+.topbar__dropdown-item--has-sub.is-open > .topbar__dropdown-submenu{
+  visibility:visible !important;
+  pointer-events:auto !important;
+  opacity:1 !important;
+  transform: translateX(0) scale(1) !important;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s !important;
+}
+
+/* teclado (opcional) */
+.topbar__dropdown-item--has-sub:focus-within > .topbar__dropdown-submenu{
+  visibility:visible !important;
+  pointer-events:auto !important;
+  opacity:1 !important;
+  transform: translateX(0) scale(1) !important;
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s !important;
+}
+
+/* mobile: abre abaixo (via clique/is-open) */
+@media (max-width: 720px){
+  .topbar__dropdown-submenu{
+    position: static;
+    left: auto;
+    top: auto;
+    margin-top: 6px;
+
+    transform: translateY(-8px) scale(.985);
+    transform-origin: top center;
+  }
+
+  /* no mobile, hover não manda */
+  .topbar__dropdown-subtrigger:hover + .topbar__dropdown-submenu,
+  .topbar__dropdown-submenu:hover{
+    visibility:hidden !important;
+    pointer-events:none !important;
+    opacity:0 !important;
+    transform: translateY(-8px) scale(.985) !important;
+  }
+
+  .topbar__dropdown-item--has-sub.is-open > .topbar__dropdown-submenu{
+    visibility:visible !important;
+    pointer-events:auto !important;
+    opacity:1 !important;
+    transform: translateY(0) scale(1) !important;
+  }
+}
+
+/* =========================
+   TOPS MAIS ALTOS (mostrar Top 10)
+   ========================= */
+
+/* aumenta altura visual do card */
+.dashboard-exec .tops-row .top-card{
+  min-height: 520px;     /* antes ~320 */
+  display: flex;
+  flex-direction: column;
+}
+
+/* área rolável maior */
+.dashboard-exec .tops-row .top-list{
+  flex: 1;
+  max-height: 460px;     /* altura real do scroll */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* deixa cada linha um pouco mais compacta
+   pra caber mais itens */
+.dashboard-exec .top-item{
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
+
+/* barra menor = mais itens visíveis */
+.dashboard-exec .top-bar{
+  height: 6px;
+  margin-top: 4px;
+}
+
+/* =========================================================
+   FIX FINAL — TOPS MOSTRAR TOP 10 (FORÇADO)
+   Cole NO FINAL do dashboard-executivo.css
+   ========================================================= */
+
+/* garante que a linha dos tops estique */
+.dashboard-exec .tops-row{
+  align-items: stretch;
+}
+
+/* aumenta o card todo */
+.dashboard-exec .tops-row .data-table-card.top-card{
+  height: 620px !important;     /* sobe bastante */
+  min-height: 620px !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* cabeçalho dos tops (título + badge) não pode crescer demais */
+.dashboard-exec .tops-row .top-head{
+  flex: 0 0 auto !important;
+  margin-bottom: 10px !important;
+}
+
+/* AQUI é o principal: a lista ocupa TODO resto do card */
+.dashboard-exec .tops-row .top-list{
+  flex: 1 1 auto !important;
+  height: auto !important;
+  max-height: none !important;      /* mata limites antigos */
+  min-height: 0 !important;         /* importante em flex */
+  overflow-y: auto !important;
+  padding-right: 8px !important;
+}
+
+/* deixa cada item mais “compacto” pra caber 10 */
+.dashboard-exec .tops-row .top-item{
+  padding: 7px 10px !important;
+  margin-bottom: 8px !important;
+  border-radius: 10px !important;
+}
+
+/* texto um pouco menor pra caber mais linhas */
+.dashboard-exec .tops-row .top-name{
+  font-size: 12.5px !important;
+  line-height: 1.15 !important;
+}
+
+.dashboard-exec .tops-row .top-sub{
+  font-size: 11px !important;
+  margin-top: 2px !important;
+}
+
+/* barra menor */
+.dashboard-exec .tops-row .top-bar{
+  height: 6px !important;
+  margin-top: 4px !important;
+}

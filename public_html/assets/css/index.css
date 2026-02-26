@@ -309,9 +309,6 @@
 .slide--insight .insight__card{
   min-width: 0 !important;
 }
-
-html{ outline: 12px solid lime !important; }
-
 /* Novos cards de Progresso e Ritmo: um pouco maiores */
 .insight__card--chart{
   min-height: 64px !important; /* um pouco maior que os outros */

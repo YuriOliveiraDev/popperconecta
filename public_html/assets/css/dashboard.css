@@ -1,0 +1,78 @@
+/* =========================
+   KPI Meta Dinâmica (igual aos outros cards)
+   ========================= */
+
+.kpi-dynamic{
+  /* usa o mesmo visual do kpi-card */
+  background: #fff;
+  border-radius: 14px;
+  padding: 18px;
+  border: 1px solid rgba(15,23,42,.08);
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  box-shadow: 0 2px 6px rgba(15,23,42,.04);
+}
+
+/* valor principal (igual KPI grande) */
+.kpi-dynamic__value{
+  font-size: 32px;
+  font-weight: 900;
+  color: rgba(15,23,42,.92);
+  line-height: 1.15;
+}
+
+/* label pequena (igual label dos outros cards) */
+.kpi-dynamic__label{
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15,23,42,.65);
+  margin-top: 2px;
+}
+
+/* subtítulo */
+.kpi-dynamic__sub{
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(15,23,42,.75);
+}
+
+/* infos menores (meta teórica + gap) */
+.kpi-dynamic__info{
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(15,23,42,.12);
+
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+
+  font-size:12px;
+  color:rgba(15,23,42,.55);
+}
+.totvs-refresh {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all .2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* hover suave */
+.totvs-refresh:hover {
+    background: rgba(0,0,0,0.06);
+    color: #111827;
+}
+
+/* animação clique */
+.totvs-refresh:active {
+    transform: scale(0.92);
+}

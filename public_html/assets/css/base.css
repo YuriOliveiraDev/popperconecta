@@ -1689,3 +1689,191 @@ body.page > main .container{
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
+/* =========================
+   Botão Forçar TOTVS
+   ========================= */
+
+#btnForceTotvs{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  height: 38px;
+  padding: 0 16px;
+
+  border-radius: 10px;
+  border: 1px solid rgba(92,44,140,.35);
+
+  background: linear-gradient(
+    180deg,
+    rgba(92,44,140,.08),
+    rgba(92,44,140,.02)
+  );
+
+  color: var(--primary1);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: .02em;
+
+  cursor: pointer;
+  transition: all .18s ease;
+
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
+}
+
+/* hover */
+#btnForceTotvs:hover{
+  background: linear-gradient(
+    180deg,
+    rgba(92,44,140,.14),
+    rgba(92,44,140,.05)
+  );
+
+  border-color: var(--primary1);
+
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(92,44,140,.18);
+}
+
+/* click */
+#btnForceTotvs:active{
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+
+/* loading state */
+#btnForceTotvs.is-loading{
+  pointer-events: none;
+  opacity: .7;
+}
+
+/* spinner */
+#btnForceTotvs.is-loading::after{
+  content:'';
+  width:14px;
+  height:14px;
+
+  border-radius:50%;
+  border:2px solid rgba(92,44,140,.25);
+  border-top-color: var(--primary1);
+
+  animation: totvsSpin .7s linear infinite;
+}
+
+@keyframes totvsSpin{
+  to{ transform: rotate(360deg); }
+}
+
+/* =====================================================
+   DASHBOARD EXECUTIVO — remove fundo azul global
+   ===================================================== */
+
+body.dashboard-exec{
+  background: #f6f7fb !important;
+  background-image: none !important;
+}
+
+/* garante que containers não herdem fundo escuro */
+.dashboard-exec main,
+.dashboard-exec .container,
+.dashboard-exec .dashboard-grid{
+  background: transparent !important;
+}
+
+/* cards padrão igual contas a pagar */
+.dashboard-exec .card,
+.dashboard-exec .kpi-card,
+.dashboard-exec .chart-card,
+.dashboard-exec .data-table-card{
+  background: #ffffff !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+  box-shadow: none !important;
+}
+/* ===== TOP LIST (scroll) ===== */
+.top-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.top-sub{
+  font-size:12px;
+  opacity:.7;
+  margin-top:-6px;
+}
+
+.top-badge{
+  font-size:12px;
+  font-weight:800;
+  padding:6px 10px;
+  border-radius:999px;
+  background: rgba(59,130,246,.10);
+  border: 1px solid rgba(59,130,246,.20);
+}
+
+.top-list{
+  max-height: 420px;       /* <<< scroll aparece aqui */
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* item estilo “contas a pagar” */
+.top-item{
+  display:grid;
+  grid-template-columns: 34px 1fr auto;
+  gap:12px;
+  padding:12px 6px;
+  border-top:1px solid rgba(15,23,42,.06);
+}
+
+.top-item:first-child{ border-top:0; }
+
+.top-rank{
+  width:26px;height:26px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:12px;
+  background: rgba(245,158,11,.18);
+}
+
+.top-main{ min-width:0; }
+.top-name{
+  font-weight:800;
+  font-size:13px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.top-subline{
+  font-size:12px;
+  opacity:.75;
+  margin-top:3px;
+}
+
+.top-bar{
+  height:6px;
+  border-radius:999px;
+  background: rgba(15,23,42,.10);
+  overflow:hidden;
+  margin-top:8px;
+}
+.top-bar i{
+  display:block;
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background: #1d4ed8;
+}
+
+.top-val{
+  font-weight:900;
+  color:#1d4ed8;
+  font-size:13px;
+  white-space:nowrap;
+}
+
+/* destaca TOP 10 (sem cortar o resto) */
+.top-item.is-top .top-name{ font-size:13.5px; }
+.top-item.is-top .top-rank{ background: rgba(59,130,246,.18); }

@@ -1,14 +1,28 @@
 <?php
 declare(strict_types=1);
+
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
+require_once __DIR__ . '/../app/config-totvs.php';
+
 require_admin();
 
-// ✅ Essencial para o header.php funcionar
+/* =========================================================
+   COMPAT
+========================================================= */
+if (!function_exists('array_is_list')) {
+  function array_is_list(array $array): bool {
+    if ($array === []) return true;
+    return array_keys($array) === range(0, count($array) - 1);
+  }
+}
+
+/* =========================================================
+   CONTEXTO (header.php / permissões / dashboard selecionado)
+========================================================= */
 $u = current_user();
 $activePage = 'admin';
 
-// ✅ Dropdown "Dashboards" no header
 try {
   $dashboards = db()
     ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
@@ -21,15 +35,13 @@ $allowedDash = ['executivo', 'financeiro'];
 $dashboard_slug = $_GET['dash'] ?? 'executivo';
 if (!in_array($dashboard_slug, $allowedDash, true)) $dashboard_slug = 'executivo';
 
-// Para o header.php montar o link correto de /admin/metrics.php?dash=...
-$current_dash = $dashboard_slug;
+$current_dash = $dashboard_slug; // usado pelo header
 
-$success = '';
 $error = '';
 
-// ------------------------------
-// Helpers existentes
-// ------------------------------
+/* =========================================================
+   HELPERS
+========================================================= */
 function parse_ptbr_number(string $s): ?float {
   $s = trim($s);
   if ($s === '') return null;
@@ -66,7 +78,7 @@ function normalize_value(string $type, ?string $raw): array {
 }
 
 function format_for_input(array $r): string {
-  $type = (string)$r['metric_type'];
+  $type = (string)($r['metric_type'] ?? 'money');
 
   if ($type === 'text') return (string)($r['metric_value_text'] ?? '');
 
@@ -86,9 +98,27 @@ function format_for_input(array $r): string {
   return 'R$ ' . number_format($n, 2, ',', '.');
 }
 
-// ------------------------------
-// NOVO: Diário (tabela dashboard_daily)
-// ------------------------------
+/* =========================================================
+   REGRAS: CAMPOS MANUAIS (somente estes são editáveis)
+========================================================= */
+$manualKeysByDash = [
+  'executivo' => [
+    'meta_ano',
+    'meta_mes',
+    // se você quiser voltar com dias úteis manuais, adicione aqui:
+    // 'dias_uteis_trabalhar',
+    // 'dias_uteis_trabalhados',
+  ],
+  'financeiro' => [
+    'faturado_dia',
+    'contas_pagar_dia',
+  ],
+];
+$manualKeys = array_flip($manualKeysByDash[$dashboard_slug] ?? []);
+
+/* =========================================================
+   HISTÓRICO DIÁRIO (executivo)
+========================================================= */
 $daily_date = (string)($_POST['daily_date'] ?? date('Y-m-d'));
 $daily_faturado_raw = (string)($_POST['daily_faturado'] ?? '');
 $daily_agendado_raw = (string)($_POST['daily_agendado'] ?? '');
@@ -98,43 +128,28 @@ $dailyOk = false;
 $dailyMsg = '';
 
 if ($dashboard_slug === 'executivo') {
-  // Carrega o registro do dia (para preencher o form)
   try {
     if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $daily_date)) {
-      $stmtD = db()->prepare('SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at FROM dashboard_daily WHERE dash_slug=? AND ref_date=? LIMIT 1');
+      $stmtD = db()->prepare('
+        SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at
+        FROM dashboard_daily
+        WHERE dash_slug=? AND ref_date=?
+        LIMIT 1
+      ');
       $stmtD->execute([$dashboard_slug, $daily_date]);
       $dailyRow = $stmtD->fetch(PDO::FETCH_ASSOC);
     }
   } catch (Throwable $e) {
-    // silencioso: não derruba a página de métricas
+    // silencioso
   }
 }
 
-// ------------------------------
-// Campos calculados: somente no executivo
-// ------------------------------
-$computedKeysExecutivo = [
-  'falta_meta_ano' => true,
-  'falta_meta_mes' => true,
-  'atingimento_mes_pct' => true,
-  'deveria_ate_hoje' => true,
-  'meta_dia_util' => true,
-  'a_faturar_dia_util' => true,
-  'realizado_dia_util' => true,
-  'realizado_dia_util_pct' => true,
-  'vai_bater_meta' => true,
-  'fechar_em' => true,
-  'equivale_pct' => true,
-];
-$computedKeys = ($dashboard_slug === 'executivo') ? $computedKeysExecutivo : [];
-
-// ------------------------------
-// POST: pode salvar 2 coisas:
-// 1) daily_action = 'save_daily'  -> salva histórico diário
-// 2) normal (sem daily_action)    -> salva tabela metrics (como já é hoje)
-// ------------------------------
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($dashboard_slug === 'executivo') && (($_POST['daily_action'] ?? '') === 'save_daily')) {
-  // Salvar diário
+/* =========================================================
+   POST HANDLERS
+   - save_daily: salva dashboard_daily
+   - default: salva SOMENTE campos manuais em metrics
+========================================================= */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $dashboard_slug === 'executivo' && (($_POST['daily_action'] ?? '') === 'save_daily')) {
   try {
     if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $daily_date)) {
       throw new Exception('Data inválida.');
@@ -159,8 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($dashboard_slug === 'executivo') &
     ');
     $stmtS->execute([$dashboard_slug, $daily_date, $fat, $agd, $uid]);
 
-    // Recarrega para mostrar valores salvos
-    $stmtD = db()->prepare('SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at FROM dashboard_daily WHERE dash_slug=? AND ref_date=? LIMIT 1');
+    $stmtD = db()->prepare('
+      SELECT dash_slug, ref_date, faturado_dia, agendado_hoje, updated_at
+      FROM dashboard_daily
+      WHERE dash_slug=? AND ref_date=?
+      LIMIT 1
+    ');
     $stmtD->execute([$dashboard_slug, $daily_date]);
     $dailyRow = $stmtD->fetch(PDO::FETCH_ASSOC);
 
@@ -173,13 +192,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($dashboard_slug === 'executivo') &
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['daily_action'] ?? '') !== 'save_daily')) {
-  // Salvar métricas (seu comportamento atual)
   try {
-    $stmt = db()->prepare('UPDATE metrics SET metric_value_num=?, metric_value_text=? WHERE dashboard_slug=? AND metric_key=?');
+    $stmt = db()->prepare('
+      UPDATE metrics
+      SET metric_value_num=?, metric_value_text=?
+      WHERE dashboard_slug=? AND metric_key=?
+    ');
 
     foreach (($_POST['m'] ?? []) as $key => $posted) {
       $keyStr = (string)$key;
-      if (isset($computedKeys[$keyStr])) continue;
+
+      // ✅ salva SOMENTE manuais
+      if (!isset($manualKeys[$keyStr])) continue;
 
       $type = (string)($posted['type'] ?? 'money');
       $raw  = (string)($posted['value'] ?? '');
@@ -188,66 +212,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (($_POST['daily_action'] ?? '') !==
       $stmt->execute([$num, $txt, $dashboard_slug, $keyStr]);
     }
 
-    header('Location: /index.php');
+    header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
     exit;
-
   } catch (Throwable $e) {
     $error = 'Erro ao salvar: ' . $e->getMessage();
   }
 }
 
-// ------------------------------
-// Carrega métricas
-// ------------------------------
-$stmt = db()->prepare('SELECT id, metric_key, metric_label, metric_type, metric_value_num, metric_value_text FROM metrics WHERE dashboard_slug=? ORDER BY id ASC');
+/* =========================================================
+   LOAD METRICS (render)
+========================================================= */
+$stmt = db()->prepare('
+  SELECT id, metric_key, metric_label, metric_type, metric_value_num, metric_value_text
+  FROM metrics
+  WHERE dashboard_slug=?
+  ORDER BY id ASC
+');
 $stmt->execute([$dashboard_slug]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Grupos por dashboard
-if ($dashboard_slug === 'financeiro') {
-  $groups = [
-    'Financeiro' => [
-      'faturado_dia',
-      'contas_pagar_dia',
-    ]
-  ];
-} else {
-  $groups = [
-    'Ano' => [
-      'meta_ano',
-      'falta_meta_ano',
-      'realizado_ano_acum',
-    ],
-    'Mês' => [
-      'meta_mes',
-      'realizado_ate_hoje',
-      'falta_meta_mes',
-      'atingimento_mes_pct',
-      'deveria_ate_hoje',
-    ],
-    'Ritmo (dia útil)' => [
-      'meta_dia_util',
-      'a_faturar_dia_util',
-      'realizado_dia_util',
-      'realizado_dia_util_pct',
-    ],
-    'Dias úteis' => [
-      'dias_uteis_trabalhar',
-      'dias_uteis_trabalhados',
-    ],
-    'Projeções' => [
-      'vai_bater_meta',
-      'fechar_em',
-      'equivale_pct',
-    ],
-  ];
-}
+$groups = ($dashboard_slug === 'financeiro')
+  ? ['Configuração (manual)' => ['faturado_dia', 'contas_pagar_dia']]
+  : ['Configuração (manual)' => ['meta_ano', 'meta_mes']];
 
-// index por key
 $byKey = [];
 foreach ($rows as $r) $byKey[(string)$r['metric_key']] = $r;
 
-// monta lista final em ordem
 $ordered = [];
 foreach ($groups as $gName => $keys) {
   foreach ($keys as $k) {
@@ -255,16 +245,15 @@ foreach ($groups as $gName => $keys) {
   }
 }
 
-$dashboardName = $dashboard_slug === 'executivo' ? 'Faturamento' : 'Financeiro';
+$dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro';
 
-// Formata valores do diário para input
 $dailyFatInput = '';
 $dailyAgInput = '';
 $dailyUpdatedAt = '';
 
 if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
   $dailyFatInput = 'R$ ' . number_format((float)($dailyRow['faturado_dia'] ?? 0), 2, ',', '.');
-  $dailyAgInput = 'R$ ' . number_format((float)($dailyRow['agendado_hoje'] ?? 0), 2, ',', '.');
+  $dailyAgInput  = 'R$ ' . number_format((float)($dailyRow['agendado_hoje'] ?? 0), 2, ',', '.');
   $dailyUpdatedAt = (string)($dailyRow['updated_at'] ?? '');
 }
 ?>
@@ -299,63 +288,37 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
     <?php endif; ?>
 
     <?php if ($dashboard_slug === 'executivo'): ?>
-      <!-- ✅ NOVO BLOCO: Histórico diário (não existia no seu HTML) -->
-      <div class="group" style="margin-bottom:18px;">
-        <div class="group__title">Histórico diário (manual)</div>
+      <!-- Prévia automática (igual dashboard) -->
+      <section class="group" style="margin-bottom:18px;">
+        <div class="group__title">Prévia do Dashboard (automático)</div>
+        <div class="hint" style="margin:0 0 10px 0;">Valores do TOTVS + cálculos automáticos (igual ao dashboard).</div>
 
-        <?php if ($dailyMsg !== ''): ?>
-          <div class="alert <?= $dailyOk ? 'alert--ok' : 'alert--error' ?>">
-            <?= htmlspecialchars($dailyMsg, ENT_QUOTES, 'UTF-8') ?>
-          </div>
-        <?php endif; ?>
+        <table id="previewTable" style="width:100%;border-collapse:collapse;">
+          <tbody></tbody>
+        </table>
 
-        <form method="post" class="form" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:end;">
-          <input type="hidden" name="daily_action" value="save_daily">
+        <div style="margin-top:10px;display:flex;gap:10px;align-items:center;">
+          <button class="btn btn--secondary" type="button" id="btnPreviewForce">Atualizar agora (forçar TOTVS)</button>
+          <span id="previewStatus"></span>
+        </div>
+      </section>
 
-          <div class="field" style="grid-column:1 / -1;">
-            <label class="field__label" for="daily_date">Data</label>
-            <input class="field__control" id="daily_date" name="daily_date" type="date"
-                   value="<?= htmlspecialchars($daily_date, ENT_QUOTES, 'UTF-8') ?>" />
-            <?php if ($dailyUpdatedAt !== ''): ?>
-              <div class="field__hint">Última atualização: <?= htmlspecialchars($dailyUpdatedAt, ENT_QUOTES, 'UTF-8') ?></div>
-            <?php endif; ?>
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="daily_faturado">Faturado do dia</label>
-            <input class="field__control" id="daily_faturado" name="daily_faturado" type="text"
-                   placeholder="R$ 0,00"
-                   value="<?= htmlspecialchars($dailyFatInput, ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="daily_agendado">Agendado para faturar hoje</label>
-            <input class="field__control" id="daily_agendado" name="daily_agendado" type="text"
-                   placeholder="R$ 0,00"
-                   value="<?= htmlspecialchars($dailyAgInput, ENT_QUOTES, 'UTF-8') ?>" />
-          </div>
-
-          <button class="btn btn--secondary" type="submit" style="grid-column:1 / -1;">Salvar dia</button>
-
-          <div class="hint" style="grid-column:1 / -1;margin:0;">
-            Dica: você pode preencher só um dos campos. Se deixar vazio, considera <strong>0</strong>.
-          </div>
+      <!-- Histórico diário manual -->
+      <section class="group" style="margin-bottom:18px;">
         </form>
-      </div>
+      </section>
     <?php endif; ?>
 
-    <!-- ✅ Seu formulário original (permanece) -->
+    <!-- Formulário: somente campos manuais -->
     <form method="post" class="form metrics-form">
       <?php foreach ($ordered as $groupName => $items): ?>
-        <div class="group">
+        <section class="group">
           <div class="group__title"><?= htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8') ?></div>
 
           <?php foreach ($items as $r): ?>
             <?php
               $key = (string)$r['metric_key'];
-              $isComputed = isset($computedKeys[$key]);
               $type = (string)$r['metric_type'];
-              $isVaiBater = ($key === 'vai_bater_meta');
 
               $placeholder = match($type) {
                 'money' => 'Ex: R$ 4.000.000,00',
@@ -370,38 +333,24 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
                 <?= htmlspecialchars((string)$r['metric_label'], ENT_QUOTES, 'UTF-8') ?>
               </label>
 
-              <?php if ($isVaiBater): ?>
-                <input class="field__control is-computed metric-input"
-                       id="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>"
-                       name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][value]"
-                       value="<?= htmlspecialchars((string)($r['metric_value_text'] ?? ''), ENT_QUOTES, 'UTF-8') ?>"
-                       data-type="text"
-                       placeholder="<?= htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') ?>"
-                       readonly />
-                <input type="hidden" name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][type]" value="text" />
-                <div class="field__hint">Calculado automaticamente</div>
-              <?php else: ?>
-                <input class="field__control metric-input <?= $isComputed ? 'is-computed' : '' ?>"
-                       id="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>"
-                       name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][value]"
-                       value="<?= htmlspecialchars(format_for_input($r), ENT_QUOTES, 'UTF-8') ?>"
-                       placeholder="<?= htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') ?>"
-                       autocomplete="off"
-                       inputmode="<?= ($type === 'text') ? 'text' : 'decimal' ?>"
-                       data-type="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>"
-                       <?= $isComputed ? 'readonly' : '' ?> />
-                <input type="hidden" name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][type]" value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>" />
-                <?php if ($isComputed): ?>
-                  <div class="field__hint">Calculado automaticamente</div>
-                <?php endif; ?>
-              <?php endif; ?>
+              <input class="field__control metric-input"
+                     id="m_<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>"
+                     name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][value]"
+                     value="<?= htmlspecialchars(format_for_input($r), ENT_QUOTES, 'UTF-8') ?>"
+                     placeholder="<?= htmlspecialchars($placeholder, ENT_QUOTES, 'UTF-8') ?>"
+                     autocomplete="off"
+                     inputmode="<?= ($type === 'text') ? 'text' : 'decimal' ?>"
+                     data-type="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>" />
+
+              <input type="hidden"
+                     name="m[<?= htmlspecialchars($key, ENT_QUOTES, 'UTF-8') ?>][type]"
+                     value="<?= htmlspecialchars($type, ENT_QUOTES, 'UTF-8') ?>" />
             </div>
           <?php endforeach; ?>
-        </div>
+        </section>
       <?php endforeach; ?>
 
-      <div class="hint">Dica: digite valores como <strong>R$ 4.000.000,00</strong> ou <strong>59%</strong>. Ao pressionar <strong>Tab</strong>, ele formata automaticamente.</div>
-
+      <div class="hint">Dica: digite valores como <strong>R$ 4.000.000,00</strong> ou <strong>18</strong>. Ao pressionar <strong>Tab</strong>, ele formata automaticamente.</div>
       <button class="btn btn--primary" type="submit">Salvar Alterações</button>
     </form>
   </div>
@@ -412,6 +361,64 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
 <script>
   window.METRICS_DASH = <?= json_encode($dashboard_slug, JSON_UNESCAPED_UNICODE) ?>;
 </script>
+
+<?php if ($dashboard_slug === 'executivo'): ?>
+<script>
+(function(){
+  const dash = <?= json_encode($dashboard_slug, JSON_UNESCAPED_UNICODE) ?>;
+
+  const brl = (v) => new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(v||0));
+  const pct = (v) => new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:0}).format(Number(v||0));
+
+  async function loadPreview(force=false){
+    const st = document.getElementById('previewStatus');
+    if (st) st.textContent = force ? 'Forçando TOTVS...' : 'Carregando...';
+
+    const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${force ? '&force=1' : ''}`;
+    const res = await fetch(url, { cache: 'no-store' });
+    const payload = await res.json();
+
+    const v = payload.values || {};
+    const rows = [
+      ['Atualizado em', payload.updated_at || '—'],
+      ['Hoje (faturado + agendado)', brl(v.hoje_total ?? 0)],
+      ['Realizado até hoje (mês)', brl(v.realizado_ate_hoje ?? 0)],
+      ['Realizado anual acumulado', brl(v.realizado_ano_acum ?? 0)],
+      ['Meta do mês', brl(v.meta_mes ?? 0)],
+      ['Falta para meta do mês', brl(v.falta_meta_mes ?? 0)],
+      ['Atingimento do mês', pct(v.atingimento_mes_pct ?? 0)],
+      ['Dias úteis', `${Number(v.dias_uteis_trabalhados||0)} / ${Number(v.dias_uteis_trabalhar||0)}`],
+      ['Meta por dia útil', brl(v.meta_dia_util ?? 0)],
+      ['Realizado por dia útil', brl(v.realizado_dia_util ?? 0)],
+      ['Vai bater meta?', v.vai_bater_meta ?? '—'],
+      ['Projeção de fechamento', brl(v.fechar_em ?? 0)],
+      ['Equivale a', pct(v.equivale_pct ?? 0)]
+    ];
+
+    const tbody = document.querySelector('#previewTable tbody');
+    if (tbody) {
+      tbody.innerHTML = '';
+      rows.forEach(([k,val])=>{
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0">${k}</td>
+          <td style="padding:6px 8px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600">${val}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    if (st) st.textContent = 'OK ✅';
+  }
+
+  loadPreview(false);
+
+  const btn = document.getElementById('btnPreviewForce');
+  if (btn) btn.addEventListener('click', () => loadPreview(true));
+})();
+</script>
+<?php endif; ?>
+
 <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
 <script src="/assets/js/metrics.js?v=<?= filemtime(__DIR__ . '/../assets/js/metrics.js') ?>"></script>

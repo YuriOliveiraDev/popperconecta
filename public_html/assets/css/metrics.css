@@ -1,6 +1,28 @@
 /* =========================
-   metrics.css (Admin / Métricas) - FULL WIDTH + 2 COLUNAS
+   metrics.css (Admin / Métricas) - FULL WIDTH + 2 COLUNAS (MODERNO)
+   Mantém funcionalidades e estrutura atual
    ========================= */
+
+:root{
+  /* Se já existir no seu base.css, não conflita; só define se faltar */
+  --primary1: var(--primary1, #5c2c8c);
+
+  --m-bg: #f6f7fb;
+  --m-card: #ffffff;
+  --m-text: rgba(15,23,42,.92);
+  --m-muted: rgba(15,23,42,.65);
+  --m-border: rgba(15,23,42,.10);
+  --m-border-strong: rgba(15,23,42,.14);
+  --m-shadow: 0 14px 34px rgba(2,6,23,.10);
+  --m-shadow-sm: 0 8px 18px rgba(2,6,23,.08);
+  --m-radius: 18px;
+  --m-radius-sm: 14px;
+}
+
+/* Fundo mais clean (não mexe no restante do sistema) */
+body.page{
+  background: var(--m-bg);
+}
 
 /* ===== OVERRIDE FORTE: full width ===== */
 main.metrics.metrics--fullwidth.container{
@@ -14,6 +36,15 @@ main.metrics.metrics--fullwidth .metrics-card{
   max-width: none !important;
 }
 
+/* Card principal (mais moderno) */
+.metrics .metrics-card{
+  padding: 18px;
+  border-radius: var(--m-radius);
+  background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,1));
+  border: 1px solid var(--m-border);
+  box-shadow: var(--m-shadow);
+}
+
 /* ===== 2 COLUNAS POR GRUPO ===== */
 main.metrics.metrics--two-col .metrics-form{
   display: block !important;
@@ -23,19 +54,30 @@ main.metrics.metrics--two-col .group{
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 14px 18px !important;
-  margin-bottom: 22px !important;
-  padding-bottom: 18px !important;
-  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+
+  /* visual de card por grupo */
+  margin-bottom: 14px !important;
+  padding: 14px !important;
+  border-radius: var(--m-radius-sm) !important;
+  border: 1px solid var(--m-border) !important;
+  background: var(--m-card) !important;
+  box-shadow: var(--m-shadow-sm) !important;
 }
 
+/* Título do grupo com linha sutil */
 main.metrics.metrics--two-col .group__title{
   grid-column: 1 / -1 !important;
-  font-size: 16px !important;
+  display:flex !important;
+  align-items:center !important;
+
+  font-size: 14px !important;
   font-weight: 900 !important;
   color: var(--primary1) !important;
-  margin: 0 0 6px !important;
-  padding-bottom: 8px !important;
-  border-bottom: 1px solid rgba(92,44,140,.20) !important;
+
+  margin: 0 0 10px !important;
+  padding-bottom: 10px !important;
+  border-bottom: 1px solid rgba(92,44,140,.18) !important;
+  letter-spacing: -0.01em !important;
 }
 
 main.metrics.metrics--two-col .hint,
@@ -46,38 +88,46 @@ main.metrics.metrics--two-col .btn.btn--primary{
 
 /* ===== ESTILOS GERAIS ===== */
 .metrics .page-title{
-  margin: 18px 0 14px;
+  margin: 16px 0 12px;
   font-size: 22px;
-  font-weight: 800;
-  color: rgba(15,23,42,.92);
+  font-weight: 900;
+  color: var(--m-text);
+  letter-spacing: -0.02em;
 }
 
+/* Tabs em pill */
 .metrics .tabs{
   display: flex;
   gap: 8px;
-  margin: 10px 0 16px;
+  margin: 10px 0 14px;
+  flex-wrap: wrap;
 }
 
 .metrics .tab{
-  padding: 10px 16px;
-  border-radius: 12px;
-  background: rgba(15,23,42,.06);
-  color: rgba(15,23,42,.75);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.80);
+  border: 1px solid var(--m-border);
+  color: rgba(15,23,42,.78);
   text-decoration: none;
-  font-weight: 800;
+  font-weight: 900;
+  font-size: 13px;
+  transition: transform .08s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
 }
 
-.metrics .tab:hover{ background: rgba(15,23,42,.10); }
+.metrics .tab:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(2,6,23,.06);
+  background: rgba(255,255,255,1);
+}
 
 .metrics .tab.is-active{
-  background: var(--primary1);
-  color: #fff;
+  background: rgba(92,44,140,.10);
+  border-color: rgba(92,44,140,.35);
+  color: var(--primary1);
 }
 
-.metrics .metrics-card{
-  padding: 22px;
-}
-
+/* Fields */
 .metrics .field{
   display: flex;
   flex-direction: column;
@@ -85,22 +135,25 @@ main.metrics.metrics--two-col .btn.btn--primary{
 }
 
 .metrics .field__label{
-  font-size: 13px;
-  color: #334155;
-  font-weight: 800;
+  font-size: 12px;
+  color: rgba(15,23,42,.82);
+  font-weight: 900;
+  letter-spacing: -0.01em;
 }
 
 .metrics .field__control{
-  height: 44px;
+  height: 46px;
   padding: 0 12px;
   border-radius: 12px;
-  border: 1px solid rgba(15,23,42,.14);
-  background: #fff;
+  border: 1px solid var(--m-border-strong);
+  background: rgba(255,255,255,.96);
   outline: none;
+  color: rgba(15,23,42,.92);
+  transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
 }
 
 .metrics .field__control:focus{
-  border-color: rgba(92,44,140,.55);
+  border-color: rgba(92,44,140,.45);
   box-shadow: 0 0 0 4px rgba(92,44,140,.12);
 }
 
@@ -111,25 +164,35 @@ main.metrics.metrics--two-col .btn.btn--primary{
 
 .metrics .field__hint{
   font-size: 12px;
-  color: rgba(15,23,42,.55);
+  color: var(--m-muted);
 }
 
+/* Hint/Info box mais clean */
 .metrics .hint{
-  margin: 12px 0 18px;
-  padding: 12px 16px;
+  margin: 12px 0 16px;
+  padding: 12px 14px;
   background: rgba(92,44,140,.08);
-  border-radius: 10px;
-  color: rgba(15,23,42,.75);
+  border-radius: 12px;
+  color: rgba(15,23,42,.78);
+  border: 1px solid rgba(92,44,140,.12);
 }
 
 .metrics .hint strong{
   color: var(--primary1);
 }
 
+/* Botão principal mais “premium” */
 .metrics .btn.btn--primary{
   height: 50px;
   font-weight: 900;
-  font-size: 16px;
+  font-size: 15px;
+  border-radius: 14px;
+  border: 1px solid rgba(92,44,140,.20);
+  box-shadow: 0 10px 18px rgba(2,6,23,.08);
+}
+
+.metrics .btn.btn--primary:hover{
+  transform: translateY(-1px);
 }
 
 /* ===== RESPONSIVO ===== */
@@ -141,4 +204,67 @@ main.metrics.metrics--two-col .btn.btn--primary{
   main.metrics.metrics--two-col .group{
     grid-template-columns: 1fr !important;
   }
+}
+
+/* =========================
+   Preview Status (TOTVS)
+   ========================= */
+
+#previewStatus{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .02em;
+
+  padding: 6px 12px;
+  border-radius: 999px;
+
+  background: rgba(15,23,42,.06);
+  color: rgba(15,23,42,.75);
+
+  border: 1px solid rgba(15,23,42,.10);
+
+  transition: all .25s ease;
+  min-height: 28px;
+}
+
+/* carregando */
+#previewStatus.is-loading{
+  background: rgba(234,179,8,.12);
+  color: #a16207;
+  border-color: rgba(234,179,8,.35);
+}
+
+/* sucesso */
+#previewStatus.is-ok{
+  background: rgba(34,197,94,.12);
+  color: #166534;
+  border-color: rgba(34,197,94,.35);
+}
+
+/* erro */
+#previewStatus.is-error{
+  background: rgba(239,68,68,.12);
+  color: #991b1b;
+  border-color: rgba(239,68,68,.35);
+}
+
+/* animação leve */
+#previewStatus.is-loading::after{
+  content:'';
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background: currentColor;
+  opacity:.6;
+  animation: previewPulse 1s infinite;
+}
+
+@keyframes previewPulse{
+  0%{ transform: scale(.7); opacity:.3; }
+  50%{ transform: scale(1); opacity:.9; }
+  100%{ transform: scale(.7); opacity:.3; }
 }
