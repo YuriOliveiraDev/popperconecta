@@ -127,6 +127,10 @@ if ($h >= 5 && $h < 12) {
               <span class="topbar__dropdown-icon">💡</span>
               <span class="topbar__dropdown-label">Insight</span>
             </a>
+            <a class="topbar__dropdown-item" href="/clientes.php">
+              <span class="topbar__dropdown-icon">💡</span>
+              <span class="topbar__dropdown-label">Clientes</span>
+            </a>
 
             <?php if (isset($dashboards) && is_array($dashboards)): ?>
               <?php foreach ($dashboards as $dash): ?>

@@ -1,0 +1,243 @@
+
+  :root{
+    --bg:#F6F7FB;
+    --card:#ffffff;
+    --text:rgba(15,23,42,.92);
+    --muted:rgba(15,23,42,.62);
+    --line:rgba(15,23,42,.10);
+    --shadow:0 12px 28px rgba(2,6,23,.06);
+    --radius:16px;
+    --p:#5C2C8C;
+    --p2:rgba(92,44,140,.12);
+  }
+
+  html,body{background:var(--bg); overflow:hidden;}
+
+  .wrap{
+    height:calc(100vh - 64px);
+    overflow:auto;
+    padding:18px 18px 26px;
+  }
+
+  .pageHead{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px;
+    margin-bottom:14px;
+  }
+
+  .headTop{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .title{display:flex; flex-direction:column; gap:6px; min-width:260px;}
+  .title h1{
+    margin:0; font-size:16px; font-weight:900; color:var(--text); letter-spacing:.2px;
+  }
+
+  .meta{
+    color:var(--muted);
+    font-size:12px;
+    font-weight:800;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+  .meta .dot{opacity:.55;}
+
+  .monthBar{
+    display:flex; gap:8px; flex-wrap:wrap; align-items:center; justify-content:flex-end;
+  }
+  .pill{
+    border:1px solid var(--line);
+    background:rgba(255,255,255,.92);
+    color:rgba(15,23,42,.78);
+    padding:6px 10px;
+    border-radius:999px;
+    font-weight:900;
+    font-size:12px;
+    cursor:pointer;
+    transition:transform .12s ease, box-shadow .12s ease, background .12s ease, border-color .12s ease;
+    user-select:none;
+  }
+  .pill:hover{transform:translateY(-1px); box-shadow:0 10px 18px rgba(2,6,23,.06);}
+  .pill.is-active{
+    background:rgba(92,44,140,.12);
+    border-color:rgba(92,44,140,.28);
+    color:rgba(92,44,140,.98);
+  }
+
+  .headBottom{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+
+  .kpiRow{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    width:100%;
+  }
+  @media (max-width:1100px){.kpiRow{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:540px){.kpiRow{grid-template-columns:1fr;}}
+
+  .kpi{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:14px;
+    padding:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-height:68px;
+  }
+  .kpi .l{font-size:12px; font-weight:900; color:var(--muted);}
+  .kpi .v{font-size:18px; font-weight:900; color:var(--text);}
+  .kpi .s{margin-top:2px; font-size:11px; font-weight:900; color:rgba(15,23,42,.55);}
+  .kpi .left{display:flex; flex-direction:column; gap:2px;}
+  .kpi .right{display:flex; flex-direction:column; align-items:flex-end; gap:2px;}
+
+  .btn{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    height:38px;
+    padding:0 12px;
+    font-weight:900;
+    font-size:12px;
+    color:rgba(15,23,42,.86);
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:hover{transform:translateY(-1px); box-shadow:0 10px 18px rgba(2,6,23,.06);}
+  .btn:active{transform:translateY(0px); box-shadow:none;}
+
+  .err{
+    display:none;
+    background:rgba(239,68,68,.08);
+    border:1px solid rgba(239,68,68,.20);
+    color:rgba(153,27,27,.95);
+    border-radius:14px;
+    padding:12px 14px;
+    font-weight:900;
+    font-size:13px;
+    margin-bottom:12px;
+  }
+
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:14px;}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:14px;
+    min-height:320px;
+  }
+  .span-4{grid-column:span 4;}
+  .span-12{grid-column:span 12;}
+  @media (max-width:1200px){
+    .span-4{grid-column:span 12;}
+    .card{min-height:300px;}
+  }
+
+  /* LISTA */
+  .listRank{height:320px; overflow-y:auto; padding-right:6px;}
+  .rankItem{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border-radius:10px; margin-bottom:6px;
+    background:#f8fafc; transition:.2s;
+  }
+  .rankItem:hover{background:#eef2ff;}
+  .rankLeft{display:flex; gap:10px; align-items:center;}
+  .rankPos{font-weight:800; font-size:13px; color:#6366f1; width:28px;}
+  .rankName{font-size:13px; font-weight:600; color:#0f172a;}
+  .rankValue{font-size:13px; font-weight:700; color:#111827;}
+
+  .cardHead{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;
+  }
+  .cardTitle{font-size:13px; font-weight:900; color:var(--text); margin:0; letter-spacing:.2px;}
+  .cardSub{font-size:12px; font-weight:900; color:rgba(15,23,42,.55);}
+
+  .rowInline{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .select{
+    border:1px solid var(--line);
+    background:#fff;
+    border-radius:12px;
+    height:38px;
+    padding:0 12px;
+    font-weight:900;
+    font-size:12px;
+    color:rgba(15,23,42,.86);
+    outline:none;
+    min-width:280px;
+  }
+
+  .insight{
+    background:rgba(92,44,140,.06);
+    border:1px dashed rgba(92,44,140,.22);
+    border-radius:14px;
+    padding:12px;
+    min-height:unset;
+  }
+  .insTag{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:6px 10px; border-radius:999px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(92,44,140,.20);
+    color:rgba(92,44,140,.92);
+    font-size:12px; font-weight:900;
+    margin-bottom:8px;
+  }
+  .insText{
+    color:rgba(15,23,42,.84);
+    font-size:13px;
+    font-weight:900;
+    line-height:1.35;
+  }
+
+  canvas.chart{
+    width:100%;
+    height:260px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:14px;
+    display:block;
+  }
+
+  .loading{opacity:.88; filter:saturate(.96);}
+/* Tooltip flutuante para o canvas */
+.canvasTip{
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(92,44,140,.92); /* roxo claro */
+  color: #fff;
+  font-size: 12px;
+  font-weight: 900;
+  box-shadow: 0 12px 28px rgba(2,6,23,.22);
+  display: none;
+  max-width: min(560px, calc(100vw - 24px));
+  white-space: normal;           /* pega texto inteiro */
+  overflow-wrap: anywhere;       /* quebra nomes grandes */
+  line-height: 1.25;
+}
+
+
