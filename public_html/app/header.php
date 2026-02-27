@@ -168,6 +168,20 @@ if ($h >= 5 && $h < 12) {
             </a>
           </div>
         </div>
+         <div class="topbar__dropdown-group" data-submenu>
+          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
+            <span class="topbar__dropdown-icon">💰</span>
+            <span class="topbar__dropdown-label">Comex</span>
+            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+          </button>
+
+          <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
+            <a class="topbar__dropdown-item" href="/importacoes.php">
+              <span class="topbar__dropdown-icon">🧾</span>
+              <span class="topbar__dropdown-label">Importações</span>
+            </a>
+          </div>
+        </div>
       </div>
     </div>
 

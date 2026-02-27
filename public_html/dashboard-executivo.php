@@ -27,6 +27,7 @@ $meses = [
   12 => 'Dez'
 ];
 ?>
+  <link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/assets/css/loader.css') ?>">
 
 <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
 <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
@@ -108,12 +109,11 @@ $meses = [
   <script>
     window.EXEC_DEFAULT_YM = <?= json_encode($activeYm, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
   </script>
-
-  <script
-    src="/assets/js/dashboard-executivo.js?v=<?= filemtime(__DIR__ . '/assets/js/dashboard-executivo.js') ?>"></script>
+  <script src="/assets/js/loader.js"></script>
+  <script src="/assets/js/dashboard-executivo.js?v=<?= filemtime(__DIR__ . '/assets/js/dashboard-executivo.js') ?>"></script>
   <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
   <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
 </main>
 
-<?php require_once __DIR__ . '/app/footer.php'; ?>
+<?php require_once __DIR__ . '/app/footer.php'; ?>  

@@ -408,3 +408,107 @@ body .topbar__dropdown-menu *{
   }
 }
 
+/* =========================
+   DROPDOWN + SUBMENU (fix flicker / animação)
+   ========================= */
+
+.topbar__dropdown { position: relative; }
+
+/* Menu base */
+.topbar__dropdown-menu{
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 240px;
+  z-index: 9999;
+
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+
+  transition: opacity .15s ease, transform .15s ease;
+  will-change: opacity, transform;
+
+  /* se quiser, mantém seu visual atual (bordas/cores) */
+  /* background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; */
+}
+
+/* Estado aberto do menu */
+.topbar__dropdown.is-open > .topbar__dropdown-menu{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Itens */
+.topbar__dropdown-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* Grupo com submenu (pai) */
+.topbar__dropdown-group{ position: relative; }
+
+/* Botão “pai” do submenu */
+.topbar__dropdown-item--group{
+  width: 100%;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+/* Submenu lateral */
+.topbar__dropdown-submenu{
+  position: absolute;
+  top: -8px;               /* sobe um tiquinho para “colar” */
+  left: calc(100% + 8px);  /* distância lateral */
+  min-width: 240px;
+  z-index: 10000;
+
+  opacity: 0;
+  transform: translateX(-6px);
+  pointer-events: none;
+
+  transition: opacity .15s ease, transform .15s ease;
+  will-change: opacity, transform;
+}
+
+/* Estado aberto do submenu */
+.topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* “Ponte invisível” para evitar vão entre pai e submenu (elimina flicker) */
+.topbar__dropdown-group::after{
+  content:"";
+  position:absolute;
+  top: 0;
+  right: -10px;
+  width: 12px;
+  height: 100%;
+}
+
+/* Mobile: submenu vira “inline” (sem ficar flutuando ao lado) */
+@media (max-width: 860px){
+  .topbar__dropdown-menu{
+    left: 0;
+    right: auto;
+  }
+  .topbar__dropdown-submenu{
+    position: static;
+    min-width: 0;
+    transform: none;
+    opacity: 1;
+    pointer-events: auto;
+    display: none; /* abre/fecha via classe */
+    margin-left: 10px;
+    margin-top: 6px;
+  }
+  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
+    display: block;
+  }
+}

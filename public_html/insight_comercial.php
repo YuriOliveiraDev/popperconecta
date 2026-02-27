@@ -6,14 +6,10 @@ require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/header.php';
 require_once __DIR__ . '/app/config-totvs.php';
 
-// =========================
-// CONFIG
-// =========================
 const CACHE_DIR = __DIR__ . '/cache';
-const CACHE_TTL = 600;              // 10 min
-const CONSULTA_RANKINGS = '000070'; // consulta item a item
+const CACHE_TTL = 600;              
+const CONSULTA_RANKINGS = '000070'; 
 
-// mês ativo (default)
 $nowY = (int)date('Y');
 $nowM = (int)date('m');
 
@@ -317,12 +313,14 @@ $topProdR   = $rankByDesc($priceAggProd);
 
 $descPctGeral = ($totTabela > 0) ? ($totDesc / $totTabela) : 0.0;
 ?>
-
+<link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/assets/css/loader.css') ?>" />
 <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
 <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 <link rel="stylesheet" href="/assets/css/dashboard-executivo.css?v=<?= filemtime(__DIR__ . '/assets/css/dashboard-executivo.css') ?>" />
 <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
 <link rel="stylesheet" href="/assets/css/index.css?v=<?= filemtime(__DIR__ . '/assets/css/index.css') ?>" />
+
+
 
 <script>document.documentElement.classList.add('dashboard-exec');</script>
 
@@ -943,13 +941,61 @@ $descPctGeral = ($totTabela > 0) ? ($totDesc / $totTabela) : 0.0;
 
       </div><!-- /d5-wrap -->
     </div><!-- /card d5 -->
-
   </section>
 
   <script>
-    setInterval(() => window.location.reload(), <?= (int)(CACHE_TTL * 1000) ?>);
-  </script>
+  (function(){
+    const RELOAD_MS = <?= (int)(CACHE_TTL * 1000) ?>;
 
+    setInterval(() => {
+      if (window.PopperLoading) {
+        window.PopperLoading.show('Atualizando…', 'Recarregando dados do dashboard');
+      }
+      setTimeout(() => window.location.reload(), 120);
+    }, RELOAD_MS);
+  })();
+</script>
+  <script src="/assets/js/loader.js?v=<?= filemtime(__DIR__ . '/assets/js/loader.js') ?>"></script>
+  <script>
+  (function () {
+    // 1) Carregamento inicial (mostra o loader o mais cedo possível no client)
+    function showInitial() {
+      if (window.PopperLoading) {
+        window.PopperLoading.show('Carregando…', 'Montando rankings e cálculos');
+      }
+    }
+
+    // mostra imediatamente
+    showInitial();
+
+    // esconde quando tudo carregou (imagens, CSS, etc.)
+    window.addEventListener('load', () => {
+      window.PopperLoading && window.PopperLoading.hide();
+    }, { once: true });
+
+    // se voltar pelo histórico (bfcache), garante que não fica travado aberto
+    window.addEventListener('pageshow', (e) => {
+      if (e.persisted && window.PopperLoading) window.PopperLoading.hide();
+    });
+
+    // 2) Troca de mês (chips)
+    document.addEventListener('click', (ev) => {
+      const a = ev.target && ev.target.closest ? ev.target.closest('#chipsMeses a.chip') : null;
+      if (!a) return;
+
+      // evita navegar instantâneo pra dar tempo de renderizar o loader
+      ev.preventDefault();
+
+      const mesTxt = (a.textContent || '').trim(); // ex: "Fev/26"
+      if (window.PopperLoading) {
+        window.PopperLoading.show('Carregando…', 'Trocando para ' + (mesTxt || 'outro mês'));
+      }
+
+      // navega logo em seguida
+      setTimeout(() => { window.location.href = a.href; }, 30);
+    }, { passive: false });
+  })();
+</script>
   <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
   <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>

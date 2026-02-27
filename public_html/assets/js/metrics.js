@@ -1,10 +1,50 @@
 /* =========================
-   metrics.js (Admin -> Métricas)
+   metrics.js (Admin -> Métricas) + Loader
    ========================= */
 
 (function(){
   const fmtBRL = new Intl.NumberFormat('pt-BR', { style:'currency', currency:'BRL' });
   const fmtINT = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+
+  // ---------- Loader helpers ----------
+  function loaderShow(title, sub){
+    if (window.PopperLoading && typeof window.PopperLoading.show === 'function'){
+      window.PopperLoading.show(title || 'Carregando…', sub || 'Aguarde');
+    }
+  }
+  function loaderHide(){
+    if (window.PopperLoading && typeof window.PopperLoading.hide === 'function'){
+      window.PopperLoading.hide();
+    }
+  }
+
+  // 0) Loader inicial (rápido, só UX)
+  // Mostra no começo, e esconde quando DOM estiver pronto.
+  // (Se a página já veio pronta, ele pode nem aparecer — ok.)
+  loaderShow('Carregando…', 'Abrindo métricas');
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', () => setTimeout(loaderHide, 120), { once:true });
+  } else {
+    setTimeout(loaderHide, 120);
+  }
+
+  // 0.1) Se voltar via histórico (bfcache), não deixa o loader preso
+  window.addEventListener('pageshow', (e)=>{
+    if (e.persisted) loaderHide();
+  });
+
+  // 0.2) Loader ao salvar (submit)
+  // tenta pegar o form mais provável. Ajuste o seletor se o seu form tiver id fixo.
+  const form =
+    document.querySelector('form#metricsForm') ||
+    document.querySelector('form[data-metrics-form]') ||
+    document.querySelector('form');
+
+  if (form){
+    form.addEventListener('submit', ()=>{
+      loaderShow('Salvando…', 'Gravando métricas no sistema');
+    });
+  }
 
   function parsePtBrToNumber(raw){
     if (raw == null) return null;

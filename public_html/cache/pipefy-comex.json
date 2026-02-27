@@ -1,0 +1,462 @@
+{
+    "ok": true,
+    "pipe_id": 304022726,
+    "total": 50,
+    "pageInfo": {
+        "hasNextPage": true,
+        "endCursor": "WyIyMDI0LTExLTE1IDE4OjMyOjQyLjQ2MDEyMjAwMCBVVEMiLCIzLjAiLDEwMzAzMzc2MzNd"
+    },
+    "items": [
+        {
+            "card_id": "978526388",
+            "titulo": "PO02.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 NEON",
+            "container": null,
+            "previsao_embarque_etd": "16\/08\/2024",
+            "previsao_entrega_eta": "29\/09\/2024 15:03"
+        },
+        {
+            "card_id": "979166473",
+            "titulo": "PO01.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 NEON",
+            "container": null,
+            "previsao_embarque_etd": "04\/08\/2024",
+            "previsao_entrega_eta": "28\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979531806",
+            "titulo": "C01.2024 LC MOLA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "C01.2024 LC MOLA",
+            "container": null,
+            "previsao_embarque_etd": "22\/07\/2024",
+            "previsao_entrega_eta": "13\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979534668",
+            "titulo": "C02.2024 LC MOLA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "C02.2024 LC MOLA",
+            "container": null,
+            "previsao_embarque_etd": "01\/08\/2024",
+            "previsao_entrega_eta": "13\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979539077",
+            "titulo": "C03.2024 CORNETA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "C03.2024 CORNETA",
+            "container": null,
+            "previsao_embarque_etd": "21\/08\/2024",
+            "previsao_entrega_eta": "04\/10\/2024 09:00"
+        },
+        {
+            "card_id": "979540188",
+            "titulo": "C04.2024 CORNETA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "C04.2024 CORNETA",
+            "container": null,
+            "previsao_embarque_etd": "25\/08\/2024",
+            "previsao_entrega_eta": "04\/10\/2024 09:00"
+        },
+        {
+            "card_id": "979932530",
+            "titulo": "PO02.2024 LENTES PART. 1",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 LENTES PART. 1",
+            "container": null,
+            "previsao_embarque_etd": "22\/08\/2024",
+            "previsao_entrega_eta": "01\/09\/2024 21:00"
+        },
+        {
+            "card_id": "980006332",
+            "titulo": "B04.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B04.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "20\/08\/2024",
+            "previsao_entrega_eta": "02\/10\/2024 00:00"
+        },
+        {
+            "card_id": "980010973",
+            "titulo": "B05.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B05.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "22\/08\/2024",
+            "previsao_entrega_eta": "05\/10\/2024 11:00"
+        },
+        {
+            "card_id": "980062557",
+            "titulo": "B06.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B06.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "08\/09\/2024",
+            "previsao_entrega_eta": "11\/10\/2024 21:00"
+        },
+        {
+            "card_id": "980065695",
+            "titulo": "B07.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B07.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "14\/09\/2024",
+            "previsao_entrega_eta": "27\/10\/2024 22:01"
+        },
+        {
+            "card_id": "980106317",
+            "titulo": "PO02.2024 LENTES PART. 2",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 LENTES PART. 2",
+            "container": null,
+            "previsao_embarque_etd": "31\/08\/2024",
+            "previsao_entrega_eta": "08\/09\/2024 21:00"
+        },
+        {
+            "card_id": "981078773",
+            "titulo": "PO08.2024 MÁQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO08.2024 MÁQUINAS E ACESSÓRIOS ",
+            "container": null,
+            "previsao_embarque_etd": "06\/09\/2024",
+            "previsao_entrega_eta": "08\/09\/2024 16:32"
+        },
+        {
+            "card_id": "983224564",
+            "titulo": "A03.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A03.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "13\/08\/2024",
+            "previsao_entrega_eta": "14\/09\/2024 21:00"
+        },
+        {
+            "card_id": "983228549",
+            "titulo": "A04.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A04.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "19\/08\/2024",
+            "previsao_entrega_eta": "02\/10\/2024 20:00"
+        },
+        {
+            "card_id": "983243356",
+            "titulo": "PO01.2024 VELA SPARKLERS E FONTANA (AMY)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 Vela Sparklers e Fontana Amy",
+            "container": null,
+            "previsao_embarque_etd": "11\/08\/2024",
+            "previsao_entrega_eta": "14\/09\/2024 21:00"
+        },
+        {
+            "card_id": "985777402",
+            "titulo": "A05.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A05.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "26\/09\/2024",
+            "previsao_entrega_eta": "20\/11\/2024 21:00"
+        },
+        {
+            "card_id": "985819766",
+            "titulo": "A06.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A06.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "03\/10\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 22:01"
+        },
+        {
+            "card_id": "985850515",
+            "titulo": "A07.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A07.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:01"
+        },
+        {
+            "card_id": "985873863",
+            "titulo": "A08.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A08.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "14\/11\/2024",
+            "previsao_entrega_eta": "09\/01\/2025 09:00"
+        },
+        {
+            "card_id": "985890930",
+            "titulo": "PO01.2024 GÁS HELIO CHINA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 GÁS HELIO CHINA",
+            "container": null,
+            "previsao_embarque_etd": "12\/09\/2024",
+            "previsao_entrega_eta": "01\/11\/2024 00:00"
+        },
+        {
+            "card_id": "986477641",
+            "titulo": "PO06.2024 YIWU STAR (BASTÃO)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO06.2024 YIWU STAR (BASTÃO)",
+            "container": null,
+            "previsao_embarque_etd": "03\/10\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 21:00"
+        },
+        {
+            "card_id": "986496607",
+            "titulo": "PO05.2024 YIWU STAR (BASTÃO+DISPLAY)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO05.2024 YIWU STAR (BASTÃO+DISPLAY)",
+            "container": null,
+            "previsao_embarque_etd": "27\/08\/2024",
+            "previsao_entrega_eta": "05\/10\/2024 11:00"
+        },
+        {
+            "card_id": "990131836",
+            "titulo": "B08.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B08.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "25\/11\/2024 09:25"
+        },
+        {
+            "card_id": "990483343",
+            "titulo": "PO07.2024 MAQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO07.2024 MAQUINAS E ACESSÓRIOS",
+            "container": null,
+            "previsao_embarque_etd": "18\/09\/2024",
+            "previsao_entrega_eta": "21\/09\/2024 21:00"
+        },
+        {
+            "card_id": "990557740",
+            "titulo": "C05.2024 KIDS+CORNETA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "C05.2024 KIDS+CORNETA",
+            "container": null,
+            "previsao_embarque_etd": "09\/11\/2024",
+            "previsao_entrega_eta": "30\/12\/2024 02:00"
+        },
+        {
+            "card_id": "992497982",
+            "titulo": "A09.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A09.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "01\/11\/2024",
+            "previsao_entrega_eta": "14\/12\/2024 01:30"
+        },
+        {
+            "card_id": "992501459",
+            "titulo": "A10.2024 LC",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "A10.2024 LC",
+            "container": null,
+            "previsao_embarque_etd": "05\/11\/2024",
+            "previsao_entrega_eta": "11\/12\/2024 13:00"
+        },
+        {
+            "card_id": "992506701",
+            "titulo": "PO01.2024 SERPENTINA",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 SERPENTINA",
+            "container": null,
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:10"
+        },
+        {
+            "card_id": "992509214",
+            "titulo": "PO02.2024 CARNA FLOQUINHO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 CARNA FLOQUINHO",
+            "container": null,
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:01"
+        },
+        {
+            "card_id": "994766041",
+            "titulo": "PO03.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO03.2024 NEON",
+            "container": null,
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "17\/12\/2024 10:00"
+        },
+        {
+            "card_id": "994766510",
+            "titulo": "PO04.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO04.2024 NEON",
+            "container": null,
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "17\/12\/2024 10:00"
+        },
+        {
+            "card_id": "998257240",
+            "titulo": "B09.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B09.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "25\/09\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 22:01"
+        },
+        {
+            "card_id": "998268904",
+            "titulo": "B11.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B11.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "04\/11\/2024",
+            "previsao_entrega_eta": "14\/12\/2024 01:30"
+        },
+        {
+            "card_id": "998273151",
+            "titulo": "B10.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B10.2024 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "16\/10\/2024",
+            "previsao_entrega_eta": "05\/12\/2024 13:00"
+        },
+        {
+            "card_id": "998924790",
+            "titulo": "PO01.2024 GLITTER AÉREO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 GLITTER AÉREO ",
+            "container": null,
+            "previsao_embarque_etd": "24\/10\/2024",
+            "previsao_entrega_eta": "24\/10\/2024 21:00"
+        },
+        {
+            "card_id": "998925934",
+            "titulo": "PO02.2024 GLITTER MARÍTIMO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 GLITTER MARÍTIMO",
+            "container": null,
+            "previsao_embarque_etd": "08\/11\/2024",
+            "previsao_entrega_eta": "22\/12\/2024 19:00"
+        },
+        {
+            "card_id": "1004666423",
+            "titulo": "PO03.2024 CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO03.2024 CABELO MANEIRO",
+            "container": null,
+            "previsao_embarque_etd": "17\/12\/2024",
+            "previsao_entrega_eta": "16\/01\/2025 12:18"
+        },
+        {
+            "card_id": "1004666445",
+            "titulo": "PO04.2024 CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO04.2024 CABELO MANEIRO ",
+            "container": null,
+            "previsao_embarque_etd": "13\/12\/2024",
+            "previsao_entrega_eta": "06\/02\/2025 12:00"
+        },
+        {
+            "card_id": "1004669906",
+            "titulo": "PO01.2024 COPO AMERICANO",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO01.2024 COPO AMERICANO",
+            "container": null,
+            "previsao_embarque_etd": "21\/10\/2024",
+            "previsao_entrega_eta": "04\/12\/2024 06:00"
+        },
+        {
+            "card_id": "1010016871",
+            "titulo": "PO03.2024 LENTE",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO03.2024 LENTE",
+            "container": null,
+            "previsao_embarque_etd": "14\/11\/2024",
+            "previsao_entrega_eta": "14\/11\/2024 22:01"
+        },
+        {
+            "card_id": "1010142182",
+            "titulo": "PO03.2024 PARTYGRAM",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO03.2024 PARTYGRAM",
+            "container": null,
+            "previsao_embarque_etd": "14\/09\/2024",
+            "previsao_entrega_eta": "26\/10\/2024 22:01"
+        },
+        {
+            "card_id": "1030273012",
+            "titulo": "PO08.2024 YIWU STAR (PASCOA + JUNINO)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO08.2024 YIWU STAR (PASCOA + JUNINO)",
+            "container": null,
+            "previsao_embarque_etd": "25\/11\/2024",
+            "previsao_entrega_eta": "17\/01\/2025 08:00"
+        },
+        {
+            "card_id": "1030274488",
+            "titulo": "PO09.2024 YIWU STAR (JUNINO)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO09.2024 YIWU STAR (JUNINO)",
+            "container": null,
+            "previsao_embarque_etd": "13\/12\/2024",
+            "previsao_entrega_eta": "17\/01\/2025 17:00"
+        },
+        {
+            "card_id": "1030277994",
+            "titulo": "PO10.2024 YIWU STAR (JUNINO)",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO10.2024 YIWU STAR (JUNINO)",
+            "container": null,
+            "previsao_embarque_etd": "15\/12\/2024",
+            "previsao_entrega_eta": "21\/01\/2025 08:00"
+        },
+        {
+            "card_id": "1030283003",
+            "titulo": "PO02.2024 VELA FUMAÇA AMY",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO02.2024 VELA FUMAÇA AMY",
+            "container": null,
+            "previsao_embarque_etd": "27\/12\/2024",
+            "previsao_entrega_eta": "18\/02\/2025 02:00"
+        },
+        {
+            "card_id": "1030285161",
+            "titulo": "PO03.2024 VELA FUMAÇA AMY",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO03.2024 VELA FUMAÇA AMY",
+            "container": null,
+            "previsao_embarque_etd": "20\/03\/2025",
+            "previsao_entrega_eta": "25\/04\/2025 08:46"
+        },
+        {
+            "card_id": "1030287129",
+            "titulo": "B01.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B01.2025 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "26\/12\/2024",
+            "previsao_entrega_eta": "02\/02\/2025 15:00"
+        },
+        {
+            "card_id": "1030289352",
+            "titulo": "B02.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "B02.2025 LATAS",
+            "container": null,
+            "previsao_embarque_etd": "26\/12\/2024",
+            "previsao_entrega_eta": "02\/02\/2025 15:01"
+        },
+        {
+            "card_id": "1030337633",
+            "titulo": "PO10.2024 MAQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "nome_processo": "PO09.2024 MAQUINAS E ACESSÓRIOS ",
+            "container": null,
+            "previsao_embarque_etd": "18\/12\/2024",
+            "previsao_entrega_eta": "06\/01\/2025 22:01"
+        }
+    ],
+    "cached_at": "2026-02-27T19:15:01+01:00"
+}

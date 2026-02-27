@@ -1,0 +1,999 @@
+{
+    "ok": true,
+    "pipe_id": 304022726,
+    "total": 141,
+    "pageInfo": {
+        "hasNextPage": false,
+        "endCursor": "WyIyMDI2LTAxLTMwIDEzOjUxOjEzLjc5MTAwOTAwMCBVVEMiLCIxLjAiLDEyOTA5MDg3OTRd"
+    },
+    "items": [
+        {
+            "card_id": "978526388",
+            "container": "PO02.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "16\/08\/2024",
+            "previsao_entrega_eta": "29\/09\/2024 15:03"
+        },
+        {
+            "card_id": "979166473",
+            "container": "PO01.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "04\/08\/2024",
+            "previsao_entrega_eta": "28\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979531806",
+            "container": "C01.2024 LC MOLA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "22\/07\/2024",
+            "previsao_entrega_eta": "13\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979534668",
+            "container": "C02.2024 LC MOLA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "01\/08\/2024",
+            "previsao_entrega_eta": "13\/09\/2024 21:00"
+        },
+        {
+            "card_id": "979539077",
+            "container": "C03.2024 CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "21\/08\/2024",
+            "previsao_entrega_eta": "04\/10\/2024 09:00"
+        },
+        {
+            "card_id": "979540188",
+            "container": "C04.2024 CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "25\/08\/2024",
+            "previsao_entrega_eta": "04\/10\/2024 09:00"
+        },
+        {
+            "card_id": "979932530",
+            "container": "PO02.2024 LENTES PART. 1",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "22\/08\/2024",
+            "previsao_entrega_eta": "01\/09\/2024 21:00"
+        },
+        {
+            "card_id": "980006332",
+            "container": "B04.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/08\/2024",
+            "previsao_entrega_eta": "02\/10\/2024 00:00"
+        },
+        {
+            "card_id": "980010973",
+            "container": "B05.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "22\/08\/2024",
+            "previsao_entrega_eta": "05\/10\/2024 11:00"
+        },
+        {
+            "card_id": "980062557",
+            "container": "B06.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/09\/2024",
+            "previsao_entrega_eta": "11\/10\/2024 21:00"
+        },
+        {
+            "card_id": "980065695",
+            "container": "B07.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "14\/09\/2024",
+            "previsao_entrega_eta": "27\/10\/2024 22:01"
+        },
+        {
+            "card_id": "980106317",
+            "container": "PO02.2024 LENTES PART. 2",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "31\/08\/2024",
+            "previsao_entrega_eta": "08\/09\/2024 21:00"
+        },
+        {
+            "card_id": "981078773",
+            "container": "PO08.2024 MÁQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "06\/09\/2024",
+            "previsao_entrega_eta": "08\/09\/2024 16:32"
+        },
+        {
+            "card_id": "983224564",
+            "container": "A03.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/08\/2024",
+            "previsao_entrega_eta": "14\/09\/2024 21:00"
+        },
+        {
+            "card_id": "983228549",
+            "container": "A04.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "19\/08\/2024",
+            "previsao_entrega_eta": "02\/10\/2024 20:00"
+        },
+        {
+            "card_id": "983243356",
+            "container": "PO01.2024 VELA SPARKLERS E FONTANA (AMY)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "11\/08\/2024",
+            "previsao_entrega_eta": "14\/09\/2024 21:00"
+        },
+        {
+            "card_id": "985777402",
+            "container": "A05.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/09\/2024",
+            "previsao_entrega_eta": "20\/11\/2024 21:00"
+        },
+        {
+            "card_id": "985819766",
+            "container": "A06.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "03\/10\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 22:01"
+        },
+        {
+            "card_id": "985850515",
+            "container": "A07.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:01"
+        },
+        {
+            "card_id": "985873863",
+            "container": "A08.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "14\/11\/2024",
+            "previsao_entrega_eta": "09\/01\/2025 09:00"
+        },
+        {
+            "card_id": "985890930",
+            "container": "PO01.2024 GÁS HELIO CHINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "12\/09\/2024",
+            "previsao_entrega_eta": "01\/11\/2024 00:00"
+        },
+        {
+            "card_id": "986477641",
+            "container": "PO06.2024 YIWU STAR (BASTÃO)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "03\/10\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 21:00"
+        },
+        {
+            "card_id": "986496607",
+            "container": "PO05.2024 YIWU STAR (BASTÃO+DISPLAY)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/08\/2024",
+            "previsao_entrega_eta": "05\/10\/2024 11:00"
+        },
+        {
+            "card_id": "990131836",
+            "container": "B08.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "25\/11\/2024 09:25"
+        },
+        {
+            "card_id": "990483343",
+            "container": "PO07.2024 MAQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "18\/09\/2024",
+            "previsao_entrega_eta": "21\/09\/2024 21:00"
+        },
+        {
+            "card_id": "990557740",
+            "container": "C05.2024 KIDS+CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "09\/11\/2024",
+            "previsao_entrega_eta": "30\/12\/2024 02:00"
+        },
+        {
+            "card_id": "992497982",
+            "container": "A09.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "01\/11\/2024",
+            "previsao_entrega_eta": "14\/12\/2024 01:30"
+        },
+        {
+            "card_id": "992501459",
+            "container": "A10.2024 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "05\/11\/2024",
+            "previsao_entrega_eta": "11\/12\/2024 13:00"
+        },
+        {
+            "card_id": "992506701",
+            "container": "PO01.2024 SERPENTINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:10"
+        },
+        {
+            "card_id": "992509214",
+            "container": "PO02.2024 CARNA FLOQUINHO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/10\/2024",
+            "previsao_entrega_eta": "19\/11\/2024 14:01"
+        },
+        {
+            "card_id": "994766041",
+            "container": "PO03.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "17\/12\/2024 10:00"
+        },
+        {
+            "card_id": "994766510",
+            "container": "PO04.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/10\/2024",
+            "previsao_entrega_eta": "17\/12\/2024 10:00"
+        },
+        {
+            "card_id": "998257240",
+            "container": "B09.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "25\/09\/2024",
+            "previsao_entrega_eta": "05\/11\/2024 22:01"
+        },
+        {
+            "card_id": "998268904",
+            "container": "B11.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "04\/11\/2024",
+            "previsao_entrega_eta": "14\/12\/2024 01:30"
+        },
+        {
+            "card_id": "998273151",
+            "container": "B10.2024 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "16\/10\/2024",
+            "previsao_entrega_eta": "05\/12\/2024 13:00"
+        },
+        {
+            "card_id": "998924790",
+            "container": "PO01.2024 GLITTER AÉREO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "24\/10\/2024",
+            "previsao_entrega_eta": "24\/10\/2024 21:00"
+        },
+        {
+            "card_id": "998925934",
+            "container": "PO02.2024 GLITTER MARÍTIMO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/11\/2024",
+            "previsao_entrega_eta": "22\/12\/2024 19:00"
+        },
+        {
+            "card_id": "1004666423",
+            "container": "PO03.2024 CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "17\/12\/2024",
+            "previsao_entrega_eta": "16\/01\/2025 12:18"
+        },
+        {
+            "card_id": "1004666445",
+            "container": "PO04.2024 CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/12\/2024",
+            "previsao_entrega_eta": "06\/02\/2025 12:00"
+        },
+        {
+            "card_id": "1004669906",
+            "container": "PO01.2024 COPO AMERICANO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "21\/10\/2024",
+            "previsao_entrega_eta": "04\/12\/2024 06:00"
+        },
+        {
+            "card_id": "1010016871",
+            "container": "PO03.2024 LENTE",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "14\/11\/2024",
+            "previsao_entrega_eta": "14\/11\/2024 22:01"
+        },
+        {
+            "card_id": "1010142182",
+            "container": "PO03.2024 PARTYGRAM",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "14\/09\/2024",
+            "previsao_entrega_eta": "26\/10\/2024 22:01"
+        },
+        {
+            "card_id": "1030273012",
+            "container": "PO08.2024 YIWU STAR (PASCOA + JUNINO)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "25\/11\/2024",
+            "previsao_entrega_eta": "17\/01\/2025 08:00"
+        },
+        {
+            "card_id": "1030274488",
+            "container": "PO09.2024 YIWU STAR (JUNINO)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/12\/2024",
+            "previsao_entrega_eta": "17\/01\/2025 17:00"
+        },
+        {
+            "card_id": "1030277994",
+            "container": "PO10.2024 YIWU STAR (JUNINO)",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/12\/2024",
+            "previsao_entrega_eta": "21\/01\/2025 08:00"
+        },
+        {
+            "card_id": "1030283003",
+            "container": "PO02.2024 VELA FUMAÇA AMY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/12\/2024",
+            "previsao_entrega_eta": "18\/02\/2025 02:00"
+        },
+        {
+            "card_id": "1030285161",
+            "container": "PO03.2024 VELA FUMAÇA AMY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/03\/2025",
+            "previsao_entrega_eta": "25\/04\/2025 08:46"
+        },
+        {
+            "card_id": "1030287129",
+            "container": "B01.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/12\/2024",
+            "previsao_entrega_eta": "02\/02\/2025 15:00"
+        },
+        {
+            "card_id": "1030289352",
+            "container": "B02.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/12\/2024",
+            "previsao_entrega_eta": "02\/02\/2025 15:01"
+        },
+        {
+            "card_id": "1030337633",
+            "container": "PO10.2024 MAQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "18\/12\/2024",
+            "previsao_entrega_eta": "06\/01\/2025 22:01"
+        },
+        {
+            "card_id": "1036820192",
+            "container": "PO01.2025 FESTA JUNINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "09\/12\/2024",
+            "previsao_entrega_eta": "22\/01\/2025 09:00"
+        },
+        {
+            "card_id": "1036824076",
+            "container": "PO02.2025 FESTA JUNINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "01\/01\/2025",
+            "previsao_entrega_eta": "15\/02\/2025 02:00"
+        },
+        {
+            "card_id": "1036827109",
+            "container": "PO03.2025 FESTA JUNINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/01\/2025",
+            "previsao_entrega_eta": "12\/05\/2025 09:30"
+        },
+        {
+            "card_id": "1038234541",
+            "container": "C01.2025 CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "06\/01\/2025",
+            "previsao_entrega_eta": "07\/02\/2025 16:00"
+        },
+        {
+            "card_id": "1038239489",
+            "container": "PO12.2024 YIWU STAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/02\/2025",
+            "previsao_entrega_eta": "25\/03\/2025 20:00"
+        },
+        {
+            "card_id": "1042954803",
+            "container": "PO11.2024 YIWU STAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "07\/01\/2025",
+            "previsao_entrega_eta": "15\/02\/2025 19:00"
+        },
+        {
+            "card_id": "1042961124",
+            "container": "PO01.2024 WONDERFUL",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "19\/01\/2025",
+            "previsao_entrega_eta": "20\/02\/2025 17:00"
+        },
+        {
+            "card_id": "1042964930",
+            "container": "PO05.2024 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "22\/01\/2025",
+            "previsao_entrega_eta": "14\/03\/2025 09:56"
+        },
+        {
+            "card_id": "1042968372",
+            "container": "PO11.2024 MAQUINAS E ACESSORIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "24\/01\/2025",
+            "previsao_entrega_eta": "29\/01\/2025 11:50"
+        },
+        {
+            "card_id": "1047666064",
+            "container": "B04.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/01\/2025",
+            "previsao_entrega_eta": "14\/03\/2025 11:30"
+        },
+        {
+            "card_id": "1047670261",
+            "container": "B03.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "16\/01\/2025",
+            "previsao_entrega_eta": "22\/02\/2025 11:24"
+        },
+        {
+            "card_id": "1060696625",
+            "container": "B05.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/03\/2025",
+            "previsao_entrega_eta": "13\/04\/2025 10:16"
+        },
+        {
+            "card_id": "1060696642",
+            "container": "B06.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/03\/2025",
+            "previsao_entrega_eta": "13\/04\/2025 10:16"
+        },
+        {
+            "card_id": "1061066665",
+            "container": " PO01.2025 MÁQUINAS E ACESSÓRIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": "21\/01\/2025 09:57"
+        },
+        {
+            "card_id": "1062493677",
+            "container": "PO02.2025 MAQUINAS E ACESSORIOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/01\/2025",
+            "previsao_entrega_eta": "02\/02\/2025 15:58"
+        },
+        {
+            "card_id": "1079315129",
+            "container": "A01.2025 LANÇA CONFETES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "25\/04\/2025",
+            "previsao_entrega_eta": "19\/06\/2025 13:00"
+        },
+        {
+            "card_id": "1079316951",
+            "container": "B07.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "12\/04\/2025",
+            "previsao_entrega_eta": "14\/05\/2025 21:00"
+        },
+        {
+            "card_id": "1096505726",
+            "container": "PO01.2025 YIWU STAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "21\/04\/2025",
+            "previsao_entrega_eta": "10\/06\/2025 15:02"
+        },
+        {
+            "card_id": "1096817009",
+            "container": "PO02.2025 YIWU STAR - HALLOWEEN",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/07\/2025",
+            "previsao_entrega_eta": "02\/09\/2025 23:00"
+        },
+        {
+            "card_id": "1097153850",
+            "container": "PO03.2025 MAQUINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/03\/2025",
+            "previsao_entrega_eta": "29\/03\/2025 08:28"
+        },
+        {
+            "card_id": "1097264656",
+            "container": "PO01.2025 SUSAN",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "05\/05\/2025",
+            "previsao_entrega_eta": "20\/07\/2025 01:00"
+        },
+        {
+            "card_id": "1102521636",
+            "container": "PO01.2025 Halloween YiHai",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "18\/06\/2025",
+            "previsao_entrega_eta": "16\/08\/2025 06:30"
+        },
+        {
+            "card_id": "1111072433",
+            "container": "PO01.2025 VELA DUO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "09\/08\/2025",
+            "previsao_entrega_eta": "19\/09\/2025 09:00"
+        },
+        {
+            "card_id": "1119495411",
+            "container": "PO01.2025 GÁS HÉLIO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "21\/06\/2025",
+            "previsao_entrega_eta": "05\/09\/2025 15:30"
+        },
+        {
+            "card_id": "1123132944",
+            "container": "A02.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "04\/07\/2025",
+            "previsao_entrega_eta": "20\/08\/2025 15:00"
+        },
+        {
+            "card_id": "1123136240",
+            "container": "A03.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "04\/07\/2025",
+            "previsao_entrega_eta": "20\/08\/2025 15:30"
+        },
+        {
+            "card_id": "1123146839",
+            "container": "A04.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "29\/06\/2027",
+            "previsao_entrega_eta": "10\/09\/2025 11:00"
+        },
+        {
+            "card_id": "1136738705",
+            "container": "PO01.2025 BRINDES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": "06\/05\/2025 08:00"
+        },
+        {
+            "card_id": "1136745826",
+            "container": "PO02.2025 BRINDES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "01\/06\/2025",
+            "previsao_entrega_eta": "14\/07\/2025 08:00"
+        },
+        {
+            "card_id": "1140067442",
+            "container": "PO03.2025 AMY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/07\/2025",
+            "previsao_entrega_eta": "19\/08\/2025 16:00"
+        },
+        {
+            "card_id": "1140067556",
+            "container": "PO04.2025 AMY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "09\/08\/2025",
+            "previsao_entrega_eta": "19\/09\/2025 09:00"
+        },
+        {
+            "card_id": "1141926985",
+            "container": "B08.2025 LATAS NEYMAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "21\/06\/2025",
+            "previsao_entrega_eta": "04\/08\/2025 18:00"
+        },
+        {
+            "card_id": "1157380593",
+            "container": "A05.2025 LC Neymar",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/07\/2025",
+            "previsao_entrega_eta": "20\/09\/2025 04:00"
+        },
+        {
+            "card_id": "1164521651",
+            "container": "PO02.2025 PY JENNY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "09\/08\/2025",
+            "previsao_entrega_eta": "19\/09\/2025 09:00"
+        },
+        {
+            "card_id": "1165054595",
+            "container": "PO01.2025 BASTÃO DE LED LULU",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "17\/08\/2025",
+            "previsao_entrega_eta": "03\/10\/2025 05:00"
+        },
+        {
+            "card_id": "1165069473",
+            "container": "CANCELADO PO01.2025 - LED SPLASH TINY",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1165072007",
+            "container": "PO01.2025 VELLA PARAFINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "03\/10\/2025",
+            "previsao_entrega_eta": "15\/12\/2025 10:42"
+        },
+        {
+            "card_id": "1165236026",
+            "container": "CF01.2025 - PACOTE DE CONFETES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1165309263",
+            "container": "A06.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "26\/07\/2025",
+            "previsao_entrega_eta": "20\/09\/2025 04:00"
+        },
+        {
+            "card_id": "1171905830",
+            "container": "PO04.2025 1 YIWU PROJETO N",
+            "fase": "NO PORTO",
+            "previsao_embarque_etd": "09\/11\/2025",
+            "previsao_entrega_eta": "11\/01\/2026 09:29"
+        },
+        {
+            "card_id": "1172994288",
+            "container": "PO01.2025 LENTES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/09\/2025",
+            "previsao_entrega_eta": "28\/09\/2025 08:00"
+        },
+        {
+            "card_id": "1173147868",
+            "container": "PO01.2025 TAIZHOU COPO AMERICANO",
+            "fase": "NO PORTO",
+            "previsao_embarque_etd": "08\/01\/2026",
+            "previsao_entrega_eta": "27\/02\/2026 05:00"
+        },
+        {
+            "card_id": "1173262801",
+            "container": "PO01.2025 TONGDA - LINHA BRANCA + PROJETO N",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/10\/2025",
+            "previsao_entrega_eta": "02\/12\/2025 12:00"
+        },
+        {
+            "card_id": "1174003386",
+            "container": "PO01.2025 BALÕES NJ",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "07\/02\/2026",
+            "previsao_entrega_eta": "11\/03\/2026 00:00"
+        },
+        {
+            "card_id": "1174573936",
+            "container": "PO02.2025 YIWU STAR - SALDO HALLOWEEN",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "18\/08\/2025",
+            "previsao_entrega_eta": "09\/10\/2025 05:00"
+        },
+        {
+            "card_id": "1182455005",
+            "container": "A07.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "08\/09\/2025",
+            "previsao_entrega_eta": "30\/10\/2025 17:00"
+        },
+        {
+            "card_id": "1182797353",
+            "container": "PO01.2025 NEON",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "14\/09\/2025",
+            "previsao_entrega_eta": "11\/11\/2025 08:00"
+        },
+        {
+            "card_id": "1184367773",
+            "container": "C02.2025 CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/10\/2025",
+            "previsao_entrega_eta": "02\/12\/2025 21:00"
+        },
+        {
+            "card_id": "1186473948",
+            "container": "A08.2025 LC - SLIM + COPA DO MUNDO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "18\/10\/2025",
+            "previsao_entrega_eta": "06\/12\/2025 05:00"
+        },
+        {
+            "card_id": "1186477232",
+            "container": "PO02.2025 - TONGDA  - ANIVERSÁRIOS - PÁSCOA - JUNINO",
+            "fase": "DESEMBARAÇO",
+            "previsao_embarque_etd": "28\/12\/2025",
+            "previsao_entrega_eta": "11\/02\/2026 05:00"
+        },
+        {
+            "card_id": "1186485059",
+            "container": "PO05.2025 YIWU STAR - PÁSCOA JUNINO E COPA DO MUNDO",
+            "fase": "ENTREGA",
+            "previsao_embarque_etd": "28\/12\/2025",
+            "previsao_entrega_eta": "11\/02\/2026 05:00"
+        },
+        {
+            "card_id": "1193245781",
+            "container": "PO02.2025 - AMOSTRA BALÕES NJ",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1200161252",
+            "container": "B09.2025 LATAS CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/09\/2025",
+            "previsao_entrega_eta": "16\/11\/2025 14:32"
+        },
+        {
+            "card_id": "1200167508",
+            "container": "B10.2025 LATAS CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/09\/2025",
+            "previsao_entrega_eta": "16\/11\/2025 14:39"
+        },
+        {
+            "card_id": "1200181763",
+            "container": "B13.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "23\/09\/2025",
+            "previsao_entrega_eta": "09\/11\/2025 15:00"
+        },
+        {
+            "card_id": "1200183478",
+            "container": "B14.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "23\/09\/2025",
+            "previsao_entrega_eta": "09\/11\/2025 15:02"
+        },
+        {
+            "card_id": "1200186768",
+            "container": "B11.2025 LATAS NEYMAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "23\/09\/2025",
+            "previsao_entrega_eta": "03\/11\/2025 15:05"
+        },
+        {
+            "card_id": "1200188636",
+            "container": "B12.2025 LATAS NEYMAR",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "23\/09\/2025",
+            "previsao_entrega_eta": "03\/11\/2025 15:08"
+        },
+        {
+            "card_id": "1201341076",
+            "container": "A09.2025 LC - LANÇA CONFETES|MINI POWER PÓ",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/10\/2025",
+            "previsao_entrega_eta": "11\/12\/2025 05:00"
+        },
+        {
+            "card_id": "1201344738",
+            "container": "A10.2025 LANÇA CONFETES|MINI POWER PÓ",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "20\/11\/2025",
+            "previsao_entrega_eta": "30\/12\/2025 05:00"
+        },
+        {
+            "card_id": "1201348330",
+            "container": "A11.2025 - LANÇA CONFETES",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "16\/11\/2025",
+            "previsao_entrega_eta": "26\/12\/2025 21:00"
+        },
+        {
+            "card_id": "1210922164",
+            "container": "PO02.2025 BASTÃO LULU",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "15\/12\/2025",
+            "previsao_entrega_eta": "23\/01\/2026 11:00"
+        },
+        {
+            "card_id": "1210925088",
+            "container": "PO02.2025 COSMÉTICOS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/11\/2025",
+            "previsao_entrega_eta": "03\/01\/2026 05:00"
+        },
+        {
+            "card_id": "1213357925",
+            "container": "PO02.2025 AMOSTRAS VELLA PARAFINA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "23\/10\/2025",
+            "previsao_entrega_eta": "31\/10\/2025 16:58"
+        },
+        {
+            "card_id": "1215776116",
+            "container": "A12.2025 LC",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "13\/11\/2025",
+            "previsao_entrega_eta": "25\/12\/2025 00:00"
+        },
+        {
+            "card_id": "1215776822",
+            "container": "C03.2025 CORNETA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "29\/10\/2025",
+            "previsao_entrega_eta": "23\/12\/2025 19:30"
+        },
+        {
+            "card_id": "1228817391",
+            "container": "B15.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "27\/10\/2025",
+            "previsao_entrega_eta": "30\/11\/2025 11:45"
+        },
+        {
+            "card_id": "1228840438",
+            "container": "B16.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "11\/11\/2025",
+            "previsao_entrega_eta": "18\/01\/2026 12:04"
+        },
+        {
+            "card_id": "1228844677",
+            "container": "B17.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "11\/11\/2025",
+            "previsao_entrega_eta": "18\/01\/2026 12:08"
+        },
+        {
+            "card_id": "1228845706",
+            "container": "B18.2025 LATAS",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "24\/11\/2025",
+            "previsao_entrega_eta": "09\/01\/2026 12:09"
+        },
+        {
+            "card_id": "1228849516",
+            "container": "B01.2026 LATAS (COPA)",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1228850624",
+            "container": "B02.2026 LATAS",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1234263099",
+            "container": "PO06.2025 FUMAÇA DUO",
+            "fase": "EMBARQUE",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1234270313",
+            "container": "PO05.2025 FUMAÇA AMY",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "22\/01\/2026",
+            "previsao_entrega_eta": "26\/02\/2026 12:00"
+        },
+        {
+            "card_id": "1235595974",
+            "container": "PO01.2026 JUNINO",
+            "fase": "ENTREGA",
+            "previsao_embarque_etd": "29\/11\/2025",
+            "previsao_entrega_eta": "03\/02\/2026 12:37"
+        },
+        {
+            "card_id": "1236571196",
+            "container": "A13.2025 LC COPA DO MUNDO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "28\/11\/2025",
+            "previsao_entrega_eta": "04\/01\/2026 12:00"
+        },
+        {
+            "card_id": "1236578660",
+            "container": "A14.2025 LC",
+            "fase": "ENTREGA",
+            "previsao_embarque_etd": "11\/12\/2025",
+            "previsao_entrega_eta": "18\/01\/2026 12:00"
+        },
+        {
+            "card_id": "1236583324",
+            "container": "A01.2026 LC",
+            "fase": "NO PORTO",
+            "previsao_embarque_etd": "25\/12\/2025",
+            "previsao_entrega_eta": "17\/02\/2026 12:00"
+        },
+        {
+            "card_id": "1236586851",
+            "container": "A02.2026 LC",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "17\/01\/2026",
+            "previsao_entrega_eta": "28\/02\/2026 23:00"
+        },
+        {
+            "card_id": "1236734523",
+            "container": "PO04.2025 2 YIWU PROJETO N",
+            "fase": "NO PORTO",
+            "previsao_embarque_etd": "09\/11\/2025",
+            "previsao_entrega_eta": "11\/01\/2026 12:00"
+        },
+        {
+            "card_id": "1253904986",
+            "container": "PO02.2026 JUNINO + COPA",
+            "fase": "ENTREGA",
+            "previsao_embarque_etd": "10\/12\/2025",
+            "previsao_entrega_eta": "14\/02\/2026 05:00"
+        },
+        {
+            "card_id": "1258776815",
+            "container": "A03.2026 LC",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "01\/02\/2026",
+            "previsao_entrega_eta": "15\/03\/2026 00:00"
+        },
+        {
+            "card_id": "1258780814",
+            "container": "A04.2026 LC \/ MINI POWER PÓ",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "06\/02\/2026",
+            "previsao_entrega_eta": "22\/03\/2026 00:00"
+        },
+        {
+            "card_id": "1258782585",
+            "container": "A05.2026 LC",
+            "fase": "EMBARQUE",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1264597082",
+            "container": "PO07.2025 YIWU STAR COPA DO MUNDO PÁSCOA E JUNINO",
+            "fase": "NO PORTO",
+            "previsao_embarque_etd": "11\/01\/2026",
+            "previsao_entrega_eta": "26\/02\/2026 05:00"
+        },
+        {
+            "card_id": "1264737846",
+            "container": "PO01.2026 FUMAÇA CELEBRA",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1270590689",
+            "container": "PO03.2025 MALAS",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "13\/02\/2026",
+            "previsao_entrega_eta": "29\/03\/2026 05:00"
+        },
+        {
+            "card_id": "1270597494",
+            "container": "PO04.2025 MOCHILAS E NECESSAIRE",
+            "fase": "COTAÇÃO FRETE INTERNACIONAL",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1283811812",
+            "container": "B23.2025 CABELO MANEIRO",
+            "fase": "CONCLUÍDO",
+            "previsao_embarque_etd": "17\/12\/2025",
+            "previsao_entrega_eta": "18\/01\/2026 08:58"
+        },
+        {
+            "card_id": "1283815452",
+            "container": "B24.2025 CABELO MANEIRO",
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "15\/01\/2026",
+            "previsao_entrega_eta": "01\/03\/2026 09:03"
+        },
+        {
+            "card_id": "1290908794",
+            "container": "PO01.2026 GÁS HÉLIO",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        }
+    ],
+    "cached_at": "2026-02-27T16:49:30-03:00"
+}

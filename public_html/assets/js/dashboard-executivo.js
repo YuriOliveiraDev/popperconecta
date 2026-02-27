@@ -5,12 +5,64 @@
  * - Carrega /api/dashboard-executivo-save.php?ym=YYYY-MM
  * - Renderiza 3 cards: Hoje / Mês / Ano (Total + Faturado + Agendado)
  * - Renderiza gráfico diário + Tops
+ * - ✅ Loader global PopperLoading (anti-piscar)
  */
 
 const CACHE_URL = '/api/dashboard-executivo-save.php';
 let chart;
 
 const TOP_N = 10;
+
+// =========================
+// LOADER (anti-piscar)
+// =========================
+const LOADER_DELAY_MS = 120; // só mostra se demorar mais que isso
+const LOADER_MIN_MS   = 350; // se mostrou, fica no mínimo
+
+let _loaderTimer = null;
+let _loaderShownAt = 0;
+
+function loaderOpen(title, sub){
+  const api = window.PopperLoading;
+  if (!api || typeof api.show !== 'function') return;
+
+  if (_loaderTimer) { clearTimeout(_loaderTimer); _loaderTimer = null; }
+  _loaderShownAt = 0;
+
+  _loaderTimer = setTimeout(() => {
+    _loaderTimer = null;
+    _loaderShownAt = Date.now();
+    api.show(title || 'Carregando…', sub || 'Buscando dados');
+  }, LOADER_DELAY_MS);
+}
+
+function loaderClose(){
+  const api = window.PopperLoading;
+  if (!api || typeof api.hide !== 'function') return;
+
+  // se ainda não mostrou, cancela e sai
+  if (_loaderTimer) { clearTimeout(_loaderTimer); _loaderTimer = null; return; }
+
+  // se mostrou, respeita mínimo
+  if (_loaderShownAt) {
+    const elapsed = Date.now() - _loaderShownAt;
+    const wait = Math.max(0, LOADER_MIN_MS - elapsed);
+    setTimeout(() => api.hide(), wait);
+    _loaderShownAt = 0;
+    return;
+  }
+
+  api.hide();
+}
+
+async function waitForLoader(maxMs = 800){
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    if (window.PopperLoading && typeof window.PopperLoading.show === 'function') return true;
+    await new Promise(r => setTimeout(r, 25));
+  }
+  return false;
+}
 
 // ---------- helpers ----------
 function asNumber(v) {
@@ -93,7 +145,8 @@ function applyYm(ym) {
   const pl = document.getElementById('periodLabel');
   if (pl) pl.textContent = `Período: ${fmtPeriodLabel(ym)}`;
 
-  refresh();
+  // ✅ ao trocar mês, mostra loader
+  refresh({ reason: 'month' });
 }
 
 function bindChips() {
@@ -162,7 +215,6 @@ function renderTopList(containerId, badgeId, input) {
 function renderChart(diario_mes) {
   const diario = (diario_mes && typeof diario_mes === 'object') ? diario_mes : {};
 
-  // Ordena por dia numérico (chaves "02","3","26"...)
   const labels = Object.keys(diario).sort((a, b) => Number(a) - Number(b));
   const values = labels.map(k => asNumber(diario[k]));
 
@@ -186,9 +238,7 @@ function renderChart(diario_mes) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { maxRotation: 0 } }
-      }
+      scales: { x: { ticks: { maxRotation: 0 } } }
     }
   });
 }
@@ -211,7 +261,6 @@ async function load() {
   const v = payload.values || {};
   const updatedAt = payload.updated_at || '—';
 
-  // Header
   setText('updatedAt', `Atualizado em: ${updatedAt}`);
 
   // HOJE
@@ -232,17 +281,42 @@ async function load() {
   setText('kpiAnoAg', moneyBR(v.ano_agendado));
   setText('kpiAnoTrend', `Atualizado: ${updatedAt}`);
 
-  // Tops + gráfico
   renderTopList('listTopProdutos', 'badgeTopProdutos', payload.top_produtos);
   renderTopList('listTopVendedores', 'badgeTopVendedores', payload.top_vendedores);
   renderChart(payload.diario_mes);
 }
 
-async function refresh() {
+/**
+ * refresh({ reason })
+ * reason:
+ * - 'init'  (carga inicial)
+ * - 'month' (troca mês)
+ * - 'tick'  (intervalo)
+ */
+async function refresh(opts = {}) {
+  const reason = opts.reason || 'tick';
+
+  // ✅ loader só em init e month (evita ficar aparecendo a cada 60s)
+  const shouldShow = (reason === 'init' || reason === 'month');
+
+  if (shouldShow) {
+    await waitForLoader(800);
+    const title = 'Carregando executivo…';
+    const sub = reason === 'month'
+      ? `Atualizando período: ${fmtPeriodLabel(currentYm)}`
+      : 'Buscando dados do painel';
+    loaderOpen(title, sub);
+  }
+
   try {
     await load();
+    if (shouldShow) loaderClose();
   } catch (e) {
     console.error(e);
+
+    if (shouldShow) loaderClose();
+    window.PopperLoading?.error?.('Erro ao carregar o dashboard executivo');
+
     setText('updatedAt', 'Sem dados (erro ao carregar)');
     renderTopList('listTopProdutos', 'badgeTopProdutos', null);
     renderTopList('listTopVendedores', 'badgeTopVendedores', null);
@@ -252,6 +326,16 @@ async function refresh() {
 // ---------- init ----------
 (function init() {
   bindChips();
-  applyYm(currentYm);        // já chama refresh()
-  setInterval(refresh, 60_000);
+  setActiveChip(currentYm);
+
+  // ✅ primeira carga (com loader)
+  refresh({ reason: 'init' });
+
+  // ✅ troca o título/label sem disparar refresh duplicado
+  setText('ttlChart', `Faturamento Diário (${fmtPeriodLabel(currentYm)})`);
+  const pl = document.getElementById('periodLabel');
+  if (pl) pl.textContent = `Período: ${fmtPeriodLabel(currentYm)}`;
+
+  // ✅ atualiza a cada 60s sem loader (evita poluição visual)
+  setInterval(() => refresh({ reason: 'tick' }), 60_000);
 })();

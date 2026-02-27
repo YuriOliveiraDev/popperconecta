@@ -155,10 +155,6 @@ try {
 } catch (Throwable $e) {
   $insight = null;
 }
-
-// =========================
-// PRÉ-CÁLCULOS PARA GRÁFICOS (SVG)
-// =========================
 $chart = null;
 if ($insight) {
   $pctAting = max(0, min(100, (float)$insight['atingimento_mes_pct'] * 100));

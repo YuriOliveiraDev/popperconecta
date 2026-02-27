@@ -39,7 +39,24 @@ for ($i = 0; $i < 12; $i++) {
 <link rel="stylesheet" href="/assets/css/index.css?v=<?= filemtime(__DIR__ . '/assets/css/index.css') ?>" />
 <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 <link rel="stylesheet" href="/assets/css/clientes.css?v=<?= filemtime(__DIR__ . '/assets/css/clientes.css') ?>" />
+<link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/assets/css/loader.css') ?>" />
 <div class="wrap" id="wrap">
+<script src="/assets/js/loader.js"></script>
+<script>
+  (function(){
+    try{
+      if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+        window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
+      } else {
+        document.addEventListener('DOMContentLoaded', function(){
+          if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+            window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
+          }
+        }, { once:true });
+      }
+    }catch(e){}
+  })();
+</script>
 
   <div class="pageHead">
     <div class="headTop">
@@ -220,7 +237,7 @@ for ($i = 0; $i < 12; $i++) {
   <canvas class="chart" id="cMatrix"></canvas>
 </div>
 <?php require_once __DIR__ . '/app/footer.php'; ?>
-
+<script src="/assets/js/loader.js"></script>
 <script src="/assets/js/clientes.js?v=<?= filemtime(__DIR__ . '/assets/js/clientes.js') ?>"></script>
 <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
 <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>

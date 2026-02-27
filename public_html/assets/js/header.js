@@ -175,3 +175,142 @@ document.addEventListener('DOMContentLoaded', function () {
     e.stopPropagation();
   });
 });
+(function () {
+  "use strict";
+
+  const closeAll = (except = null) => {
+    document.querySelectorAll(".topbar__dropdown.is-open").forEach(d => {
+      if (except && d === except) return;
+      d.classList.remove("is-open");
+      const t = d.querySelector(".topbar__dropdown-trigger");
+      if (t) t.setAttribute("aria-expanded", "false");
+
+      // fecha submenus internos também
+      d.querySelectorAll(".topbar__dropdown-group.is-open").forEach(g => {
+        g.classList.remove("is-open");
+        const btn = g.querySelector(".topbar__dropdown-item--group");
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      });
+    });
+  };
+
+  // =========
+  // DROPDOWNS PRINCIPAIS
+  // =========
+  const dropdowns = document.querySelectorAll(".topbar__dropdown");
+  dropdowns.forEach(drop => {
+    const trigger = drop.querySelector(".topbar__dropdown-trigger");
+    const menu = drop.querySelector(".topbar__dropdown-menu");
+    if (!trigger || !menu) return;
+
+    let openTimer = null;
+    let closeTimer = null;
+
+    const open = () => {
+      clearTimeout(closeTimer);
+      closeAll(drop);
+      drop.classList.add("is-open");
+      trigger.setAttribute("aria-expanded", "true");
+    };
+
+    const close = () => {
+      clearTimeout(openTimer);
+      drop.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+
+      // também fecha submenus
+      drop.querySelectorAll(".topbar__dropdown-group.is-open").forEach(g => {
+        g.classList.remove("is-open");
+        const btn = g.querySelector(".topbar__dropdown-item--group");
+        if (btn) btn.setAttribute("aria-expanded", "false");
+      });
+    };
+
+    // Hover com delay (evita flicker)
+    drop.addEventListener("mouseenter", () => {
+      clearTimeout(closeTimer);
+      openTimer = setTimeout(open, 80);
+    });
+
+    drop.addEventListener("mouseleave", () => {
+      clearTimeout(openTimer);
+      closeTimer = setTimeout(close, 160);
+    });
+
+    // Click (mobile + acessibilidade)
+    trigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isOpen = drop.classList.contains("is-open");
+      if (isOpen) close();
+      else open();
+    });
+
+    // ESC fecha
+    drop.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") close();
+    });
+  });
+
+  // =========
+  // SUBMENUS (itens com data-submenu)
+  // =========
+  document.querySelectorAll(".topbar__dropdown-group[data-submenu]").forEach(group => {
+    const btn = group.querySelector(".topbar__dropdown-item--group");
+    const submenu = group.querySelector(".topbar__dropdown-submenu");
+    if (!btn || !submenu) return;
+
+    let closeTimer = null;
+
+    const openSub = () => {
+      clearTimeout(closeTimer);
+
+      // fecha irmãos
+      const parentMenu = group.closest(".topbar__dropdown-menu") || group.parentElement;
+      if (parentMenu) {
+        parentMenu.querySelectorAll(".topbar__dropdown-group.is-open").forEach(g => {
+          if (g !== group) {
+            g.classList.remove("is-open");
+            const b = g.querySelector(".topbar__dropdown-item--group");
+            if (b) b.setAttribute("aria-expanded", "false");
+          }
+        });
+      }
+
+      group.classList.add("is-open");
+      btn.setAttribute("aria-expanded", "true");
+    };
+
+    const closeSub = () => {
+      closeTimer = setTimeout(() => {
+        group.classList.remove("is-open");
+        btn.setAttribute("aria-expanded", "false");
+      }, 160);
+    };
+
+    // Hover (desktop)
+    group.addEventListener("mouseenter", openSub);
+    group.addEventListener("mouseleave", closeSub);
+
+    // Click (mobile)
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const isOpen = group.classList.contains("is-open");
+      if (isOpen) {
+        group.classList.remove("is-open");
+        btn.setAttribute("aria-expanded", "false");
+      } else {
+        openSub();
+      }
+    });
+  });
+
+  // Click fora fecha tudo
+  document.addEventListener("click", () => closeAll(null));
+
+  // Scroll / resize fecha (evita menus “flutuando” fora do lugar)
+  window.addEventListener("scroll", () => closeAll(null), { passive: true });
+  window.addEventListener("resize", () => closeAll(null), { passive: true });
+})();

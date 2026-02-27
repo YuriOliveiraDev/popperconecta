@@ -1,0 +1,166 @@
+
+.popper-loading{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(2,6,23,.55);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+}
+.popper-loading.is-open{ display:flex; }
+.popper-loading__card{
+  background: rgba(255,255,255,.95);
+  border: 1px solid rgba(15,23,42,.12);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.2);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 280px;
+}
+.popper-loading__text{
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.popper-loading__title{
+  font-weight: 900;
+  color: rgba(15,23,42,.92);
+  font-size: 14px;
+  line-height: 1.1;
+}
+.popper-loading__sub{
+  font-weight: 600;
+  color: rgba(15,23,42,.65);
+  font-size: 12px;
+}
+
+/* ===== SVG loader ===== */
+.popper-loader{
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+.popper-loader__svg{ display:block; }
+
+.popper-loader__ring{
+  fill: none;
+  stroke: rgba(15,23,42,.12);
+  stroke-width: 10;
+}
+.popper-loader__arc{
+  fill: none;
+  stroke: rgba(15,23,42,.85);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-dasharray: 96 260;
+  transform-origin: 60px 60px;
+  animation: popper-spin 0.9s linear infinite;
+}
+.popper-loader__center{
+  transform-origin: 0 0;
+  animation: popper-bob 0.9s ease-in-out infinite;
+}
+
+.cannon-body{ fill: rgba(92,44,140,.92); stroke: rgba(15,23,42,.18); stroke-width: 1; }
+.cannon-mouth{ fill: rgba(172,204,54,.90); stroke: rgba(15,23,42,.18); stroke-width: 1; }
+.cannon-line{ stroke: rgba(255,255,255,.55); stroke-width: 2.2; stroke-linecap: round; }
+
+.popper-loader__confetti .c1{ fill: rgba(245,158,11,.95); }
+.popper-loader__confetti .c2{ fill: rgba(22,163,74,.95); }
+.popper-loader__confetti .c3{ fill: rgba(59,130,246,.95); }
+.popper-loader__confetti .c4{ fill: rgba(236,72,153,.95); }
+.popper-loader__confetti .c5{ fill: rgba(172,204,54,.95); }
+.popper-loader__confetti{
+  transform-origin: 0 0;
+  animation: popper-burst 0.9s ease-in-out infinite;
+}
+
+@keyframes popper-spin{ to{ transform: rotate(360deg); } }
+@keyframes popper-bob{
+  0%,100%{ transform: translate(0,0) rotate(-2deg); }
+  50%{ transform: translate(0,-1px) rotate(2deg); }
+}
+@keyframes popper-burst{
+  0%{ transform: translate(0,0) scale(.85); opacity:.25; }
+  35%{ transform: translate(0,-2px) scale(1.05); opacity:1; }
+  70%{ transform: translate(0,0) scale(.92); opacity:.55; }
+  100%{ transform: translate(0,0) scale(.85); opacity:.25; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .popper-loader__arc,
+  .popper-loader__center,
+  .popper-loader__confetti{ animation: none; }
+  .popper-loading{ backdrop-filter: none; }
+}
+
+/* PATCH: força animações mesmo se outro CSS sobrescrever */
+.popper-loading .popper-loader__arc{
+  animation: popper-spin 0.9s linear infinite !important;
+}
+.popper-loading .popper-loader__center{
+  animation: popper-bob 0.9s ease-in-out infinite !important;
+}
+.popper-loading .popper-loader__confetti{
+  animation: popper-burst 0.9s ease-in-out infinite !important;
+}
+
+
+.vip-loader{
+  --vip-size: 100px;
+  --vip-ring-bleed: 6px;
+
+  position: relative;
+  width: var(--vip-size);
+  height: var(--vip-size);
+  display: grid;
+  place-items: center;
+}
+
+.vip-loader__ring{
+  position: absolute;
+  inset: calc(-1 * var(--vip-ring-bleed));
+  width: calc(100% + (2 * var(--vip-ring-bleed)));
+  height: calc(100% + (2 * var(--vip-ring-bleed)));
+  transform-origin: center;
+  animation: vipSpin 3.2s linear infinite;
+  pointer-events: none;
+}
+
+.vip-loader__center{
+  position: absolute;
+  width: 120%;
+  height: auto;
+  pointer-events: none;
+}
+
+/* fallback spinner simples (se quiser usar) */
+.vip-fallback{
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 6px solid rgba(15,23,42,.10);
+  border-top-color: rgba(92,44,140,.85);
+  animation: vipSpin .9s linear infinite;
+  display: none;
+}
+
+/* se quiser forçar fallback: adicione .vip-loader.is-fallback */
+.vip-loader.is-fallback .vip-fallback{ display:block; }
+.vip-loader.is-fallback .vip-loader__ring,
+.vip-loader.is-fallback .vip-loader__center{ display:none; }
+
+@keyframes vipSpin{
+  to{ transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .vip-loader__ring,
+  .vip-fallback{ animation: none; }
+}
