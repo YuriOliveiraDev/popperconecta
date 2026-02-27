@@ -227,6 +227,63 @@ if ($insight) {
         </svg>
       </button>
 
+      <div class="carousel__viewport">
+        <div class="carousel__track" id="track">
+
+          
+
+          <!-- =====================================================
+               SLIDES 2+: COMUNICADOS
+               ===================================================== -->
+          <?php if (empty($comunicados)): ?>
+            <article class="slide slide--text">
+              <div class="slide__doc">
+                <div class="doc__title">Bem-vindo</div>
+                <div class="doc__body">Fique atento aos novos comunicados da Popper aqui.</div>
+              </div>
+            </article>
+          <?php else: ?>
+            <?php foreach ($comunicados as $c): ?>
+              <?php
+                $img = trim((string)($c['imagem_path'] ?? ''));
+                $titulo = trim((string)($c['titulo'] ?? ''));
+                $conteudo = trim((string)($c['conteudo'] ?? ''));
+                $hasImage = ($img !== '');
+                $hasText = ($titulo !== '' || $conteudo !== '');
+              ?>
+
+              <?php if ($hasImage): ?>
+                <article class="slide slide--image">
+                  <div class="slide__inner">
+                    <img class="slide__img-full" src="<?= h($img) ?>" alt="Comunicado">
+                  </div>
+                </article>
+              <?php else: ?>
+                <article class="slide slide--text">
+                  <div class="slide__doc">
+                    <?php if ($titulo !== ''): ?>
+                      <div class="doc__title"><?= h($titulo) ?></div>
+                    <?php endif; ?>
+
+                    <?php if ($conteudo !== ''): ?>
+                      <?php $conteudoSafe = nl2br(h($conteudo)); ?>
+                      <div class="doc__body"><?= $conteudoSafe ?></div>
+                    <?php endif; ?>
+
+                    <?php if (!$hasText): ?>
+                      <div class="doc__title">Comunicado</div>
+                      <div class="doc__body">Sem conteúdo.</div>
+                    <?php endif; ?>
+                  </div>
+                </article>
+              <?php endif; ?>
+
+            <?php endforeach; ?>
+          <?php endif; ?>
+
+        </div>
+      </div>
+
       <button class="carousel__arrow carousel__arrow--next" type="button" id="nextBtn" aria-label="Próximo">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
