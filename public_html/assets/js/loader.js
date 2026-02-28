@@ -122,3 +122,51 @@ const HTML = `
     ensure(); validateImages();
   }
 })();
+
+(function(){
+  const form = document.querySelector('.auth-form');
+  if (!form) return;
+
+  const btn = form.querySelector('.auth-btn');
+
+  // mostra loader só se demorar um pouquinho (evita piscada)
+  const SHOW_AFTER_MS = 150;
+
+  // se aparecer, mantém pelo menos 1s (fica suave)
+  const MIN_VISIBLE_MS = 1000;
+
+  let showTimer = null;
+  let shownAt = 0;
+
+  form.addEventListener('submit', function(){
+    // trava duplo submit
+    if (btn){
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+    }
+
+    // tenta mostrar loader depois de um pequeno delay
+    showTimer = setTimeout(() => {
+      if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+        window.PopperLoading.show('Entrando…', 'Validando acesso');
+        shownAt = Date.now();
+      }
+    }, SHOW_AFTER_MS);
+  });
+
+  // Quando a página estiver saindo (redirect), tenta manter 1s se o loader já abriu.
+  // (em alguns browsers o redirect é tão rápido que não dá, mas melhora muito)
+  window.addEventListener('beforeunload', () => {
+    if (showTimer) clearTimeout(showTimer);
+
+    if (shownAt){
+      const elapsed = Date.now() - shownAt;
+      const remaining = MIN_VISIBLE_MS - elapsed;
+      if (remaining > 0) {
+        // segura um tiquinho (nem sempre o browser respeita, mas ajuda)
+        const start = Date.now();
+        while (Date.now() - start < remaining) {}
+      }
+    }
+  });
+})();

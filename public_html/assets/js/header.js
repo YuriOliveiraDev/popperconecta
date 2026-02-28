@@ -314,3 +314,96 @@ document.addEventListener('DOMContentLoaded', function () {
   window.addEventListener("scroll", () => closeAll(null), { passive: true });
   window.addEventListener("resize", () => closeAll(null), { passive: true });
 })();
+
+// =========================================================
+// MOBILE MENU (cria botão ☰ Menu via JS, sem alterar o PHP)
+// =========================================================
+(function () {
+  "use strict";
+
+  function isMobile() {
+    return window.matchMedia("(max-width: 720px)").matches;
+  }
+
+  function getTopbar() {
+    return document.querySelector("header.topbar--site");
+  }
+
+  function ensureMobileButton() {
+    const topbar = getTopbar();
+    if (!topbar) return;
+
+    // se já existe, ok
+    if (topbar.querySelector(".mobileMenuBtn")) return;
+
+    // cria botão
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mobileMenuBtn";
+    btn.setAttribute("aria-expanded", "false");
+    btn.setAttribute("aria-label", "Abrir menu");
+    btn.innerHTML = "☰ <span>Menu</span>";
+
+    // coloca no começo da left (antes do brand)
+    const left = topbar.querySelector(".topbar__left");
+    if (!left) return;
+    left.insertBefore(btn, left.firstChild);
+
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const open = topbar.classList.toggle("is-mobile-open");
+      btn.setAttribute("aria-expanded", open ? "true" : "false");
+
+      // quando abrir, fecha dropdowns abertos pra evitar bagunça
+      if (open) {
+        document.querySelectorAll(".topbar__dropdown.is-open").forEach(d => d.classList.remove("is-open"));
+        document.querySelectorAll(".topbar__dropdown-group.is-open").forEach(g => g.classList.remove("is-open"));
+      }
+    });
+
+    // clique fora fecha o menu mobile
+    document.addEventListener("click", function (e) {
+      if (!isMobile()) return;
+      if (!topbar.classList.contains("is-mobile-open")) return;
+      if (topbar.contains(e.target)) return;
+
+      topbar.classList.remove("is-mobile-open");
+      btn.setAttribute("aria-expanded", "false");
+    });
+
+    // ESC fecha
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape") return;
+      if (!topbar.classList.contains("is-mobile-open")) return;
+
+      topbar.classList.remove("is-mobile-open");
+      btn.setAttribute("aria-expanded", "false");
+    });
+  }
+
+  function sync() {
+    const topbar = getTopbar();
+    if (!topbar) return;
+
+    if (isMobile()) {
+      ensureMobileButton();
+    } else {
+      // ao sair do mobile, fecha menu e reseta aria
+      topbar.classList.remove("is-mobile-open");
+      const btn = topbar.querySelector(".mobileMenuBtn");
+      if (btn) btn.setAttribute("aria-expanded", "false");
+    }
+  }
+
+  // inicial
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", sync);
+  } else {
+    sync();
+  }
+
+  // re-sincroniza em resize/orientation
+  window.addEventListener("resize", sync, { passive: true });
+})();

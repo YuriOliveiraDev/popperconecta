@@ -4,8 +4,54 @@ declare(strict_types=1);
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
 require_once __DIR__ . '/app/notifications.php';
+
 require_login();
 
+/**
+ * ===============================
+ * TRADUÇÕES UI (EN → PT-BR)
+ * ===============================
+ */
+
+function t_status(string $status): string {
+  $s = strtolower(trim($status));
+  return match ($s) {
+    'pending'   => 'Pendente',
+    'approved'  => 'Aprovado',
+    'rejected'  => 'Recusado',
+    'cancelled' => 'Cancelado',
+    default     => ($s !== '' ? mb_convert_case($s, MB_CASE_TITLE, 'UTF-8') : '—'),
+  };
+}
+
+function t_action(string $action): string {
+  $a = strtolower(trim($action));
+  return match ($a) {
+    'earn'     => 'Ganho',
+    'spend'    => 'Gasto',
+    'hold'     => 'Reserva',
+    'release'  => 'Liberação',
+    'refund'   => 'Estorno',
+    default    => ($a !== '' ? mb_convert_case($a, MB_CASE_TITLE, 'UTF-8') : '—'),
+  };
+}
+
+function t_approval_action(string $action): string {
+  $a = strtolower(trim($action));
+  return match ($a) {
+    'approve' => 'Aprovou',
+    'reject'  => 'Recusou',
+    'cancel'  => 'Cancelou',
+    'create'  => 'Criou',
+    default   => ($a !== '' ? mb_convert_case($a, MB_CASE_TITLE, 'UTF-8') : '—'),
+  };
+}
+
+/**
+ * ===============================
+ * HEADERS (NO CACHE)
+ * ===============================
+ */
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
@@ -25,10 +71,12 @@ $activePage = 'coins';
 
 $success = '';
 $error = '';
-if (isset($_GET['ok'])) $success = 'Pedido enviado.';
-if (isset($_GET['err'])) $error = 'Erro: ' . (string)$_GET['err'];
+if (isset($_GET['ok']))  $success = 'Pedido enviado.';
+if (isset($_GET['err'])) $error   = 'Erro: ' . (string)$_GET['err'];
 
-// ✅ Sessão para token anti-duplicação
+/**
+ * ✅ Sessão para token anti-duplicação
+ */
 if (session_status() !== PHP_SESSION_ACTIVE) {
   session_start();
 }
@@ -37,6 +85,11 @@ if (empty($_SESSION['redeem_token'])) {
 }
 $redeemToken = (string)$_SESSION['redeem_token'];
 
+/**
+ * ===============================
+ * WALLET / LEDGER HELPERS
+ * ===============================
+ */
 function ensure_wallet_int(int $userId): void {
   $stmt = db()->prepare("INSERT IGNORE INTO popper_coin_wallets (user_id, balance) VALUES (?, 0)");
   $stmt->execute([$userId]);
@@ -44,27 +97,35 @@ function ensure_wallet_int(int $userId): void {
 
 function apply_ledger_no_tx(int $userId, int $amount, string $type, ?string $reason, int $actorId): void {
   ensure_wallet_int($userId);
-  $stmt = db()->prepare("INSERT INTO popper_coin_ledger (user_id, amount, action_type, reason, created_by) VALUES (?, ?, ?, ?, ?)");
+
+  $stmt = db()->prepare("
+    INSERT INTO popper_coin_ledger (user_id, amount, action_type, reason, created_by)
+    VALUES (?, ?, ?, ?, ?)
+  ");
   $stmt->execute([$userId, $amount, $type, $reason, $actorId]);
 
   $stmt = db()->prepare("UPDATE popper_coin_wallets SET balance = balance + ? WHERE user_id = ?");
   $stmt->execute([$amount, $userId]);
 }
 
-// ✅ Processa resgate (PRG: depois redireciona)
+/**
+ * ===============================
+ * ✅ PROCESSA RESGATE (PRG)
+ * ===============================
+ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_reward_id'])) {
   try {
     $rewardId = (int)($_POST['redeem_reward_id'] ?? 0);
     $userNote = trim((string)($_POST['user_note'] ?? ''));
-    $token = (string)($_POST['redeem_token'] ?? '');
+    $token    = (string)($_POST['redeem_token'] ?? '');
 
     if ($rewardId <= 0) throw new Exception('Recompensa inválida.');
 
-    // valida token
+    // valida token anti-duplicação
     if ($token === '' || empty($_SESSION['redeem_token']) || !hash_equals($_SESSION['redeem_token'], $token)) {
       throw new Exception('Requisição inválida ou repetida.');
     }
-    unset($_SESSION['redeem_token']); // gasta token
+    unset($_SESSION['redeem_token']); // consome token
 
     $db = db();
     $db->beginTransaction();
@@ -147,6 +208,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['redeem_reward_id'])) 
   }
 }
 
+/**
+ * ===============================
+ * DADOS DA PÁGINA
+ * ===============================
+ */
 ensure_wallet_int($userId);
 
 // Saldo
@@ -154,7 +220,7 @@ $stmt = db()->prepare("SELECT COALESCE(balance, 0) FROM popper_coin_wallets WHER
 $stmt->execute([$userId]);
 $balance = (int)($stmt->fetchColumn() ?? 0);
 
-// Recompensas (com inventário)
+// Recompensas (com inventário) — (se você usa em modal / cards, já fica aqui)
 $rewards = db()->query("
   SELECT id, title, description, cost, inventory
   FROM popper_coin_rewards
@@ -202,12 +268,11 @@ try {
   $stmt->execute([$userId]);
   $approvalLogs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-  // se a tabela approval_logs não existir ainda, não quebra a página
   $approvalLogs = [];
 }
 ?>
 <!doctype html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -227,19 +292,22 @@ try {
 <main class="container coins">
   <div class="pc-header">
     <h1 class="pc-title">Popper Coins</h1>
-    <p class="pc-subtitle">Solicite recompensas e acompanhe seus pedidos.</p>
+    <p class="pc-subtitle">Acompanhe seus pedidos.</p>
   </div>
 
-  <?php if ($success): ?><div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
-  <?php if ($error): ?><div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div><?php endif; ?>
+  <?php if ($success): ?>
+    <div class="alert alert--ok"><?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
+  <?php if ($error): ?>
+    <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
+  <?php endif; ?>
 
   <div class="pc-container">
     <div class="pc-grid">
-      <!-- SALDO (moderno / sem emoji) -->
+      <!-- SALDO -->
       <div class="pc-card pc-card--balance">
         <div class="pc-balance-head">
           <h3 class="pc-balance-title">Seu saldo</h3>
-          <span class="pc-balance-pill">Popper Coins</span>
         </div>
 
         <div class="pc-balance-value">
@@ -253,7 +321,7 @@ try {
         </div>
       </div>
 
-      <!-- SEUS PEDIDOS (scroll ~5 itens) -->
+      <!-- SEUS PEDIDOS -->
       <div class="pc-card pc-card--requests">
         <div class="pc-card-head">
           <h3 class="pc-card-title">Seus pedidos</h3>
@@ -283,7 +351,11 @@ try {
                     <td><?= htmlspecialchars((string)$r['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
                     <td><?= htmlspecialchars((string)$r['reward_title'], ENT_QUOTES, 'UTF-8') ?></td>
                     <td class="right"><?= (int)$r['cost'] ?></td>
-                    <td><span class="pill <?= $pill ?>"><?= htmlspecialchars($st, ENT_QUOTES, 'UTF-8') ?></span></td>
+                    <td>
+                      <span class="pill <?= $pill ?>">
+                        <?= htmlspecialchars(t_status($st), ENT_QUOTES, 'UTF-8') ?>
+                      </span>
+                    </td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -292,7 +364,8 @@ try {
         </div>
       </div>
     </div>
-    <!-- EXTRATO (últimos 10) -->
+
+    <!-- EXTRATO -->
     <div class="pc-card">
       <div class="pc-card-head">
         <h3 class="pc-card-title">Extrato</h3>
@@ -316,7 +389,7 @@ try {
               <?php foreach ($entries as $e): ?>
                 <tr>
                   <td><?= htmlspecialchars((string)$e['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string)$e['action_type'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars(t_action((string)$e['action_type']), ENT_QUOTES, 'UTF-8') ?></td>
                   <td><?= htmlspecialchars((string)($e['reason'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
                   <td class="right"><?= (int)$e['amount'] ?></td>
                 </tr>
@@ -327,10 +400,10 @@ try {
       </div>
     </div>
 
-    <!-- HISTÓRICO DE APROVAÇÕES (últimos 10) -->
+    <!-- HISTÓRICO DE APROVAÇÕES -->
     <div class="pc-card">
       <div class="pc-card-head">
-        <h3 class="pc-card-title">Histórico de Aprovações</h3>
+        <h3 class="pc-card-title">Histórico de aprovações</h3>
         <span class="pc-card-badge">Últimos 10</span>
       </div>
 
@@ -343,7 +416,7 @@ try {
               <th>Ação</th>
               <th>Status</th>
               <th>Por</th>
-              <th>Obs</th>
+              <th>Obs.</th>
             </tr>
           </thead>
           <tbody>
@@ -352,11 +425,11 @@ try {
             <?php else: ?>
               <?php foreach ($approvalLogs as $l): ?>
                 <tr>
-                  <td><?= htmlspecialchars((string)$l['created_at'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string)$l['reward_title'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string)$l['action'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string)$l['status'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string)$l['approved_by_name'], ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)($l['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)($l['reward_title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars(t_approval_action((string)($l['action'] ?? '')), ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars(t_status((string)($l['status'] ?? '')), ENT_QUOTES, 'UTF-8') ?></td>
+                  <td><?= htmlspecialchars((string)($l['approved_by_name'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
                   <td><?= htmlspecialchars((string)($l['note'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
                 </tr>
               <?php endforeach; ?>
@@ -365,6 +438,7 @@ try {
         </table>
       </div>
     </div>
+
   </div>
 </main>
 

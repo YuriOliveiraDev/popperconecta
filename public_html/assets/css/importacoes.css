@@ -1,15 +1,13 @@
 /* =========================================================
-   COMEX Importações — Modern Light (leve, moderno, sem bold)
-   Escopo: body.page.comex-importacoes
+   COMEX Importações — Modern Light
+   Escopo: body.comex-importacoes
    ========================================================= */
 
-html, body{
-  margin: 0 !important;
-  padding: 0 !important;
-  height: auto !important;
-}
+/* ✅ reset seguro só para esta página */
+body.comex-importacoes{
+  margin: 0;
+  padding: 0;
 
-body.page.comex-importacoes{
   --bg: #f6f7fb;
   --card:#ffffff;
   --text:#0f172a;
@@ -25,32 +23,32 @@ body.page.comex-importacoes{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* ✅ garante scroll e evita faixa branca */
   overflow-x: hidden !important;
-  overflow-y: auto !important;
   min-height: 100vh;
 }
 
-/* evita interferência do tema global */
-body.page.comex-importacoes .page,
-body.page.comex-importacoes .container,
-body.page.comex-importacoes main.container,
-body.page.comex-importacoes .comex{
+/* ✅ mata fundo roxo herdado */
+body.comex-importacoes,
+body.comex-importacoes #app,
+body.comex-importacoes .page,
+body.comex-importacoes .container,
+body.comex-importacoes main{
   background: transparent !important;
   color: var(--text) !important;
-  overflow: visible !important;
 }
 
-body.page.comex-importacoes .container{
+/* container da página */
+body.comex-importacoes main.container.comex-importacoes{
   max-width: 1240px;
   margin: 0 auto;
   padding: 18px 18px 34px;
 }
 
+
 /* =========================
-   Cabeçalho
+   Cabeçalho da página
    ========================= */
-body.page.comex-importacoes .page__head{
+body.comex-importacoes .page__head{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -58,21 +56,21 @@ body.page.comex-importacoes .page__head{
   margin: 10px 0 14px;
 }
 
-body.page.comex-importacoes .page__title h1{
+body.comex-importacoes .page__title h1{
   margin:0;
   font-size: 20px;
   font-weight: 650;
   letter-spacing: .1px;
   color: var(--text) !important;
 }
-body.page.comex-importacoes .page__title p{
+body.comex-importacoes .page__title p{
   margin:6px 0 0;
   font-size: 13px;
   color: var(--muted) !important;
   font-weight: 450;
 }
 
-body.page.comex-importacoes .page__actions{
+body.comex-importacoes .page__actions{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
@@ -81,7 +79,7 @@ body.page.comex-importacoes .page__actions{
 /* =========================
    Botões
    ========================= */
-body.page.comex-importacoes .btn{
+body.comex-importacoes .btn{
   border: 1px solid var(--line) !important;
   background: rgba(255,255,255,.92) !important;
   color: var(--text) !important;
@@ -92,18 +90,17 @@ body.page.comex-importacoes .btn{
   box-shadow: 0 2px 10px rgba(2,6,23,.05);
   transition: transform .10s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
 }
-body.page.comex-importacoes .btn:hover{
+body.comex-importacoes .btn:hover{
   border-color: rgba(15,23,42,.16) !important;
   box-shadow: var(--shadow2);
   background: #fff !important;
 }
-body.page.comex-importacoes .btn:active{transform:scale(.985);}
-
-body.page.comex-importacoes .btn--ghost{
+body.comex-importacoes .btn:active{transform:scale(.985);}
+body.comex-importacoes .btn--ghost{
   background: transparent !important;
   box-shadow:none !important;
 }
-body.page.comex-importacoes .btn--primary{
+body.comex-importacoes .btn--primary{
   background: linear-gradient(180deg, rgba(57,56,143,.10), rgba(57,56,143,.06)) !important;
   border-color: rgba(57,56,143,.22) !important;
 }
@@ -111,7 +108,7 @@ body.page.comex-importacoes .btn--primary{
 /* =========================
    Toolbar
    ========================= */
-body.page.comex-importacoes .toolbar{
+body.comex-importacoes .toolbar{
   display:flex;
   justify-content:space-between;
   align-items:flex-end;
@@ -125,7 +122,7 @@ body.page.comex-importacoes .toolbar{
   margin-bottom: 14px;
 }
 
-body.page.comex-importacoes .toolbar__left{
+body.comex-importacoes .toolbar__left{
   display:flex;
   flex-wrap:wrap;
   gap:12px;
@@ -133,20 +130,20 @@ body.page.comex-importacoes .toolbar__left{
 }
 
 /* inputs */
-body.page.comex-importacoes .field{
+body.comex-importacoes .field{
   display:flex;
   flex-direction:column;
   gap:6px;
   min-width: 220px;
 }
-body.page.comex-importacoes .field label{
+body.comex-importacoes .field label{
   font-size:12px;
   color: var(--muted) !important;
   font-weight: 550;
 }
 
-body.page.comex-importacoes .field input,
-body.page.comex-importacoes .field select{
+body.comex-importacoes .field input,
+body.comex-importacoes .field select{
   border:1px solid var(--line) !important;
   background:#fff !important;
   color: var(--text) !important;
@@ -156,20 +153,20 @@ body.page.comex-importacoes .field select{
   font-weight: 450;
   transition: box-shadow .2s ease, border-color .2s ease;
 }
-body.page.comex-importacoes .field input:focus,
-body.page.comex-importacoes .field select:focus{
+body.comex-importacoes .field input:focus,
+body.comex-importacoes .field select:focus{
   border-color: rgba(57,56,143,.35) !important;
   box-shadow: 0 0 0 4px rgba(57,56,143,.10) !important;
 }
 
 /* chips */
-body.page.comex-importacoes .chips{
+body.comex-importacoes .chips{
   display:flex;
   gap:8px;
   flex-wrap:wrap;
   justify-content:flex-end;
 }
-body.page.comex-importacoes .chip{
+body.comex-importacoes .chip{
   border:1px solid var(--line) !important;
   background:#fff !important;
   color: rgba(15,23,42,.86) !important;
@@ -180,8 +177,8 @@ body.page.comex-importacoes .chip{
   font-size:12px;
   transition: background .2s ease, border-color .2s ease, transform .10s ease;
 }
-body.page.comex-importacoes .chip:hover{transform: translateY(-1px);}
-body.page.comex-importacoes .chip.is-active{
+body.comex-importacoes .chip:hover{transform: translateY(-1px);}
+body.comex-importacoes .chip.is-active{
   border-color: rgba(57,56,143,.28) !important;
   background: rgba(57,56,143,.08) !important;
 }
@@ -189,68 +186,66 @@ body.page.comex-importacoes .chip.is-active{
 /* =========================
    KPIs
    ========================= */
-body.page.comex-importacoes .kpis{
+body.comex-importacoes .kpis{
   display:grid;
   grid-template-columns: repeat(4, minmax(0,1fr));
   gap:12px;
   margin-bottom:14px;
 }
 @media (max-width:900px){
-  body.page.comex-importacoes .kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
+  body.comex-importacoes .kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
 }
-body.page.comex-importacoes .kpi{
+body.comex-importacoes .kpi{
   background: var(--card) !important;
   border: 1px solid var(--line) !important;
   border-radius: 14px;
   padding: 14px;
   box-shadow: var(--shadow);
 }
-body.page.comex-importacoes .kpi__label{
+body.comex-importacoes .kpi__label{
   color: var(--muted) !important;
   font-size:12px;
   font-weight: 550;
 }
-body.page.comex-importacoes .kpi__value{
+body.comex-importacoes .kpi__value{
   margin-top:8px;
   font-size:22px;
   font-weight: 650;
   letter-spacing:.2px;
 }
-body.page.comex-importacoes .kpi__value--small{
+body.comex-importacoes .kpi__value--small{
   font-size:12px;
   font-weight: 450;
   color: var(--muted) !important;
 }
 
 /* =========================
-   Conteúdo + Board (anti-roxo)
+   Board
    ========================= */
-body.page.comex-importacoes .content{
+body.comex-importacoes .content{
   margin-top: 2px;
   background: transparent !important;
 }
 
-body.page.comex-importacoes #board,
-body.page.comex-importacoes .board{
+body.comex-importacoes #board,
+body.comex-importacoes .board{
   background: transparent !important;
   color: var(--text) !important;
-
   display:grid;
   grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
   gap: 12px;
 }
 
-/* mata pseudo-elementos roxos */
-body.page.comex-importacoes .board::before,
-body.page.comex-importacoes .board::after,
-body.page.comex-importacoes #board::before,
-body.page.comex-importacoes #board::after{
+body.comex-importacoes .board::before,
+body.comex-importacoes .board::after,
+body.comex-importacoes #board::before,
+body.comex-importacoes #board::after{
   content: none !important;
   background: transparent !important;
 }
 
-/* Card do status */
-body.page.comex-importacoes .statuscard{
+/* Status card */
+body.comex-importacoes .statuscard{
   background: #fff !important;
   border: 1px solid var(--line) !important;
   border-radius: 16px;
@@ -261,7 +256,7 @@ body.page.comex-importacoes .statuscard{
   min-height: 220px;
 }
 
-body.page.comex-importacoes .statuscard__head{
+body.comex-importacoes .statuscard__head{
   display:flex;
   align-items:center;
   justify-content:space-between;
@@ -271,21 +266,21 @@ body.page.comex-importacoes .statuscard__head{
   background: rgba(15,23,42,.02) !important;
 }
 
-body.page.comex-importacoes .statuscard__title{
+body.comex-importacoes .statuscard__title{
   font-weight: 650;
   color: var(--text) !important;
   font-size: 12.5px;
   letter-spacing: .2px;
 }
 
-body.page.comex-importacoes .statuscard__badges{
+body.comex-importacoes .statuscard__badges{
   display:flex;
   gap:8px;
   align-items:center;
   flex-wrap:wrap;
 }
 
-body.page.comex-importacoes .pill{
+body.comex-importacoes .pill{
   border: 1px solid rgba(15,23,42,.12);
   background: rgba(255,255,255,.95);
   color: rgba(15,23,42,.78);
@@ -294,14 +289,14 @@ body.page.comex-importacoes .pill{
   font-size: 12px;
   font-weight: 550;
 }
-body.page.comex-importacoes .pill--late{
+body.comex-importacoes .pill--late{
   border-color: rgba(220,38,38,.22);
   background: rgba(220,38,38,.06);
   color: rgba(185,28,28,.88);
 }
 
 /* Lista interna */
-body.page.comex-importacoes .statuscard__list{
+body.comex-importacoes .statuscard__list{
   padding: 10px;
   display:flex;
   flex-direction:column;
@@ -309,30 +304,30 @@ body.page.comex-importacoes .statuscard__list{
   max-height: 520px;
   overflow:auto;
 }
-body.page.comex-importacoes .statuscard__list::-webkit-scrollbar{width:10px;}
-body.page.comex-importacoes .statuscard__list::-webkit-scrollbar-thumb{
+body.comex-importacoes .statuscard__list::-webkit-scrollbar{width:10px;}
+body.comex-importacoes .statuscard__list::-webkit-scrollbar-thumb{
   background: rgba(15,23,42,.12);
   border-radius: 999px;
   border: 3px solid rgba(255,255,255,.9);
 }
 
-/* Card do item */
-body.page.comex-importacoes .itcard{
+/* Itens */
+body.comex-importacoes .itcard{
   border:1px solid rgba(15,23,42,.10);
   border-radius: 14px;
   background:#fff !important;
-  padding: 10px 10px;
+  padding: 10px;
   cursor:pointer;
   transition: transform .10s ease, box-shadow .22s ease, border-color .22s ease;
 }
-body.page.comex-importacoes .itcard:hover{
+body.comex-importacoes .itcard:hover{
   border-color: rgba(15,23,42,.16);
   box-shadow: var(--shadow2);
   transform: translateY(-1px);
 }
-body.page.comex-importacoes .itcard:active{ transform: scale(.99); }
+body.comex-importacoes .itcard:active{ transform: scale(.99); }
 
-body.page.comex-importacoes .itcard__top{
+body.comex-importacoes .itcard__top{
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
@@ -340,7 +335,7 @@ body.page.comex-importacoes .itcard__top{
   margin-bottom: 8px;
 }
 
-body.page.comex-importacoes .itcard__title{
+body.comex-importacoes .itcard__title{
   font-weight: 600;
   color: rgba(15,23,42,.92) !important;
   font-size: 13px;
@@ -348,82 +343,25 @@ body.page.comex-importacoes .itcard__title{
   word-break: break-word;
 }
 
-body.page.comex-importacoes .itcard__meta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-}
-
-body.page.comex-importacoes .itcard__dates{
+body.comex-importacoes .itcard__dates{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   justify-content:flex-end;
 }
 
-body.page.comex-importacoes .itcard__dt{
+body.comex-importacoes .itcard__dt{
   font-size: 12px;
   color: rgba(15,23,42,.68) !important;
   font-weight: 450;
 }
-body.page.comex-importacoes .itcard__dt b{
+body.comex-importacoes .itcard__dt b{
   color: rgba(15,23,42,.84) !important;
   font-weight: 600;
 }
 
-/* Badges */
-body.page.comex-importacoes .badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  border-radius:999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 550;
-  border: 1px solid rgba(15,23,42,.12);
-  background: rgba(15,23,42,.03);
-  color: rgba(15,23,42,.82);
-}
-body.page.comex-importacoes .badge--good{
-  border-color: rgba(16,185,129,.25);
-  background: rgba(16,185,129,.08);
-  color: rgba(6,95,70,.92);
-}
-body.page.comex-importacoes .badge--warn{
-  border-color: rgba(245,158,11,.28);
-  background: rgba(245,158,11,.10);
-  color: rgba(146,64,14,.92);
-}
-body.page.comex-importacoes .badge--bad{
-  border-color: rgba(239,68,68,.26);
-  background: rgba(239,68,68,.08);
-  color: rgba(153,27,27,.92);
-}
-body.page.comex-importacoes .badge--neutral{
-  border-color: rgba(15,23,42,.12);
-  background: rgba(15,23,42,.03);
-  color: rgba(15,23,42,.78);
-}
-
-/* Tag atraso */
-body.page.comex-importacoes .tag{
-  border-radius:999px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 550;
-  border:1px solid rgba(15,23,42,.12);
-  background: rgba(15,23,42,.03);
-  color: rgba(15,23,42,.76);
-}
-body.page.comex-importacoes .tag--late{
-  border-color: rgba(239,68,68,.22);
-  background: rgba(239,68,68,.07);
-  color: rgba(153,27,27,.88);
-}
-
 /* Empty */
-body.page.comex-importacoes .empty{
+body.comex-importacoes .empty{
   margin-top:14px;
   border:1px dashed rgba(15,23,42,.18) !important;
   border-radius: 16px;
@@ -432,137 +370,247 @@ body.page.comex-importacoes .empty{
   color: var(--muted) !important;
   background: rgba(255,255,255,.75) !important;
 }
-body.page.comex-importacoes .empty__title{
+body.comex-importacoes .empty__title{
   font-weight: 650;
   color: rgba(15,23,42,.92) !important;
 }
-body.page.comex-importacoes .empty__sub{
+body.comex-importacoes .empty__sub{
   margin-top: 6px;
   font-weight: 450;
 }
 
 /* =========================================================
-   MODAL (NUCLEAR FIX) — centro + blur LEVE + animação suave
-   - fundo mantém igual (não branco)
-   - blur leve com uma camada transparente
+   MODAL COMEX — centralizado (NÃO fullscreen) + pronto pro JS (spring)
    ========================================================= */
 
-body.page.comex-importacoes #modal{
-  display: none !important;
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  z-index: 999999 !important;
+body.comex-importacoes .comex-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 9999;
+
+  /* importante p/ click fora: o overlay cobre tudo */
+  padding: 24px;
 }
 
-body.page.comex-importacoes #modal.is-open{
-  display: block !important;
+body.comex-importacoes .comex-modal.is-open{
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ✅ BLUR leve, sem "tela branca" */
-body.page.comex-importacoes #modal .modal__backdrop{
-  position: fixed !important;
-  inset: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-
-  /* transparente (não pinta branco!) */
-  background: rgba(2,6,23,.06) !important; /* só um "véu" quase imperceptível */
-  backdrop-filter: blur(10px) saturate(115%) !important;
-  -webkit-backdrop-filter: blur(10px) saturate(115%) !important;
-
-  opacity: 0 !important;
-  transition: opacity .32s cubic-bezier(.2,.8,.2,1) !important;
-  will-change: opacity;
+/* backdrop clicável */
+body.comex-importacoes .comex-modal .modal__backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(2,6,23,.25);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
 }
 
-/* abre suave */
-body.page.comex-importacoes #modal.is-open .modal__backdrop{
-  opacity: 1 !important;
+/* card acima do backdrop */
+body.comex-importacoes .comex-modal .modal__card{
+  position: relative;
+  z-index: 1;
+
+  width: min(720px, 92vw);
+  max-height: 82vh;
+
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(15,23,42,.10);
+  box-shadow: 0 30px 80px rgba(0,0,0,.25);
+
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* ⚠️ NÃO animar aqui, o JS faz spring com Web Animations */
+  transform: none;
+  opacity: 1;
+  transition: none;
+
+  /* pra focus trap funcionar bem */
+  outline: none;
 }
 
-/* card central com animação suave */
-body.page.comex-importacoes #modal .modal__card{
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
+/* scroll interno */
+body.comex-importacoes .comex-modal .modal__body{
+  overflow: auto;
+  padding: 16px;
+}
 
-  width: min(720px, calc(100vw - 48px)) !important;
-  max-height: min(82vh, 760px) !important;
+/* =========================================================
+   COMEX MODAL — UI CLEAN (Popper Conecta)
+   Escopo: body.comex-importacoes .comex-modal
+   ========================================================= */
 
-  margin: 0 !important;
+body.comex-importacoes .comex-modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 99999;
+  padding: 24px;
+}
 
-  background: rgba(255,255,255,.96) !important;
-  color: #0f172a !important;
+body.comex-importacoes .comex-modal.is-open{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-  border: 1px solid rgba(15,23,42,.10) !important;
-  border-radius: 18px !important;
-  box-shadow: 0 25px 90px rgba(0,0,0,.22) !important;
+/* Backdrop */
+body.comex-importacoes .comex-modal .modal__backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(2,6,23,.35);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+}
 
-  overflow: hidden !important;
+/* Card (não fullscreen) */
+body.comex-importacoes .comex-modal .modal__card{
+  position: relative;
+  width: min(820px, calc(100vw - 48px));
+  max-height: min(78vh, 720px);
+  overflow: hidden;
 
-  transform: translate(-50%, calc(-50% + 10px)) scale(.985) !important;
-  opacity: 0 !important;
+  border-radius: 18px;
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(255,255,255,.98);
+  color: #0f172a;
+
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.28),
+    0 8px 22px rgba(0,0,0,.12);
+
+  display: flex;
+  flex-direction: column;
+
+  /* estado inicial (spring via JS/animate ou transition) */
+  transform: translateY(14px) scale(.985);
+  opacity: 0;
 
   transition:
-    transform .32s cubic-bezier(.2,.9,.2,1),
-    opacity .32s cubic-bezier(.2,.8,.2,1) !important;
-  will-change: transform, opacity;
+    transform .34s cubic-bezier(.16, 1, .3, 1),
+    opacity .22s cubic-bezier(.16, 1, .3, 1);
 }
 
-body.page.comex-importacoes #modal.is-open .modal__card{
-  opacity: 1 !important;
-  transform: translate(-50%, -50%) scale(1) !important;
+body.comex-importacoes .comex-modal.is-open .modal__card{
+  transform: translateY(0) scale(1);
+  opacity: 1;
 }
 
-/* head/foot */
-body.page.comex-importacoes #modal .modal__head{
-  display:flex !important;
-  align-items:flex-start !important;
-  justify-content:space-between !important;
-  padding: 14px 16px !important;
-  border-bottom: 1px solid rgba(15,23,42,.10) !important;
-  background: rgba(255,255,255,.98) !important;
+/* Header */
+body.comex-importacoes .comex-modal .modal__head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+
+  background:
+    linear-gradient(180deg, rgba(57,56,143,.09), rgba(57,56,143,.03));
 }
 
-body.page.comex-importacoes #modal .modal__foot{
-  padding: 14px 16px !important;
-  border-top: 1px solid rgba(15,23,42,.10) !important;
-  display:flex !important;
-  justify-content:flex-end !important;
-  background: rgba(255,255,255,.98) !important;
+body.comex-importacoes .comex-modal .modal__kicker{
+  font-size: 12px;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.55);
+  font-weight: 700;
+  margin-bottom: 4px;
 }
 
-body.page.comex-importacoes #modal .modal__kicker{
-  font-size:12px !important;
-  color: rgba(15,23,42,.60) !important;
-  font-weight: 550 !important;
-}
-body.page.comex-importacoes #modal .modal__title{
-  font-size: 16px !important;
-  font-weight: 650 !important;
-  margin-top: 4px !important;
-  color: #0f172a !important;
+body.comex-importacoes .comex-modal .modal__title{
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #0f172a;
 }
 
-/* corpo com scroll interno */
-body.page.comex-importacoes #modal .modal__body{
-  padding: 16px !important;
-  overflow: auto !important;
-  max-height: calc(82vh - 140px) !important;
+/* Botão X (bonito) */
+body.comex-importacoes .comex-modal .iconbtn{
+  border: 1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.85);
+  color: rgba(15,23,42,.85);
+
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .2s ease, background .2s ease;
+}
+body.comex-importacoes .comex-modal .iconbtn:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0,0,0,.12);
+  background: rgba(255,255,255,.95);
+}
+body.comex-importacoes .comex-modal .iconbtn:active{
+  transform: scale(.98);
 }
 
-/* botão X */
-body.page.comex-importacoes #modal .iconbtn{
-  border:1px solid rgba(15,23,42,.12) !important;
-  background: rgba(255,255,255,.98) !important;
-  color: rgba(15,23,42,.92) !important;
-  width:36px !important;
-  height:36px !important;
-  border-radius: 12px !important;
-  cursor:pointer !important;
+/* Body */
+body.comex-importacoes .comex-modal .modal__body{
+  padding: 16px 18px;
+  overflow: auto;
 }
-body.page.comex-importacoes #modal .iconbtn:hover{
-  background: rgba(15,23,42,.03) !important;
+
+/* Grid de detalhes */
+body.comex-importacoes .comex-modal .detailgrid{
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+@media (max-width: 720px){
+  body.comex-importacoes .comex-modal .detailgrid{ grid-template-columns: 1fr; }
+}
+
+body.comex-importacoes .comex-modal .detail{
+  border: 1px solid rgba(15,23,42,.10);
+  background: rgba(15,23,42,.02);
+  border-radius: 14px;
+  padding: 12px 12px;
+}
+
+body.comex-importacoes .comex-modal .detail__label{
+  font-size: 12px;
+  color: rgba(15,23,42,.55);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+body.comex-importacoes .comex-modal .detail__value{
+  font-size: 14px;
+  font-weight: 750;
+  color: rgba(15,23,42,.92);
+}
+body.comex-importacoes .comex-modal .mono{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: 650;
+  letter-spacing: .2px;
+}
+
+/* Footer */
+body.comex-importacoes .comex-modal .modal__foot{
+  padding: 14px 18px;
+  border-top: 1px solid rgba(15,23,42,.08);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background: rgba(255,255,255,.96);
+}
+
+/* botão fechar mais bonito (usa teu .btn) */
+body.comex-importacoes .comex-modal .btn{
+  border-radius: 12px;
+  padding: 10px 14px;
 }

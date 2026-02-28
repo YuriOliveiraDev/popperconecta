@@ -285,8 +285,6 @@ if ($dashboard_slug === 'executivo' && is_array($dailyRow)) {
     <nav class="tabs">
       <a class="tab <?= $dashboard_slug === 'executivo' ? 'is-active' : '' ?>"
         href="/admin/metrics.php?dash=executivo">Faturamento</a>
-      <a class="tab <?= $dashboard_slug === 'financeiro' ? 'is-active' : '' ?>"
-        href="/admin/metrics.php?dash=financeiro">Financeiro</a>
     </nav>
 
     <div class="card metrics-card">

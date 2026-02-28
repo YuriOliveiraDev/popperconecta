@@ -6,12 +6,12 @@ declare(strict_types=1);
  * Quando surgir uma nova área no Admin, adicione aqui.
  */
 const PERMISSION_CATALOG = [
-  'admin.users'        => ['label' => 'Usuários',      'icon' => '👥', 'url' => '/admin/users.php'],
-  'admin.metrics'      => ['label' => 'Métricas',      'icon' => '🧮', 'url' => '/admin/metrics.php'],
-  'admin.comunicados'  => ['label' => 'Comunicados',   'icon' => '📢', 'url' => '/admin/comunicados.php'],
+  'admin.users'        => ['label' => 'Usuários',      'icon' => '', 'url' => '/admin/users.php'],
+  'admin.metrics'      => ['label' => 'Métricas',      'icon' => '', 'url' => '/admin/metrics.php'],
+  'admin.comunicados'  => ['label' => 'Comunicados',   'icon' => '', 'url' => '/admin/comunicados.php'],
 
   // RH (página “hub”)
-  'admin.rh'           => ['label' => 'RH',            'icon' => '🧑‍💼', 'url' => '/admin/rh.php'],
+  'admin.rh'           => ['label' => 'RH',            'icon' => '', 'url' => '/admin/rh.php'],
 
 ];
 

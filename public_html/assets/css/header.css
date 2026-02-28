@@ -512,3 +512,364 @@ body .topbar__dropdown-menu *{
     display: block;
   }
 }
+
+/* =========================================================
+   MOBILE ONLY (não altera desktop)
+   Cole NO FINAL do CSS
+   ========================================================= */
+@media (max-width: 720px){
+
+  /* 1) Header não estoura largura */
+  .topbar.topbar--site{
+    padding: 10px 12px;
+  }
+
+  .topbar__left,
+  .topbar__right{
+    min-width: 0;
+  }
+
+  /* 2) Faz header virar 2 linhas */
+  .topbar.topbar--site{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:10px;
+  }
+
+  .topbar__left{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:1 1 auto;
+    min-width:0;
+  }
+
+  .topbar__right{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex:0 0 auto;
+  }
+
+  /* 3) Marca: diminui e evita quebrar */
+  .brand{
+    font-size: 14px;
+    font-weight: 900;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 52vw;
+  }
+
+  /* 4) Esconde links “grandes” no mobile (mantém só ícones/perfil/notif) */
+  .topbar__left > .link,
+  .topbar__left > .topbar__dropdown{
+    display:none !important;
+  }
+
+  /* 5) Cria um botão MENU (hambúrguer) usando ::before (sem mudar PHP)
+        - ele aparece no lugar dos links escondidos
+        - ao clicar, você abre com JS adicionando .is-mobile-open no header
+  */
+  .topbar.topbar--site::before{
+    content:"☰ Menu";
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    height:36px;
+    padding:0 12px;
+    border-radius:999px;
+    background: rgba(255,255,255,.14);
+    box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset;
+    font-weight:800;
+    font-size:13px;
+    cursor:pointer;
+    user-select:none;
+  }
+
+  /* 6) Quando header estiver “aberto”, mostramos os dropdowns em modo vertical
+        Você só precisa, no clique do ::before, togglar a classe:
+        document.querySelector('.topbar--site').classList.toggle('is-mobile-open')
+  */
+  .topbar.topbar--site.is-mobile-open .topbar__left{
+    flex: 1 1 100%;
+    order: 3;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top: 6px;
+  }
+
+  .topbar.topbar--site.is-mobile-open .topbar__left > .link,
+  .topbar.topbar--site.is-mobile-open .topbar__left > .topbar__dropdown{
+    display:flex !important;
+  }
+
+  /* 7) Dropdown no mobile vira “painel” full width */
+  .topbar__dropdown{
+    width:100%;
+    margin-left:0 !important; /* mata seus inline styles no mobile */
+  }
+
+  .topbar__dropdown-trigger{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:12px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.14);
+    text-decoration:none;
+  }
+
+  .topbar__dropdown-menu{
+    position: static !important;  /* não flutua */
+    width:100%;
+    min-width: 0;
+    max-width: none;
+    margin-top: 6px;
+
+    /* você já tem “fechado por padrão” com visibility/opacity,
+       então aqui a gente simplifica pro mobile */
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+
+    display:none; /* abre via .is-open no wrapper */
+  }
+
+  .topbar__dropdown.is-open > .topbar__dropdown-menu{
+    display:block;
+  }
+
+  /* 8) Submenu sempre inline (embaixo do item pai) */
+  .topbar__dropdown-submenu{
+    position: static !important;
+    left:auto !important;
+    top:auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+
+    margin: 6px 0 0 0 !important;
+
+    transform:none !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+
+    display:none; /* abre via .is-open do grupo */
+    border-radius: 12px;
+  }
+
+  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
+    display:block;
+  }
+
+  /* 9) Item do grupo (pai) com espaçamento bom */
+  .topbar__dropdown-item--group{
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  /* 10) Notif/Profile alinhados e menores */
+  .notif__btn,
+  .profile__btn{
+    width:36px;
+    height:36px;
+  }
+
+  /* 11) Saudação já some no seu CSS (max-width:720),
+         só garantindo que não “puxe” layout */
+  .topbar__greeting{
+    display:none !important;
+  }
+}
+
+@media (max-width:720px){
+
+  /* botão do menu criado via JS */
+  .mobileMenuBtn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    height:36px;
+    padding:0 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.14);
+    font-weight:900;
+    font-size:13px;
+    cursor:pointer;
+    user-select:none;
+  }
+  .mobileMenuBtn:hover{ background: rgba(255,255,255,.18); }
+  .mobileMenuBtn span{ font-weight:900; }
+
+  /* deixa header mais “compacto” */
+  .topbar.topbar--site{
+    padding:10px 12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .topbar__left{ gap:10px; min-width:0; }
+  .brand{
+    max-width: 44vw;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:14px;
+    font-weight:900;
+  }
+
+  /* esconde os links/dropdowns por padrão (mobile fechado) */
+  .topbar__left > .link,
+  .topbar__left > .topbar__dropdown{
+    display:none !important;
+  }
+
+  /* quando abrir o menu mobile, mostra tudo em coluna */
+  .topbar--site.is-mobile-open{
+    flex-wrap:wrap;
+  }
+
+  .topbar--site.is-mobile-open .topbar__left{
+    flex: 1 1 100%;
+    order: 3;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:6px;
+  }
+
+  .topbar--site.is-mobile-open .topbar__left > .link,
+  .topbar--site.is-mobile-open .topbar__left > .topbar__dropdown{
+    display:flex !important;
+    width:100%;
+    margin-left:0 !important;
+  }
+
+  /* trigger vira “botão” full width */
+  .topbar__dropdown-trigger,
+  .topbar__left > .link{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px 12px;
+    border-radius:12px;
+    background: rgba(255,255,255,.10);
+    border: 1px solid rgba(255,255,255,.14);
+    text-decoration:none;
+  }
+
+  /* dropdown menu no mobile vira painel normal (não flutua) */
+  .topbar__dropdown-menu{
+    position: static !important;
+    width:100%;
+    min-width:0 !important;
+    margin-top:6px;
+
+    /* mantém sua lógica de abrir/fechar via .is-open */
+    visibility:visible !important;
+    opacity:1 !important;
+    transform:none !important;
+    pointer-events:auto !important;
+
+    display:none;
+  }
+  .topbar__dropdown.is-open > .topbar__dropdown-menu{ display:block; }
+
+  /* submenu sempre inline no mobile */
+  .topbar__dropdown-submenu{
+    position: static !important;
+    width:100% !important;
+    min-width:0 !important;
+    margin-top:6px !important;
+    display:none;
+  }
+  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{ display:block; }
+
+  /* some com saudação no mobile (você já tinha, mas garante) */
+  .topbar__greeting{ display:none !important; }
+}
+
+/* =========================================================
+   FIX — quadrado roxo ao abrir menu mobile
+   ========================================================= */
+@media (max-width:720px){
+
+  /* header continua roxo */
+  .topbar.topbar--site{
+    position:relative;
+  }
+
+  /* container dos menus vira um painel */
+  .topbar--site.is-mobile-open .topbar__left{
+    background:#0f172a; /* mesmo fundo dos dropdowns */
+    border-radius:14px;
+    padding:10px;
+    margin-top:8px;
+
+    box-shadow:0 12px 28px rgba(0,0,0,.35);
+  }
+
+  /* remove fundo herdado dos links */
+  .topbar--site.is-mobile-open .topbar__dropdown,
+  .topbar--site.is-mobile-open .link{
+    background:transparent !important;
+  }
+
+  /* cada item vira card */
+  .topbar--site.is-mobile-open
+  .topbar__dropdown-trigger,
+  .topbar--site.is-mobile-open
+  .topbar__left > .link{
+    background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,255,255,.12);
+  }
+
+  .topbar--site.is-mobile-open
+  .topbar__dropdown-trigger:hover{
+    background:rgba(255,255,255,.10);
+  }
+
+}
+
+/* ✅ trava a altura visual do header (não deixa crescer) */
+body .topbar{
+  height:56px;                 /* ajuste se o seu header for outro */
+  display:flex;
+  align-items:center;
+}
+
+/* garante que o lado direito não estique */
+.topbar__right{
+  height:56px;                 /* igual ao header */
+  align-items:center;
+}
+
+/* botão continua no mesmo tamanho */
+.profile__btn{
+  width:38px;
+  height:38px;
+  overflow:visible;
+  position:relative;
+}
+
+/* ✅ NÃO aumenta width/height -> usa scale (não influencia layout) */
+.profile__avatar,
+.profile__fallback{
+  width:30px;
+  height:30px;
+  border-radius:999px;
+  transform: scale(1.45);      /* 30 * 1.45 ≈ 44px */
+  transform-origin:center;
+  border:1px solid rgba(255,255,255,.22);
+  object-fit:cover;
+  position:relative;
+  z-index:2;
+}

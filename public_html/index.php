@@ -35,10 +35,10 @@ try {
 } catch (Throwable $e) {
   $dashboards = null;
 }
+
 // =========================
 // INSIGHT (server-side)
 // =========================
-
 $insight = null;
 
 try {
@@ -155,6 +155,7 @@ try {
 } catch (Throwable $e) {
   $insight = null;
 }
+
 $chart = null;
 if ($insight) {
   $pctAting = max(0, min(100, (float)$insight['atingimento_mes_pct'] * 100));
@@ -163,7 +164,6 @@ if ($insight) {
 
   $real = (float)$insight['realizado_ate_hoje'];
   $meta = (float)$insight['meta_mes'];
-  $falta = max(0, $meta - $real);
 
   $maxProg = max(1.0, $meta);
   $realW = (int)round(100 * ($real / $maxProg));
@@ -183,7 +183,6 @@ if ($insight) {
     'pctRitmo' => $pctRitmo,
     'real' => $real,
     'meta' => $meta,
-    'falta' => $falta,
     'realW' => $realW,
     'faltaW' => $faltaW,
     'realDia' => $realDia,
@@ -209,17 +208,29 @@ if ($insight) {
   <style>
     html, body { height:100%; overflow:hidden; }
 
-    /* garante que o slide 1 (dashboard) tenha respiro e não “cole” no header */
-    .slide--dashboard {
-      padding-top: 10px;
+    /* =========================
+       ENTRADA SUAVE (rápida)
+       ========================= */
+    body.page main{
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .18s ease, transform .18s ease;
+      will-change: opacity, transform;
     }
+    body.page.is-ready main{
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* respiro do primeiro slide */
+    .slide--dashboard { padding-top: 10px; }
   </style>
 </head>
 
 <body class="page">
   <?php require_once __DIR__ . '/app/header.php'; ?>
 
-  <main> 
+  <main>
     <section class="carousel carousel--full full-bleed" id="mainCarousel">
       <button class="carousel__arrow carousel__arrow--prev" type="button" id="prevBtn" aria-label="Anterior">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -229,8 +240,6 @@ if ($insight) {
 
       <div class="carousel__viewport">
         <div class="carousel__track" id="track">
-
-          
 
           <!-- =====================================================
                SLIDES 2+: COMUNICADOS
@@ -277,7 +286,6 @@ if ($insight) {
                   </div>
                 </article>
               <?php endif; ?>
-
             <?php endforeach; ?>
           <?php endif; ?>
 
@@ -300,20 +308,31 @@ if ($insight) {
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
   <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
 
-  <!-- FORÇA SEMPRE COMEÇAR NO SLIDE 1 (dashboard) -->
+  <!-- ✅ ENTRADA SUAVE (ativa assim que o DOM está pronto) -->
+  <script>
+  (function(){
+    // ativa o fade-in rápido
+    const goReady = () => document.body.classList.add('is-ready');
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', goReady, { once:true });
+    } else {
+      goReady();
+    }
+  })();
+  </script>
+
+  <!-- FORÇA SEMPRE COMEÇAR NO SLIDE 1 -->
   <script>
   (function(){
     const track = document.getElementById('track');
     if (!track) return;
 
-    // sempre volta pro começo (sem animação)
     const go0 = () => track.scrollTo({ left: 0, behavior: 'auto' });
 
     go0();
     requestAnimationFrame(go0);
     setTimeout(go0, 120);
 
-    // se seu index-carousel.js salva/restaura posição, isso garante o “slide 1”
     window.addEventListener('pageshow', go0);
   })();
   </script>

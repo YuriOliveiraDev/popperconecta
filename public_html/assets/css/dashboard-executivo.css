@@ -584,3 +584,52 @@ html.dashboard-exec, html.dashboard-exec body{
   height: 6px !important;
   margin-top: 4px !important;
 }
+site-footer__inner {
+  color: #fff;
+}
+
+/* =========================
+   Medalhas TOP 3 (Executivo)
+   baseado no estilo mini-row do outro dashboard
+   ========================= */
+
+.dashboard-exec .top-item.is-top1{
+  background: linear-gradient(90deg, rgba(255,215,0,.16), rgba(255,255,255,0)) !important;
+  border: 1px solid rgba(255,215,0,.20) !important;
+  border-radius: 14px;
+}
+.dashboard-exec .top-item.is-top2{
+  background: linear-gradient(90deg, rgba(192,192,192,.18), rgba(255,255,255,0)) !important;
+  border: 1px solid rgba(160,160,160,.18) !important;
+  border-radius: 14px;
+}
+.dashboard-exec .top-item.is-top3{
+  background: linear-gradient(90deg, rgba(205,127,50,.18), rgba(255,255,255,0)) !important;
+  border: 1px solid rgba(205,127,50,.20) !important;
+  border-radius: 14px;
+}
+
+/* Rank do Top 3 */
+.dashboard-exec .top-item.is-top1 .top-rank{
+  background: rgba(255,215,0,.22) !important;
+  color: rgba(120,80,0,.95) !important;
+}
+.dashboard-exec .top-item.is-top2 .top-rank{
+  background: rgba(192,192,192,.22) !important;
+  color: rgba(70,70,70,.95) !important;
+}
+.dashboard-exec .top-item.is-top3 .top-rank{
+  background: rgba(205,127,50,.22) !important;
+  color: rgba(120,60,10,.95) !important;
+}
+
+/* (Opcional) Top 10 com destaque leve */
+.dashboard-exec .top-item.is-top{
+  background: rgba(92,44,140,.05);
+  border: 1px solid rgba(92,44,140,.10);
+  border-radius: 14px;
+}
+.dashboard-exec .top-item.is-top .top-rank{
+  background: rgba(92,44,140,.12);
+  color: rgba(92,44,140,.95);
+}

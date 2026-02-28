@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/app/auth.php';
 require_once __DIR__ . '/app/db.php';
-require_once __DIR__ . '/app/notifications.php';
+
 require_login();
+
+require_once __DIR__ . '/app/notifications.php';
+
 
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');

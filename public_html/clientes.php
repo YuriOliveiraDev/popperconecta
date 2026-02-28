@@ -4,10 +4,12 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/app/auth.php';
+
+require_login();
+
 require_once __DIR__ . '/app/header.php';
 require_once __DIR__ . '/app/config-totvs.php';
 
-require_login();
 
 $u = current_user();
 $activePage = 'clientes';
@@ -61,7 +63,7 @@ for ($i = 0; $i < 12; $i++) {
   <div class="pageHead">
     <div class="headTop">
       <div class="title">
-        <h1>Dashboard • Clientes</h1>
+        <h1>Dashboard • Clientes >>>>>>> NÃO CONSOLIDADO</h1>
         <div class="meta">
           <span>Atualizado: <strong id="updatedAt">--/--/---- --:--</strong></span>
           <span class="dot">•</span>

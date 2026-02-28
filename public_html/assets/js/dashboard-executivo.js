@@ -17,12 +17,12 @@ const TOP_N = 10;
 // LOADER (anti-piscar)
 // =========================
 const LOADER_DELAY_MS = 120; // só mostra se demorar mais que isso
-const LOADER_MIN_MS   = 350; // se mostrou, fica no mínimo
+const LOADER_MIN_MS = 350; // se mostrou, fica no mínimo
 
 let _loaderTimer = null;
 let _loaderShownAt = 0;
 
-function loaderOpen(title, sub){
+function loaderOpen(title, sub) {
   const api = window.PopperLoading;
   if (!api || typeof api.show !== 'function') return;
 
@@ -36,7 +36,7 @@ function loaderOpen(title, sub){
   }, LOADER_DELAY_MS);
 }
 
-function loaderClose(){
+function loaderClose() {
   const api = window.PopperLoading;
   if (!api || typeof api.hide !== 'function') return;
 
@@ -55,7 +55,7 @@ function loaderClose(){
   api.hide();
 }
 
-async function waitForLoader(maxMs = 800){
+async function waitForLoader(maxMs = 800) {
   const start = Date.now();
   while (Date.now() - start < maxMs) {
     if (window.PopperLoading && typeof window.PopperLoading.show === 'function') return true;
@@ -193,7 +193,12 @@ function renderTopList(containerId, badgeId, input) {
     const width = max > 0 ? (val / max) * 100 : 0;
 
     const row = document.createElement('div');
-    row.className = 'top-item' + (rank <= TOP_N ? ' is-top' : '');
+    let cls = 'top-item';
+    if (rank === 1) cls += ' is-top1';
+    else if (rank === 2) cls += ' is-top2';
+    else if (rank === 3) cls += ' is-top3';
+    else if (rank <= TOP_N) cls += ' is-top'; // opcional (top 10 “leve”)
+    row.className = cls;
 
     row.innerHTML = `
       <div class="top-rank">${rank}</div>
@@ -231,7 +236,10 @@ function renderChart(diario_mes) {
         label: 'Faturamento',
         data: values,
         tension: 0.25,
-        pointRadius: 2
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        pointHitRadius: 12,
+        pointBorderWidth: 2
       }]
     },
     options: {
