@@ -26,19 +26,19 @@ $notifItems = [];
 
 if (is_array($u) && isset($u['id'])) {
   $notifUnread = notifications_unread_count_for_user($u);
-  $notifItems  = notifications_latest_for_user($u, 5);
+  $notifItems = notifications_latest_for_user($u, 5);
 }
 
 $userName = (is_array($u) && !empty($u['name']) && is_string($u['name'])) ? $u['name'] : 'usuário';
 $userEmail = (is_array($u) && isset($u['email']) && is_string($u['email'])) ? $u['email'] : '';
-$userRole  = (is_array($u) && isset($u['role']) && is_string($u['role'])) ? $u['role'] : '';
+$userRole = (is_array($u) && isset($u['role']) && is_string($u['role'])) ? $u['role'] : '';
 $userSetor = (is_array($u) && isset($u['setor']) && is_string($u['setor'])) ? $u['setor'] : '';
 $userHierarquia = (is_array($u) && isset($u['hierarquia']) && is_string($u['hierarquia'])) ? $u['hierarquia'] : '';
 
 $current_dash = $current_dash ?? 'executivo';
-$activePage   = $activePage ?? '';
+$activePage = $activePage ?? '';
 
-$page_title = isset($page_title) && is_string($page_title) && $page_title !== '' ? $page_title : (defined('APP_NAME') ? (string)APP_NAME : 'Popper Conecta');
+$page_title = isset($page_title) && is_string($page_title) && $page_title !== '' ? $page_title : (defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta');
 $html_class = isset($html_class) && is_string($html_class) ? trim($html_class) : '';
 
 $extra_css = (isset($extra_css) && is_array($extra_css)) ? $extra_css : [];
@@ -56,9 +56,9 @@ if (is_array($u)) {
   foreach (PERMISSION_CATALOG as $perm => $meta) {
     if (user_can($perm, $u)) {
       $adminItems[] = [
-        'url' => (string)($meta['url'] ?? '#'),
-        'label' => (string)($meta['label'] ?? $perm),
-        'icon' => (string)($meta['icon'] ?? '⚙️'),
+        'url' => (string) ($meta['url'] ?? '#'),
+        'label' => (string) ($meta['label'] ?? $perm),
+        'icon' => (string) ($meta['icon'] ?? '⚙️'),
       ];
     }
   }
@@ -69,24 +69,30 @@ $initials = 'U';
 if ($userName !== '') {
   $parts = preg_split('/\s+/', trim($userName));
   if (is_array($parts) && count($parts) > 0) {
-    $first = strtoupper(substr((string)$parts[0], 0, 1));
-    $last  = (count($parts) > 1) ? strtoupper(substr((string)$parts[count($parts) - 1], 0, 1)) : '';
+    $first = strtoupper(substr((string) $parts[0], 0, 1));
+    $last = (count($parts) > 1) ? strtoupper(substr((string) $parts[count($parts) - 1], 0, 1)) : '';
     $initials = $first . $last;
   }
 }
 
 // Saudação
-$h = (int)date('H');
-if ($h >= 5 && $h < 12) $greeting = 'Ótimo Dia';
-elseif ($h >= 12 && $h < 18) $greeting = 'Ótima Tarde';
-else $greeting = 'Ótima Noite';
+$h = (int) date('H');
+if ($h >= 5 && $h < 12)
+  $greeting = 'Ótimo Dia';
+elseif ($h >= 12 && $h < 18)
+  $greeting = 'Ótima Tarde';
+else
+  $greeting = 'Ótima Noite';
 
 ?><!doctype html>
 <html lang="pt-BR" class="<?= htmlspecialchars($html_class, ENT_QUOTES, 'UTF-8') ?>">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
+  <link rel="icon" type="image/png" href="/assets/img/favicon.ico">
+  <link rel="shortcut icon" href="/assets/img/favicon.ico">
+  <link rel="apple-touch-icon" href="/assets/img/favicon.png">
   <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
 
   <?php
@@ -96,152 +102,162 @@ else $greeting = 'Ótima Noite';
 
   <?php if (!empty($extra_css)): ?>
     <?php foreach ($extra_css as $href): ?>
-      <link rel="stylesheet" href="<?= htmlspecialchars((string)$href, ENT_QUOTES, 'UTF-8') ?>">
+      <link rel="stylesheet" href="<?= htmlspecialchars((string) $href, ENT_QUOTES, 'UTF-8') ?>">
     <?php endforeach; ?>
   <?php endif; ?>
 
   <?php if (!empty($extra_js_head)): ?>
     <?php foreach ($extra_js_head as $src): ?>
-      <script src="<?= htmlspecialchars((string)$src, ENT_QUOTES, 'UTF-8') ?>"></script>
+      <script src="<?= htmlspecialchars((string) $src, ENT_QUOTES, 'UTF-8') ?>"></script>
     <?php endforeach; ?>
   <?php endif; ?>
 </head>
 
 <body>
 
-<header class="topbar topbar--site">
-  <div class="topbar__left">
-    <a class="brand" href="/index.php" style="text-decoration:none;">
-      <?= htmlspecialchars(defined('APP_NAME') ? (string)APP_NAME : 'Popper Conecta', ENT_QUOTES, 'UTF-8') ?>
-    </a>
+  <header class="topbar topbar--site">
+    <div class="topbar__left">
+      <a class="brand" href="/index.php" style="text-decoration:none;">
+        <?= htmlspecialchars(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta', ENT_QUOTES, 'UTF-8') ?>
+      </a>
 
-    <a class="link<?= ($activePage === 'home' ? ' link--active' : '') ?>" href="/index.php" style="margin-left:12px;">
-      Início
-    </a>
+      <a class="link<?= ($activePage === 'home' ? ' link--active' : '') ?>" href="/index.php" style="margin-left:12px;">
+        Início
+      </a>
 
-    <?php if (!empty($adminItems)): ?>
-      <div class="topbar__dropdown" style="margin-left:12px;">
-        <a class="topbar__dropdown-trigger" href="#" id="adminTrigger" aria-haspopup="true" aria-expanded="false">Administração</a>
-        <div class="topbar__dropdown-menu" id="adminMenu" role="menu">
-          <?php foreach ($adminItems as $item): ?>
-            <a class="topbar__dropdown-item" href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>">
-              <span class="topbar__dropdown-icon"><?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?></span>
-              <span class="topbar__dropdown-label"><?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?></span>
-            </a>
-          <?php endforeach; ?>
+      <?php if (!empty($adminItems)): ?>
+        <div class="topbar__dropdown" style="margin-left:12px;">
+          <a class="topbar__dropdown-trigger" href="#" id="adminTrigger" aria-haspopup="true"
+            aria-expanded="false">Administração</a>
+          <div class="topbar__dropdown-menu" id="adminMenu" role="menu">
+            <?php foreach ($adminItems as $item): ?>
+              <a class="topbar__dropdown-item" href="<?= htmlspecialchars($item['url'], ENT_QUOTES, 'UTF-8') ?>">
+                <span class="topbar__dropdown-icon"><?= htmlspecialchars($item['icon'], ENT_QUOTES, 'UTF-8') ?></span>
+                <span class="topbar__dropdown-label"><?= htmlspecialchars($item['label'], ENT_QUOTES, 'UTF-8') ?></span>
+              </a>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
+
+      <!-- DASHBOARD -->
+      <div class="topbar__dropdown" style="margin-left:8px;" id="dashWrap">
+        <a class="topbar__dropdown-trigger" href="#" id="dashTrigger" aria-haspopup="true"
+          aria-expanded="false">Dashboard</a>
+
+        <div class="topbar__dropdown-menu" id="dashMenu" role="menu" aria-label="Dashboard">
+          <!-- Grupo: Comercial -->
+          <div class="topbar__dropdown-group" data-submenu>
+            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+              aria-expanded="false">
+              <span class="topbar__dropdown-icon"></span>
+              <span class="topbar__dropdown-label">Comercial</span>
+              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+            </button>
+
+            <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
+              <a class="topbar__dropdown-item" href="/dashboard.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Faturamento</span>
+              </a>
+
+              <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Executivo</span>
+              </a>
+
+              <a class="topbar__dropdown-item" href="/insight_comercial.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Insight</span>
+              </a>
+
+              <a class="topbar__dropdown-item" href="/clientes.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Clientes</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Grupo: Financeiro -->
+          <div class="topbar__dropdown-group" data-submenu>
+            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+              aria-expanded="false">
+              <span class="topbar__dropdown-icon"></span>
+              <span class="topbar__dropdown-label">Financeiro</span>
+              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+            </button>
+
+            <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
+              <a class="topbar__dropdown-item" href="/admin/dashboardContasP.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Contas a Pagar</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Grupo: Comex -->
+          <div class="topbar__dropdown-group" data-submenu>
+            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+              aria-expanded="false">
+              <span class="topbar__dropdown-icon"></span>
+              <span class="topbar__dropdown-label">Comex</span>
+              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+            </button>
+
+            <div class="topbar__dropdown-submenu" role="menu" aria-label="Comex">
+              <a class="topbar__dropdown-item" href="/importacoes.php">
+                <span class="topbar__dropdown-icon"></span>
+                <span class="topbar__dropdown-label">Importações</span>
+              </a>
+            </div>
+          </div>
         </div>
       </div>
-    <?php endif; ?>
 
-    <!-- DASHBOARD -->
-    <div class="topbar__dropdown" style="margin-left:8px;" id="dashWrap">
-      <a class="topbar__dropdown-trigger" href="#" id="dashTrigger" aria-haspopup="true" aria-expanded="false">Dashboard</a>
-
-      <div class="topbar__dropdown-menu" id="dashMenu" role="menu" aria-label="Dashboard">
-        <!-- Grupo: Comercial -->
-        <div class="topbar__dropdown-group" data-submenu>
-          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
-            <span class="topbar__dropdown-icon"></span>
-            <span class="topbar__dropdown-label">Comercial</span>
-            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-          </button>
-
-          <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
-            <a class="topbar__dropdown-item" href="/dashboard.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Faturamento</span>
-            </a>
-
-            <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Executivo</span>
-            </a>
-
-            <a class="topbar__dropdown-item" href="/insight_comercial.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Insight</span>
-            </a>
-
-            <a class="topbar__dropdown-item" href="/clientes.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Clientes</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Grupo: Financeiro -->
-        <div class="topbar__dropdown-group" data-submenu>
-          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
-            <span class="topbar__dropdown-icon"></span>
-            <span class="topbar__dropdown-label">Financeiro</span>
-            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-          </button>
-
-          <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
-            <a class="topbar__dropdown-item" href="/admin/dashboardContasP.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Contas a Pagar</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Grupo: Comex -->
-        <div class="topbar__dropdown-group" data-submenu>
-          <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true" aria-expanded="false">
-            <span class="topbar__dropdown-icon"></span>
-            <span class="topbar__dropdown-label">Comex</span>
-            <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-          </button>
-
-          <div class="topbar__dropdown-submenu" role="menu" aria-label="Comex">
-            <a class="topbar__dropdown-item" href="/importacoes.php">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Importações</span>
-            </a>
-          </div>
+      <div class="topbar__dropdown" style="margin-left:8px;">
+        <a class="topbar__dropdown-trigger<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php"
+          id="coinsTrigger" aria-haspopup="true" aria-expanded="false">Popper Coins</a>
+        <div class="topbar__dropdown-menu" id="coinsMenu" role="menu">
+          <a class="topbar__dropdown-item" href="/coins.php"><span class="topbar__dropdown-label">Meus
+              Poppercoins</span></a>
+          <a class="topbar__dropdown-item" href="/coins_resgatar.php"><span
+              class="topbar__dropdown-label">Resgatar</span></a>
+          <a class="topbar__dropdown-item" href="/ranking.php"><span class="topbar__dropdown-label">Ranking</span></a>
         </div>
       </div>
     </div>
 
-    <div class="topbar__dropdown" style="margin-left:8px;">
-      <a class="topbar__dropdown-trigger<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php" id="coinsTrigger" aria-haspopup="true" aria-expanded="false">Popper Coins</a>
-      <div class="topbar__dropdown-menu" id="coinsMenu" role="menu">
-        <a class="topbar__dropdown-item" href="/coins.php"><span class="topbar__dropdown-label">Meus Poppercoins</span></a>
-        <a class="topbar__dropdown-item" href="/coins_resgatar.php"><span class="topbar__dropdown-label">Resgatar</span></a>
-        <a class="topbar__dropdown-item" href="/ranking.php"><span class="topbar__dropdown-label">Ranking</span></a>
-      </div>
-    </div>
-  </div>
+    <div class="topbar__right">
 
-  <div class="topbar__right">
+      <div class="notif" id="notifWrap">
+        <button class="notif__btn" type="button" id="notifTrigger" aria-haspopup="true" aria-expanded="false"
+          title="Notificações">
+          <span class="notif__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+              <path fill="currentColor"
+                d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" />
+            </svg>
+          </span>
 
-    <div class="notif" id="notifWrap">
-      <button class="notif__btn" type="button" id="notifTrigger" aria-haspopup="true" aria-expanded="false" title="Notificações">
-        <span class="notif__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-            <path fill="currentColor" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" />
-          </svg>
-        </span>
+          <?php if ($notifUnread > 0): ?>
+            <span class="notif__badge"><?= $notifUnread > 99 ? '99+' : (int) $notifUnread ?></span>
+          <?php endif; ?>
+        </button>
 
-        <?php if ($notifUnread > 0): ?>
-          <span class="notif__badge"><?= $notifUnread > 99 ? '99+' : (int)$notifUnread ?></span>
-        <?php endif; ?>
-      </button>
+        <div class="notif__menu" id="notifMenu" role="menu" aria-label="Notificações">
+          <div class="notif__header">
+            <div class="notif__title">Notificações</div>
+            <button type="button" class="notif__markall" id="notifMarkAll">Marcar todas</button>
+          </div>
 
-      <div class="notif__menu" id="notifMenu" role="menu" aria-label="Notificações">
-        <div class="notif__header">
-          <div class="notif__title">Notificações</div>
-          <button type="button" class="notif__markall" id="notifMarkAll">Marcar todas</button>
-        </div>
+          <?php if (!$notifItems): ?>
+            <div class="notif__empty">Sem notificações.</div>
+          <?php else: ?>
+            <?php foreach ($notifItems as $n): ?>
+              <?php
+              $unread = ((int) ($n['is_read'] ?? 0) === 0);
 
-        <?php if (!$notifItems): ?>
-          <div class="notif__empty">Sem notificações.</div>
-        <?php else: ?>
-          <?php foreach ($notifItems as $n): ?>
-            <?php
-              $unread = ((int)($n['is_read'] ?? 0) === 0);
-
-              $href = trim((string)($n['link'] ?? ''));
+              $href = trim((string) ($n['link'] ?? ''));
               if ($href === '' || $href === '#') {
                 $href = '#';
                 $isClickable = false;
@@ -258,48 +274,50 @@ else $greeting = 'Ótima Noite';
                   }
                 }
               }
-            ?>
-            <a class="notif__item<?= $unread ? ' is-unread' : '' ?><?= $isClickable ? '' : ' is-disabled' ?>"
-               href="<?= htmlspecialchars($href, ENT_QUOTES, 'UTF-8') ?>"
-               <?= $isClickable ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;"' ?>
-               data-id="<?= (int)($n['id'] ?? 0) ?>">
-              <div class="notif__item-title"><?= htmlspecialchars((string)($n['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
-              <?php if (!empty($n['message'])): ?>
-                <div class="notif__item-msg"><?= htmlspecialchars((string)$n['message'], ENT_QUOTES, 'UTF-8') ?></div>
-              <?php endif; ?>
-              <div class="notif__item-date"><?= htmlspecialchars((string)($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?></div>
-            </a>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </div>
-    </div>
-
-    <div class="topbar__greeting" aria-label="Saudação">
-      <?= htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') ?>
-      <span class="topbar__greeting-name">, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>!</span>
-    </div>
-
-    <div class="profile" id="profileWrap">
-      <button class="profile__btn" type="button" id="profileTrigger" aria-haspopup="true" aria-expanded="false">
-        <?php if ($avatarUrl !== ''): ?>
-          <img class="profile__avatar" src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>" alt="Foto de perfil" />
-        <?php else: ?>
-          <span class="profile__fallback" aria-hidden="true"><?= htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') ?></span>
-        <?php endif; ?>
-      </button>
-
-      <div class="profile__menu" id="profileMenu" role="menu" aria-label="Menu do usuário">
-        <div class="profile__header">
-          <div class="profile__name"><?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?></div>
-          <?php if ($userEmail !== ''): ?>
-            <div class="profile__email"><?= htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') ?></div>
+              ?>
+              <a class="notif__item<?= $unread ? ' is-unread' : '' ?><?= $isClickable ? '' : ' is-disabled' ?>"
+                href="<?= htmlspecialchars($href, ENT_QUOTES, 'UTF-8') ?>" <?= $isClickable ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;"' ?> data-id="<?= (int) ($n['id'] ?? 0) ?>">
+                <div class="notif__item-title"><?= htmlspecialchars((string) ($n['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                </div>
+                <?php if (!empty($n['message'])): ?>
+                  <div class="notif__item-msg"><?= htmlspecialchars((string) $n['message'], ENT_QUOTES, 'UTF-8') ?></div>
+                <?php endif; ?>
+                <div class="notif__item-date"><?= htmlspecialchars((string) ($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                </div>
+              </a>
+            <?php endforeach; ?>
           <?php endif; ?>
         </div>
-
-        <a class="profile__item" href="/me.php" role="menuitem">Meus dados</a>
-        <a class="profile__item profile__item--danger" href="/logout.php" role="menuitem">Sair</a>
       </div>
-    </div>
 
-  </div>
-</header>
+      <div class="topbar__greeting" aria-label="Saudação">
+        <?= htmlspecialchars($greeting, ENT_QUOTES, 'UTF-8') ?>
+        <span class="topbar__greeting-name">, <?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?>!</span>
+      </div>
+
+      <div class="profile" id="profileWrap">
+        <button class="profile__btn" type="button" id="profileTrigger" aria-haspopup="true" aria-expanded="false">
+          <?php if ($avatarUrl !== ''): ?>
+            <img class="profile__avatar" src="<?= htmlspecialchars($avatarUrl, ENT_QUOTES, 'UTF-8') ?>"
+              alt="Foto de perfil" />
+          <?php else: ?>
+            <span class="profile__fallback"
+              aria-hidden="true"><?= htmlspecialchars($initials, ENT_QUOTES, 'UTF-8') ?></span>
+          <?php endif; ?>
+        </button>
+
+        <div class="profile__menu" id="profileMenu" role="menu" aria-label="Menu do usuário">
+          <div class="profile__header">
+            <div class="profile__name"><?= htmlspecialchars($userName, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php if ($userEmail !== ''): ?>
+              <div class="profile__email"><?= htmlspecialchars($userEmail, ENT_QUOTES, 'UTF-8') ?></div>
+            <?php endif; ?>
+          </div>
+
+          <a class="profile__item" href="/me.php" role="menuitem">Meus dados</a>
+          <a class="profile__item profile__item--danger" href="/logout.php" role="menuitem">Sair</a>
+        </div>
+      </div>
+
+    </div>
+  </header>
