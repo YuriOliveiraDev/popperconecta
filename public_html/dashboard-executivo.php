@@ -93,7 +93,7 @@ $meses = [
             <h3 class="table-title">Top Produtos</h3>
             <div class="top-sub">(scroll para ver todos)</div>
           </div>
-          <div class="top-badge" id="badgeTopProdutos">—</div>
+          <div class="top-badge" id="">Top50</div>
         </div>
         <div class="top-list" id="listTopProdutos"></div>
       </div>
@@ -104,7 +104,7 @@ $meses = [
             <h3 class="table-title">Top Vendedores</h3>
             <div class="top-sub">(scroll para ver todos)</div>
           </div>
-          <div class="top-badge" id="badgeTopVendedores">—</div>
+          <div class="top-badge" id="">Top 50</div>
         </div>
         <div class="top-list" id="listTopVendedores"></div>
       </div>

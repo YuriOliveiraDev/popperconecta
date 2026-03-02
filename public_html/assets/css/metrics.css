@@ -20,10 +20,9 @@
 }
 
 /* Fundo mais clean (não mexe no restante do sistema) */
-body.page{
+body.page.metrics{
   background: var(--m-bg);
 }
-
 /* ===== OVERRIDE FORTE: full width ===== */
 main.metrics.metrics--fullwidth.container{
   max-width: none !important;
@@ -267,4 +266,293 @@ main.metrics.metrics--two-col .btn.btn--primary{
   0%{ transform: scale(.7); opacity:.3; }
   50%{ transform: scale(1); opacity:.9; }
   100%{ transform: scale(.7); opacity:.3; }
+}
+
+/* =========================
+   Alerts (blindado / não quebra grid)
+   ========================= */
+.metrics .metrics-alert{
+  display:flex;
+  align-items:flex-start;
+  gap:10px;
+
+  width:100%;
+  box-sizing:border-box;
+  padding:12px 12px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(15,23,42,.12);
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 8px 18px rgba(2,6,23,.06);
+
+  margin: 0 0 12px 0;
+
+  /* impede “estourar” o grid */
+  overflow:hidden;
+}
+
+.metrics .metrics-alert__icon{
+  flex:0 0 auto;
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+.metrics .metrics-alert__text{
+  flex:1 1 auto;
+  min-width: 0;
+
+  color: rgba(15,23,42,.86);
+  font-weight: 800;
+  font-size: 13px;
+  line-height: 1.35;
+
+  /* quebra texto longo sem destruir layout */
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+.metrics .metrics-alert__close{
+  flex:0 0 auto;
+  border:0;
+  background: transparent;
+  cursor:pointer;
+
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+
+  font-size: 18px;
+  line-height: 1;
+
+  color: rgba(15,23,42,.55);
+}
+.metrics .metrics-alert__close:hover{
+  background: rgba(15,23,42,.06);
+  color: rgba(15,23,42,.75);
+}
+
+/* variações */
+.metrics .metrics-alert--success{
+  border-color: rgba(34,197,94,.35);
+  background: rgba(34,197,94,.10);
+}
+.metrics .metrics-alert--error{
+  border-color: rgba(239,68,68,.35);
+  background: rgba(239,68,68,.10);
+}
+.metrics .metrics-alert--info{
+  border-color: rgba(59,130,246,.30);
+  background: rgba(59,130,246,.10);
+}
+
+/* Ajuste manual: alert não pode ocupar uma coluna do grid */
+main.metrics.metrics--two-col .group > .metrics-alert{
+  grid-column: 1 / -1 !important; /* ocupa as 2 colunas */
+}
+
+/* E o form do ajuste manual também deve ocupar as 2 colunas */
+main.metrics.metrics--two-col .group > form#ajusteForm{
+  grid-column: 1 / -1 !important;
+}
+/* =========================
+   FIX Avatar coluna Foto
+   ========================= */
+
+.admin-users th.col-photo{
+  text-align: center;
+}
+
+.admin-users td.col-photo{
+  width: 72px;
+  min-width: 72px;
+  text-align: center;
+  vertical-align: middle; /* centraliza vertical */
+  padding: 10px 0;        /* remove padding lateral desigual */
+}
+
+/* Wrapper flex para centralização perfeita */
+.admin-users td.col-photo{
+  align-items: center;
+  justify-content: center;
+}
+
+/* Avatar */
+.admin-users .avatar,
+.admin-users .avatar--placeholder{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+/* =========================
+   FIX Avatar coluna Foto (SEM quebrar <table>)
+   ========================= */
+
+.admin-users th.col-photo,
+.admin-users td.col-photo{
+  width: 72px;
+  min-width: 72px;
+  text-align: center;
+  vertical-align: middle; /* centraliza vertical na célula */
+  padding: 10px 0;
+}
+
+/* avatar imagem */
+.admin-users td.col-photo img.avatar{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  object-fit: cover;
+  display: inline-block; /* mantém comportamento normal em tabela */
+}
+
+/* placeholder 👤 */
+.admin-users td.col-photo .avatar--placeholder{
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  display: inline-flex;      /* centraliza o emoji */
+  align-items: center;
+  justify-content: center;
+}
+
+/* =====================================================
+   FIX REAL — Avatar alinhado perfeitamente na tabela
+   ===================================================== */
+
+/* célula da foto */
+.admin-users td.col-photo{
+  width: 72px;
+  min-width: 72px;
+  text-align: center;
+  vertical-align: middle;
+  padding: 8px 0;
+}
+
+/* avatar IMG e placeholder IGUAIS */
+.admin-users .avatar,
+.admin-users .avatar--placeholder{
+  width: 36px !important;
+  height: 36px !important;
+
+  border-radius: 50%;
+  box-sizing: border-box;
+
+  vertical-align: middle;
+}
+
+/* placeholder precisa ser inline-flex */
+.admin-users .avatar--placeholder{
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1;     /* 🔥 remove empurrão vertical */
+  font-size: 18px;
+}
+
+/* imagem real */
+.admin-users img.avatar{
+  display: inline-block;
+  object-fit: cover;
+}
+
+/* =====================================================
+   FORCE: Centralização 100% da coluna Foto
+   (blindado contra line-height/baseline/estilos globais)
+   ===================================================== */
+
+.admin-users td.col-photo{
+  width: 72px !important;
+  min-width: 72px !important;
+  padding: 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+/* wrapper que centraliza sem quebrar table */
+.admin-users td.col-photo .cell-center{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 52px !important;     /* garante “centro” mesmo se a linha crescer */
+  line-height: 0 !important;       /* mata baseline */
+  vertical-align: middle !important;
+}
+
+/* força avatar e placeholder iguais */
+.admin-users td.col-photo img.avatar,
+.admin-users td.col-photo .avatar.avatar--placeholder{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  vertical-align: middle !important;
+}
+
+/* placeholder centrado e sem empurrão */
+.admin-users td.col-photo .avatar.avatar--placeholder{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  font-size: 18px !important;
+}
+
+/* imagem */
+.admin-users td.col-photo img.avatar{
+  display: block !important;       /* remove baseline de inline */
+  object-fit: cover !important;
+}
+
+/* =====================================================
+   FORCE ABSOLUTO — Coluna FOTO alinhada no centro
+   (mata o padding global da tabela)
+   ===================================================== */
+
+/* 1) mata o padding genérico SÓ na col-photo */
+.admin-users .table tbody td.col-photo,
+.admin-users .table thead th.col-photo{
+  padding: 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  width: 72px !important;
+  min-width: 72px !important;
+}
+
+/* 2) wrapper ocupa a célula inteira e centraliza */
+.admin-users .table tbody td.col-photo .cell-center{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 59px !important; /* igual ao height que o DevTools mostrou (72x59) */
+
+  line-height: 0 !important;   /* mata baseline */
+}
+
+/* 3) avatar e placeholder idênticos */
+.admin-users .table tbody td.col-photo img.avatar,
+.admin-users .table tbody td.col-photo .avatar.avatar--placeholder{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* 4) placeholder sem empurrão de fonte */
+.admin-users .table tbody td.col-photo .avatar.avatar--placeholder{
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
 }

@@ -695,3 +695,126 @@ body{
   border:1px solid rgba(15,23,42,.12);
   color:rgba(15,23,42,.55);
 }
+
+/* =========================================================
+   FIX: Não deixe o users.css "mandar" no header global
+   (evita quebrar o ícone do perfil / altura do header)
+   ========================================================= */
+
+
+/* Em vez disso: escopo pro admin-users (se você quiser um topo próprio, use outro nome) */
+/* (Se você não tem topbar próprio no admin, pode só manter vazio mesmo) */
+
+/* =========================================================
+   FIX: Avatar / ícone do perfil no header (header.php)
+   ========================================================= */
+
+header .profile__btn,
+.topbar .profile__btn{
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+header .profile__btn img,
+.topbar .profile__btn img,
+header .profile__avatar,
+.topbar .profile__avatar{
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* Evita “esticar” o header por line-height/padding */
+header .topbar,
+.topbar{
+  min-height: 56px;
+}
+
+header .topbar *{
+  line-height: normal;
+}
+/* =========================
+   FIX: Header "Foto" virando "FO..."
+   + centraliza avatar
+   ========================= */
+
+.admin-users th.col-photo,
+.admin-users td.col-photo{
+  width: 72px;        /* aumenta um pouco */
+  min-width: 72px;
+  text-align: center;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* NÃO aplicar ellipsis na coluna Foto */
+.admin-users th.col-photo,
+.admin-users td.col-photo{
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* garante que o texto "Foto" apareça inteiro */
+.admin-users th.col-photo{
+  white-space: nowrap;
+}
+
+/* centraliza as bolinhas */
+.admin-users td.col-photo .avatar,
+.admin-users td.col-photo .avatar--placeholder{
+  margin: 0 auto;
+  display: block;
+}
+
+/* =====================================================
+   FIX ÚNICO — coluna FOTO (sem conflito)
+   ===================================================== */
+
+/* remove padding global só dessa coluna */
+.admin-users .table thead th.col-photo,
+.admin-users .table tbody td.col-photo{
+  padding: 0 !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  overflow: visible !important;
+}
+
+/* wrapper obrigatório pra centralizar perfeito */
+.admin-users .table tbody td.col-photo .cell-center{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 58px !important; /* altura média da linha */
+  line-height: 0 !important;
+}
+
+/* avatar img */
+.admin-users .table tbody td.col-photo img.avatar{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+  display: block !important;
+  margin: 0 !important;
+}
+
+/* placeholder */
+.admin-users .table tbody td.col-photo .avatar--placeholder{
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+}

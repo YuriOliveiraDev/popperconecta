@@ -39,10 +39,10 @@
   }
 
   // =========================
-  // LOADER (anti-flicker + wait)
+  // LOADER
   // =========================
-  const LOADER_DELAY_MS = 120; // só mostra se demorar
-  const LOADER_MIN_MS = 350;   // se mostrou, fica no mínimo
+  const LOADER_DELAY_MS = 120;
+  const LOADER_MIN_MS = 350;
 
   let _loaderTimer = null;
   let _loaderShownAt = 0;
@@ -159,9 +159,7 @@
               }
             }
           },
-          scales: {
-            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
-          }
+          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
         },
         plugins: [valueLabelPlugin]
       });
@@ -191,9 +189,7 @@
               }
             }
           },
-          scales: {
-            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
-          }
+          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
         },
         plugins: [valueLabelPlugin]
       });
@@ -227,9 +223,7 @@
               }
             }
           },
-          scales: {
-            y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } }
-          }
+          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
         },
         plugins: [valueLabelPlugin]
       });
@@ -241,9 +235,11 @@
     const updatedAt = payload.updated_at || '—';
     const ref = buildRefLabels(updatedAt);
 
+    // ✅ principal do mês = mes_total (FATURADO + IM)
     const fatMes = num(v.mes_faturado);
-    const agMes = num(v.mes_agendado);
-    const totalMes = (fatMes + agMes) || num(v.realizado_ate_hoje);
+    const imMes  = num(v.mes_im ?? v.mes_agendado);
+    const agMes  = num(v.mes_ag);
+    const totalMes = num(v.mes_total) || (fatMes + imMes) || num(v.realizado_ate_hoje);
 
     setText('titleProgressMonth', `Progresso (Mês) — ${ref.mesAno}`);
     setText('titleProgressYear', `Progresso (Ano) — ${ref.ano}`);
@@ -255,7 +251,8 @@
 
     setText('kpi-mes-atual', brl.format(totalMes));
     setText('kpi-mes-fat', brl.format(fatMes));
-    setText('kpi-mes-ag', brl.format(agMes));
+    setText('kpi-mes-ag', brl.format(imMes));   // IMEDIATO
+    setText('kpi-mes-ag2', brl.format(agMes));  // AG
 
     setText('kpi-meta-ano', brl.format(num(v.meta_ano)));
     setText('kpi-realizado-ano', brl.format(num(v.realizado_ano_acum)));
@@ -284,7 +281,7 @@
     ensureCharts(updatedAt);
 
     if (chartProgressMonth) {
-      chartProgressMonth.data.datasets[0].data = [num(v.realizado_ate_hoje)];
+      chartProgressMonth.data.datasets[0].data = [totalMes];
       chartProgressMonth.data.datasets[1].data = [num(v.meta_mes)];
       chartProgressMonth.update('none');
     }
@@ -301,28 +298,53 @@
       chartPace.update('none');
     }
 
+        // =========================
+    // DETALHAMENTO (tabela indicador → valor)
+    // =========================
     const tbody = document.getElementById('topProductsTable')?.querySelector('tbody');
     if (tbody) {
       const diasRest = Math.max(0, num(v.dias_uteis_trabalhar) - num(v.dias_uteis_trabalhados));
+
+      const fatMes = num(v.mes_faturado);
+      const imMes  = num(v.mes_im ?? v.mes_agendado);
+      const agMes  = num(v.mes_ag);
+      const totalMes = num(v.mes_total) || (fatMes + imMes) || num(v.realizado_ate_hoje);
+
+      const fatHoje = num(v.hoje_faturado);
+      const imHoje  = num(v.hoje_im ?? v.hoje_agendado);
+      const agHoje  = num(v.hoje_ag);
+      const totalHoje = num(v.hoje_total) || (fatHoje + imHoje);
+
       const rows = [
         ['Meta do ano', brl.format(num(v.meta_ano))],
-        ['Falta para atingir a meta do ano', brl.format(num(v.falta_meta_ano))],
+        ['Realizado ano acumulado', brl.format(num(v.realizado_ano_acum))],
+        ['Falta para meta do ano', brl.format(num(v.falta_meta_ano))],
+
         ['Meta do mês', brl.format(num(v.meta_mes))],
-        ['Realizado até hoje (mês)', brl.format(num(v.realizado_ate_hoje))],
-        ['Falta para atingir a meta do mês', brl.format(num(v.falta_meta_mes))],
-        ['Quanto já atingimos (mês)', pct0.format(num(v.atingimento_mes_pct))],
-        ['Quanto deveria ter até hoje', brl.format(num(v.deveria_ate_hoje))],
-        ['Realizado anual acumulado até hoje', brl.format(num(v.realizado_ano_acum))],
+        ['Realizado (mês) — principal (Faturado + IM)', brl.format(totalMes)],
+        ['Faturado no mês ', brl.format(fatMes)],
+        ['Agendado IMEDIATO no mês ', brl.format(imMes)],
+        ['Agendado AG no mês ', brl.format(agMes)],
+
+        ['Hoje — principal (Faturado + IM)', brl.format(totalHoje)],
+        ['Faturado hoje ', brl.format(fatHoje)],
+        ['Agendado IMEDIATO p/ hoje ', brl.format(imHoje)],
+        ['Agendado AG p/ hoje ', brl.format(agHoje)],
+
+        ['Deveria ter até hoje', brl.format(num(v.deveria_ate_hoje))],
+        ['Atingimento (mês)', pct0.format(num(v.atingimento_mes_pct))],
+
         ['Meta fixa por dia útil (teórica)', brl.format(num(v.meta_dia_util))],
         ['Meta necessária por dia útil (dinâmica)', brl.format(num(v.a_faturar_dia_util))],
-        ['Dias úteis restantes', String(diasRest)],
         ['Realizado por dia útil', brl.format(num(v.realizado_dia_util))],
-        ['Realizado por dia útil (%)', pct0.format(num(v.realizado_dia_util_pct))],
-        ['Dias úteis a trabalhar', String(num(v.dias_uteis_trabalhar))],
-        ['Dias úteis trabalhados', String(num(v.dias_uteis_trabalhados))],
-        ['Se continuar assim vamos bater a meta?', (v.vai_bater_meta ?? '—')],
-        ['Se continuar assim vamos fechar em quanto?', brl.format(num(v.fechar_em))],
-        ['Equivale a', pct0.format(num(v.equivale_pct))]
+        ['Produtividade (dia útil)', pct0.format(num(v.realizado_dia_util_pct))],
+
+        ['Dias úteis (trabalhados / total)', `${num(v.dias_uteis_trabalhados)} / ${num(v.dias_uteis_trabalhar)}`],
+        ['Dias úteis restantes', String(diasRest)],
+
+        ['Projeção de fechamento (mês)', brl.format(num(v.fechar_em))],
+        ['Equivale a (projeção/meta)', pct0.format(num(v.equivale_pct))],
+        ['Vai bater a meta?', (v.vai_bater_meta ?? '—')],
       ];
 
       tbody.innerHTML = '';
@@ -338,13 +360,16 @@
     const v = basePayload.values || {};
     const updatedAt = basePayload.updated_at || '—';
 
+    // ✅ principal HOJE = hoje_total (FATURADO + IM pra hoje)
     const fatHoje = num(v.hoje_faturado);
-    const agHoje = num(v.hoje_agendado);
-    const totalHoje = (fatHoje + agHoje) || num(v.hoje_total);
+    const imHoje  = num(v.hoje_im ?? v.hoje_agendado);
+    const agHoje  = num(v.hoje_ag);
+    const totalHoje = num(v.hoje_total) || (fatHoje + imHoje);
 
     setText('kpi-hoje-total', brl.format(totalHoje));
     setText('kpi-hoje-fat', brl.format(fatHoje));
-    setText('kpi-hoje-ag', brl.format(agHoje));
+    setText('kpi-hoje-ag', brl.format(imHoje));   // IM
+    setText('kpi-hoje-ag2', brl.format(agHoje));  // AG
     setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
 
     const diasTotais = int(v.dias_uteis_trabalhar);
@@ -382,7 +407,6 @@
     return await res.json();
   }
 
-  // ✅ refresh agora garante loader na carga inicial
   async function refresh(forceTotvs = false, opts = {}) {
     const dash = (window.DASH_CURRENT || 'executivo');
     const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
@@ -392,8 +416,8 @@
     const sub = opts.sub || 'Buscando dados da API';
 
     if (showLoader) {
-      await waitForLoader(800); // ✅ garante PopperLoading existe
-      loaderOpen(title, sub);   // ✅ anti-flicker
+      await waitForLoader(800);
+      loaderOpen(title, sub);
     }
 
     try {
@@ -408,28 +432,19 @@
       return payload;
     } catch (e) {
       console.error(e);
-
       if (showLoader) loaderClose();
       window.PopperLoading?.error?.('Não consegui carregar os dados. Tente novamente.');
-
       window.dispatchEvent(new CustomEvent('dash:error', { detail: { message: 'Falha ao carregar os dados do dashboard' } }));
       throw e;
     }
   }
 
-  // =========================
-  // AUTO REFRESH
-  // =========================
+  refresh(false).catch(() => {});
 
-  // ✅ Primeira carga: com loader garantido
-  refresh(false).catch(() => { /* erro já tratado */ });
-
-  // ✅ A cada 10 min: force TOTVS
   setInterval(() => {
-    refresh(true).catch(() => { /* erro já tratado */ });
+    refresh(true).catch(() => {});
   }, 10 * 60 * 1000);
 
-  // Botão manual
   const btn = document.getElementById('btnForceTotvs');
   if (btn) {
     btn.addEventListener('click', async () => {
@@ -442,7 +457,7 @@
       loaderOpen('Atualizando TOTVS…', 'Forçando leitura no Protheus');
 
       try {
-        await refresh(true, { showLoader: false }); // loader já ligado
+        await refresh(true, { showLoader: false });
         if (st) { st.textContent = 'Atualizado'; st.className = 'is-ok'; }
       } catch (e) {
         if (st) { st.textContent = 'Falhou'; st.className = 'is-error'; }
@@ -453,7 +468,6 @@
     });
   }
 
-  // ✅ Debug no localhost (opcional)
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     window.refreshDashboard = refresh;
   }

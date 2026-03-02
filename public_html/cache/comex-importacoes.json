@@ -871,7 +871,7 @@
         {
             "card_id": "1234270313",
             "container": "PO05.2025 FUMAÇA AMY",
-            "fase": "EM TRÂNSITO",
+            "fase": "DESEMBARAÇO",
             "previsao_embarque_etd": "22\/01\/2026",
             "previsao_entrega_eta": "26\/02\/2026 12:00"
         },
@@ -948,7 +948,7 @@
         {
             "card_id": "1264597082",
             "container": "PO07.2025 YIWU STAR COPA DO MUNDO PÁSCOA E JUNINO",
-            "fase": "NO PORTO",
+            "fase": "DESEMBARAÇO",
             "previsao_embarque_etd": "11\/01\/2026",
             "previsao_entrega_eta": "26\/02\/2026 05:00"
         },
@@ -995,5 +995,5 @@
             "previsao_entrega_eta": null
         }
     ],
-    "cached_at": "2026-02-27T21:57:48-03:00"
+    "cached_at": "2026-03-02T18:01:45-03:00"
 }

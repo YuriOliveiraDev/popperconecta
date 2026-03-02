@@ -99,7 +99,7 @@ try {
       ? ($meta_mes * ($dias_passados / $dias_totais))
       : 0;
 
-    $gap_vs_deveria = $realizado_mes - $deveria_ate_hoje; // >0 acima do ritmo
+    $gap_vs_deveria = $realizado_mes - $deveria_ate_hoje;
     $ritmo_pct = ($meta_dia_util > 0) ? ($realizado_dia_util / $meta_dia_util) : 0;
 
     $dias_restantes = max(0, $dias_totais - $dias_passados);
@@ -123,31 +123,24 @@ try {
     if ($meta_mes > 0 || $realizado_mes > 0) {
       $insight = [
         'updated_at' => $latestUpdatedAt ? date('d/m/Y, H:i', strtotime($latestUpdatedAt)) : date('d/m/Y, H:i'),
-
         'meta_mes' => $meta_mes,
         'realizado_ate_hoje' => $realizado_mes,
         'falta_meta_mes' => $falta_mes,
         'atingimento_mes_pct' => $atingimento_mes_pct,
-
         'dias_uteis_trabalhar' => $dias_totais,
         'dias_uteis_trabalhados' => $dias_passados,
         'vai_bater_meta' => $vai_bater,
-
         'fechar_em' => $projecao_fechamento,
         'equivale_pct' => $equivale_pct,
-
         'a_faturar_dia_util' => $a_faturar_por_dia,
         'meta_dia_util' => $meta_dia_util,
-
         'deveria_ate_hoje' => $deveria_ate_hoje,
         'gap_vs_deveria' => $gap_vs_deveria,
         'ritmo_pct' => $ritmo_pct,
         'dias_restantes' => $dias_restantes,
-
         'hoje_total' => $hoje_total,
         'faturado_hoje' => $faturado_hoje,
         'agendado_hoje' => $agendado_hoje,
-
         'realizado_dia_util_calc' => $realizado_dia_util,
       ];
     }
@@ -208,9 +201,6 @@ if ($insight) {
   <style>
     html, body { height:100%; overflow:hidden; }
 
-    /* =========================
-       ENTRADA SUAVE (rápida)
-       ========================= */
     body.page main{
       opacity: 0;
       transform: translateY(4px);
@@ -221,17 +211,25 @@ if ($insight) {
       opacity: 1;
       transform: translateY(0);
     }
-
-    /* respiro do primeiro slide */
     .slide--dashboard { padding-top: 10px; }
   </style>
 </head>
 
-<body class="page">
+<body class="page page--gav">
   <?php require_once __DIR__ . '/app/header.php'; ?>
 
   <main>
     <section class="carousel carousel--full full-bleed" id="mainCarousel">
+
+      <!-- ✅ Ícone fullscreen no canto -->
+      <button class="carousel__fullscreen" type="button" id="fullscreenBtn" aria-label="Tela cheia">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+            stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+
       <button class="carousel__arrow carousel__arrow--prev" type="button" id="prevBtn" aria-label="Anterior">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
@@ -241,9 +239,6 @@ if ($insight) {
       <div class="carousel__viewport">
         <div class="carousel__track" id="track">
 
-          <!-- =====================================================
-               SLIDES 2+: COMUNICADOS
-               ===================================================== -->
           <?php if (empty($comunicados)): ?>
             <article class="slide slide--text">
               <div class="slide__doc">
@@ -308,10 +303,9 @@ if ($insight) {
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
   <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
 
-  <!-- ✅ ENTRADA SUAVE (ativa assim que o DOM está pronto) -->
+  <!-- ✅ Entrada suave -->
   <script>
   (function(){
-    // ativa o fade-in rápido
     const goReady = () => document.body.classList.add('is-ready');
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', goReady, { once:true });
@@ -321,20 +315,18 @@ if ($insight) {
   })();
   </script>
 
-  <!-- FORÇA SEMPRE COMEÇAR NO SLIDE 1 -->
+  <!-- ✅ Força começar no slide 1 -->
   <script>
   (function(){
     const track = document.getElementById('track');
     if (!track) return;
-
     const go0 = () => track.scrollTo({ left: 0, behavior: 'auto' });
-
     go0();
     requestAnimationFrame(go0);
     setTimeout(go0, 120);
-
     window.addEventListener('pageshow', go0);
   })();
   </script>
+
 </body>
 </html>

@@ -1,3 +1,5 @@
+/* global window, document */
+
 const carousel = document.getElementById('mainCarousel');
 const viewport = document.querySelector('#mainCarousel .carousel__viewport');
 const track = document.getElementById('track');
@@ -116,7 +118,7 @@ window.addEventListener('load', () => {
   startAutoplay();
 });
 
-// Se slides mudarem (ex.: você adiciona insight server-side ou muda comunicados), reconstrói dots
+// Se slides mudarem, reconstrói dots
 function refreshAll(){
   buildDots();
   clampIndex();
@@ -124,7 +126,7 @@ function refreshAll(){
   startAutoplay();
 }
 
-// API pública (se precisar chamar de outro script)
+// API pública
 window.carouselRefresh = refreshAll;
 window.carouselGoTo = (i) => { index = Number(i) || 0; render(); restartAutoplay(); };
 window.carouselGetIndex = () => index;
@@ -132,6 +134,76 @@ window.carouselGetIndex = () => index;
 // Inicialização defensiva
 setTimeout(refreshAll, 50);
 
-// (Opcional) pausa autoplay quando mouse está em cima do carrossel
+// pausa autoplay quando mouse está em cima do carrossel
 carousel?.addEventListener('mouseenter', stopAutoplay);
 carousel?.addEventListener('mouseleave', startAutoplay);
+
+
+/* =========================================================
+   FULLSCREEN (botão no canto)
+   - Precisa existir no HTML:
+     <button id="fullscreenBtn" class="carousel__fullscreen">...</button>
+   ========================================================= */
+
+(function(){
+  const fsBtn = document.getElementById('fullscreenBtn');
+  if (!fsBtn) return;
+
+  // Melhor para TV: tela cheia na página toda (some header/footer via CSS :fullscreen)
+  const fsTarget = document.documentElement;
+
+  function isFs(){
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement);
+  }
+
+  function reqFs(el){
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (!fn) throw new Error('Fullscreen API não suportada');
+    return fn.call(el);
+  }
+
+  function exitFs(){
+    const fn = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (!fn) return;
+    return fn.call(document);
+  }
+
+  function setIcon(){
+    const svg = fsBtn.querySelector('svg');
+    if (!svg) return;
+
+    svg.innerHTML = isFs()
+      ? `<path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round"/>`
+      : `<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+
+  async function toggleFs(){
+    try{
+      if (isFs()) {
+        await exitFs();
+      } else {
+        await reqFs(fsTarget);
+      }
+    } catch (e) {
+      console.warn('Fullscreen falhou:', e);
+    } finally {
+      setIcon();
+    }
+  }
+
+  fsBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFs();
+  });
+
+  document.addEventListener('fullscreenchange', setIcon);
+  document.addEventListener('webkitfullscreenchange', setIcon);
+  document.addEventListener('MSFullscreenChange', setIcon);
+
+  setIcon();
+})();

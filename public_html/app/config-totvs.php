@@ -11,11 +11,11 @@ date_default_timezone_set('America/Sao_Paulo');
 define('TOTVS_API_BASE', 'https://tuffloglogistica122016.protheus.cloudtotvs.com.br:4050/api/wscmrelaut/v1/Consulta/');
 
 // Consulta padrão (caso você chame callTotvsApi() sem parâmetros)
-define('TOTVS_DEFAULT_CONSULTA', '000033');
+define('TOTVS_DEFAULT_CONSULTA', '000072');
 
 // Mapa de métricas -> consulta (adicione quantas quiser)
 define('TOTVS_CONSULTAS', [
-    'kpi_faturamento' => '000033',
+    'kpi_contasapagar' => '000072',
     'kpi_pedidos'     => '000070',
     // 'kpi_outra'     => '000040',
 ]);

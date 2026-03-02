@@ -1,7 +1,18 @@
 <?php
 declare(strict_types=1);
 
+date_default_timezone_set('America/Sao_Paulo');
+
+// Compatibilidade PHP < 8.1
+if (!function_exists('array_is_list')) {
+  function array_is_list(array $array): bool {
+    if ($array === []) return true;
+    return array_keys($array) === range(0, count($array) - 1);
+  }
+}
+
 require_once __DIR__ . '/../app/config.php';
+require_once __DIR__ . '/../app/db.php';              // ✅ necessário p/ ajustes
 require_once __DIR__ . '/../app/config-totvs.php';
 
 header('Content-Type: application/json; charset=utf-8');
@@ -21,10 +32,20 @@ if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
 $ymNoDash = str_replace('-', '', $ym); // YYYYMM
 $anoY = substr($ymNoDash, 0, 4);
 $mesYm = $ymNoDash; // YYYYMM
-$hojeYmd = date('Ymd');
 
-// ✅ Se seu TOTVS agora é o relatório 000070, ajuste AQUI
-$resp = callTotvsApi('kpi_pedidos'); // ou 'kpi_pedidos_000070' conforme seu config
+$hojeYmd = date('Ymd');
+$hojeIso = date('Y-m-d');
+
+// limites do mês selecionado
+$monthStartIso = $ym . '-01';
+$monthEndIso   = date('Y-m-t', strtotime($monthStartIso));
+
+// limites do ano do ym
+$yearStartIso = $anoY . '-01-01';
+$yearEndIso   = $anoY . '-12-31';
+
+// ✅ TOTVS
+$resp = callTotvsApi('kpi_pedidos'); // ou '000070' conforme seu config
 
 if (!$resp['success'] || !is_array($resp['data'])) {
   http_response_code(500);
@@ -48,15 +69,29 @@ foreach (['items','Itens','itens','data','DATA','result','results','Resultado','
 if ($items === null && array_is_list($data)) $items = $data;
 if (!is_array($items)) $items = [];
 
+// ✅ Se seus campos do 000070 forem diferentes, ajuste estes nomes:
+$KEY_EMISSAO  = 'EMISAO';       // YYYYMMDD
+$KEY_VALOR    = 'VALOR';        // float
+$KEY_NF       = 'NF';
+$KEY_CLIENTE  = 'COD_CLIENTE';
+$KEY_LOJA     = 'LOJA_CLIENTE';
+$KEY_PRODUTO  = 'PRODUTO';
+$KEY_VENDEDOR = 'VENDEDOR';
+
 $kpi = [
   'success' => true,
-  'ym' => $ym, // 👈 importante pra debug
+  'ym' => $ym,
   'updated_at' => date('Y-m-d H:i:s'),
 
   // KPIs
   'hoje' => 0.0,
   'mes'  => 0.0,
   'ano'  => 0.0,
+
+  // ✅ ajustes (expostos p/ debug)
+  'ajuste_hoje' => 0.0,
+  'ajuste_mes'  => 0.0,
+  'ajuste_ano'  => 0.0,
 
   'qtd_nf_hoje' => 0,
   'qtd_nf_mes'  => 0,
@@ -78,15 +113,6 @@ $prod = [];
 $vend = [];
 $diario = [];
 
-// ✅ Se seus campos do 000070 forem diferentes, ajuste estes nomes:
-$KEY_EMISSAO  = 'EMISAO';       // YYYYMMDD
-$KEY_VALOR    = 'VALOR';        // float
-$KEY_NF       = 'NF';
-$KEY_CLIENTE  = 'COD_CLIENTE';
-$KEY_LOJA     = 'LOJA_CLIENTE';
-$KEY_PRODUTO  = 'PRODUTO';
-$KEY_VENDEDOR = 'VENDEDOR';
-
 foreach ($items as $r) {
   if (!is_array($r)) continue;
 
@@ -100,7 +126,7 @@ foreach ($items as $r) {
   $produto = (string)($r[$KEY_PRODUTO] ?? 'N/A');
   $vendedor= (string)($r[$KEY_VENDEDOR] ?? 'N/A');
 
-  // KPI HOJE (sempre hoje real, independente do filtro)
+  // KPI HOJE (sempre hoje real)
   if ($emissao === $hojeYmd) {
     $kpi['hoje'] += $valor;
     if ($nf !== '') $nfsHoje[$nf] = true;
@@ -111,7 +137,7 @@ foreach ($items as $r) {
     $kpi['ano'] += $valor;
   }
 
-  // ✅ FILTRO DO MÊS SELECIONADO (ym)
+  // KPI MÊS (ym)
   if (substr($emissao, 0, 6) === $mesYm) {
     $kpi['mes'] += $valor;
 
@@ -126,6 +152,57 @@ foreach ($items as $r) {
   }
 }
 
+// ======================================================
+// ✅ AJUSTE MANUAL (dashboard_faturamento_ajustes)
+// - soma em hoje/mes/ano conforme data do ajuste
+// - ✅ inclui também no diário do mês selecionado (diario_mes)
+// - ❌ NÃO entra em tops
+// ======================================================
+try {
+  // você pode trocar o slug se você estiver salvando ajustes em outro dash_slug
+  $dashSlugAjuste = 'executivo';
+
+  $stmtAdj = db()->prepare('
+    SELECT ref_date, valor
+    FROM dashboard_faturamento_ajustes
+    WHERE dash_slug = ?
+      AND is_active = 1
+      AND ref_date BETWEEN ? AND ?
+  ');
+  $stmtAdj->execute([$dashSlugAjuste, $yearStartIso, $yearEndIso]);
+
+  while ($row = $stmtAdj->fetch(PDO::FETCH_ASSOC)) {
+    $d = (string)($row['ref_date'] ?? ''); // YYYY-MM-DD
+    $v = (float)($row['valor'] ?? 0);
+
+    if ($d === '' || strlen($d) < 10) continue;
+
+    // ano do ym (sempre dentro do BETWEEN)
+    $kpi['ano'] += $v;
+    $kpi['ajuste_ano'] += $v;
+
+    // mês do ym
+    if ($d >= $monthStartIso && $d <= $monthEndIso) {
+      $kpi['mes'] += $v;
+      $kpi['ajuste_mes'] += $v;
+
+      // ✅ inclui no diário (dia = "DD")
+      $dd = substr($d, 8, 2);
+      if ($dd !== '' && ctype_digit($dd)) {
+        $diario[$dd] = ($diario[$dd] ?? 0) + $v;
+      }
+    }
+
+    // hoje real
+    if ($d === $hojeIso) {
+      $kpi['hoje'] += $v;
+      $kpi['ajuste_hoje'] += $v;
+    }
+  }
+} catch (Throwable $e) {
+  // silencioso pra não derrubar o endpoint
+}
+
 ksort($diario);
 arsort($prod);
 arsort($vend);
@@ -137,7 +214,7 @@ $kpi['clientes_mes']= count($clientesMes);
 $kpi['diario_mes'] = $diario;
 
 // ✅ TOP 10 + o JS mostra o resto no scroll (não corte no PHP!)
-$kpi['top_produtos']   = $prod; // NÃO usar array_slice aqui
-$kpi['top_vendedores'] = $vend; // NÃO usar array_slice aqui
+$kpi['top_produtos']   = $prod;
+$kpi['top_vendedores'] = $vend;
 
 echo json_encode($kpi, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

@@ -164,3 +164,5 @@
   .vip-loader__ring,
   .vip-fallback{ animation: none; }
 }
+
+.popper-loading{ z-index: 200000 !important; }

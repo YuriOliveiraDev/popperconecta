@@ -177,11 +177,6 @@ try {
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
   <link rel="stylesheet" href="/assets/css/admin-users.css?v=<?= filemtime(__DIR__ . '/../assets/css/admin-users.css') ?>" />
   <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
-
-  <style>
-    .users-table-scroll{max-height:600px;overflow-y:auto;border:1px solid rgba(15,23,42,0.10);border-radius:8px}
-    .users-table-scroll thead th{position:sticky;top:0;background:#fff;z-index:2}
-  </style>
 </head>
 
 <body class="page">
@@ -190,7 +185,6 @@ try {
   <main class="container admin-users">
     <h2 class="page-title">Gerenciar Usuários</h2>
 
-    <!-- (Mantém sua seção de cadastro exatamente como estava) -->
     <section class="card">
       <div class="card__header">
         <h3 class="card__title">Cadastrar Novo Usuário</h3>
@@ -212,8 +206,9 @@ try {
       <?php endif; ?>
 
       <form method="post" class="form" action="/admin/users.php" autocomplete="off" enctype="multipart/form-data">
-        <input class="offscreen-bait" type="text" name="email" autocomplete="username email" aria-hidden="true" tabindex="-1">
-        <input class="offscreen-bait" type="password" name="password" autocomplete="current-password" aria-hidden="true" tabindex="-1">
+        <!-- iscas anti-autofill -->
+        <input class="offscreen-bait" type="email" name="fake_email" autocomplete="username" aria-hidden="true" tabindex="-1">
+        <input class="offscreen-bait" type="password" name="fake_pass" autocomplete="current-password" aria-hidden="true" tabindex="-1">
 
         <label class="field" for="name">
           <span class="field__label">Nome Completo</span>
@@ -222,12 +217,26 @@ try {
 
         <label class="field" for="adm_email">
           <span class="field__label">E-mail</span>
-          <input class="field__control" id="adm_email" name="adm_email" type="email" required autocomplete="off" inputmode="email" spellcheck="false" autocapitalize="off" readonly />
+          <input class="field__control"
+                 id="adm_email"
+                 name="adm_email"
+                 type="email"
+                 required
+                 autocomplete="email"
+                 inputmode="email"
+                 spellcheck="false"
+                 autocapitalize="off" />
         </label>
 
         <label class="field" for="adm_pass">
           <span class="field__label">Senha</span>
-          <input class="field__control" id="adm_pass" name="adm_pass" type="password" required autocomplete="off" readonly />
+          <input class="field__control"
+                 id="adm_pass"
+                 name="adm_pass"
+                 type="password"
+                 required
+                 autocomplete="new-password"
+                 minlength="6" />
         </label>
 
         <label class="field" for="phone">
@@ -337,53 +346,61 @@ try {
                style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
       </div>
 
-      <div class="users-table-scroll">
-        <div class="table-wrap">
-          <table class="table" id="usersTable">
-            <thead>
+      <div class="table-wrap">
+        <table class="table" id="usersTable">
+          <thead>
+            <tr>
+              <th class="col-photo">Foto</th>
+              <th class="col-name">Nome</th>
+              <th class="col-email">E-mail</th>
+              <th class="col-setor">Setor</th>
+              <th class="col-hier">Hierarquia</th>
+              <th class="col-role">Perfil</th>
+              <th class="col-last">Último login</th>
+              <th class="col-actions">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($users as $row): ?>
               <tr>
-                <th class="col-photo">Foto</th>
-                <th class="col-name">Nome</th>
-                <th class="col-email">E-mail</th>
-                <th class="col-setor">Setor</th>
-                <th class="col-hier">Hierarquia</th>
-                <th class="col-role">Perfil</th>
-                <th class="col-last">Último login</th>
-                <th class="col-actions">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($users as $row): ?>
-                <tr>
-                  <td>
-                    <?php if (!empty($row['profile_photo_path'])): ?>
-                      <img class="avatar" src="<?= htmlspecialchars((string) $row['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
-                    <?php else: ?>
-                      <span class="avatar avatar--placeholder" aria-label="Sem foto" title="Sem foto"><span aria-hidden="true">👤</span></span>
-                    <?php endif; ?>
-                  </td>
-                  <td><?= htmlspecialchars((string) $row['name'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string) $row['email'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string) $row['setor'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><?= htmlspecialchars((string) $row['hierarquia'], ENT_QUOTES, 'UTF-8') ?></td>
-                  <td>
-                    <?php if (($row['role'] ?? '') === 'admin'): ?>
-                      <span class="badge badge--admin">Admin</span>
-                    <?php else: ?>
-                      <span class="badge badge--user">User</span>
-                    <?php endif; ?>
-                  </td>
-                  <td><?= htmlspecialchars((string) ($row['last_login_at'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
-                  <td><a class="link link--pill" href="/admin/user_edit.php?id=<?= (int) $row['id'] ?>">Editar</a></td>
-                </tr>
-              <?php endforeach; ?>
+               <td class="col-photo">
+  <span class="cell-center">
+    <?php if (!empty($row['profile_photo_path'])): ?>
+      <img class="avatar" src="<?= htmlspecialchars((string) $row['profile_photo_path'], ENT_QUOTES, 'UTF-8') ?>" alt="Foto">
+    <?php else: ?>
+      <span class="avatar avatar--placeholder" aria-label="Sem foto" title="Sem foto">
+        <span aria-hidden="true">👤</span>
+      </span>
+    <?php endif; ?>
+  </span>
+</td>
 
-              <?php if (!$users): ?>
-                <tr><td colspan="9" class="muted">Nenhum usuário cadastrado.</td></tr>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
+                <td class="col-name"><?= htmlspecialchars((string) $row['name'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td class="col-email"><?= htmlspecialchars((string) $row['email'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td class="col-setor"><?= htmlspecialchars((string) $row['setor'], ENT_QUOTES, 'UTF-8') ?></td>
+                <td class="col-hier"><?= htmlspecialchars((string) $row['hierarquia'], ENT_QUOTES, 'UTF-8') ?></td>
+
+                <td class="col-role">
+                  <?php if (($row['role'] ?? '') === 'admin'): ?>
+                    <span class="badge badge--admin">Admin</span>
+                  <?php else: ?>
+                    <span class="badge badge--user">User</span>
+                  <?php endif; ?>
+                </td>
+
+                <td class="col-last"><?= htmlspecialchars((string) ($row['last_login_at'] ?? '—'), ENT_QUOTES, 'UTF-8') ?></td>
+
+                <td class="col-actions">
+                  <a class="link link--pill" href="/admin/user_edit.php?id=<?= (int) $row['id'] ?>">Editar</a>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+
+            <?php if (!$users): ?>
+              <tr><td colspan="8" class="muted">Nenhum usuário cadastrado.</td></tr>
+            <?php endif; ?>
+          </tbody>
+        </table>
       </div>
     </section>
   </main>
@@ -408,6 +425,16 @@ try {
           tr.style.display = text.includes(term) ? '' : 'none';
         });
       });
+
+      // reforço anti-autofill agressivo
+      const email = document.getElementById('adm_email');
+      const pass  = document.getElementById('adm_pass');
+      if (email) {
+        email.setAttribute('autocomplete','email');
+        email.setAttribute('autocapitalize','off');
+        email.setAttribute('spellcheck','false');
+      }
+      if (pass) pass.setAttribute('autocomplete','new-password');
     })();
   </script>
 </body>

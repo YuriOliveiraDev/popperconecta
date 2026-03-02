@@ -14,8 +14,21 @@ if ($fromTs > $toTs) {
     [$fromTs, $toTs] = [$toTs, $fromTs];
 }
 
+$titulosPorFornecedor = [];
+$consulta = TOTVS_CONSULTAS['kpi_contasapagar'] ?? null;
+
+if (!$consulta) {
+  http_response_code(500);
+  echo json_encode([
+    'success' => false,
+    'error' => 'Consulta não mapeada',
+    'details' => 'Chave kpi_contasapagar não encontrada em TOTVS_CONSULTAS'
+  ]);
+  exit;
+}
+
 // Busca dados da API
-$result = callTotvsApi();
+$result = callTotvsApi($consulta);
 
 if (!$result['success']) {
     http_response_code(500);
