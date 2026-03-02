@@ -170,7 +170,7 @@ body.auth-split{
 .auth-card__title{
   margin: 0;
   font-size: 34px;
-  font-weight: 900;
+  font-weight: 500;
   color: var(--text);
   letter-spacing: -.5px;
 }
