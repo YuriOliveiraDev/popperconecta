@@ -5,8 +5,16 @@ declare(strict_types=1);
    BLOQUEIO MOBILE (temporário)
    =============================== */
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-$isMobile = (bool)preg_match('/Android|iPhone|iPad|iPod|webOS|BlackBerry|Windows Phone|Opera Mini|Mobile/i', $userAgent);
 
+$isAndroid = stripos($userAgent, 'Android') !== false;
+$isAndroidMobile = $isAndroid && stripos($userAgent, 'Mobile') !== false;
+
+$isTV = (bool)preg_match('/Android TV|SMART-TV|SmartTV|HbbTV|AFT|BRAVIA|Tizen|Web0S/i', $userAgent);
+
+$isMobile = (!$isTV) && (
+  (bool)preg_match('/iPhone|iPod|Windows Phone|webOS|BlackBerry|Opera Mini|Mobile/i', $userAgent)
+  || $isAndroidMobile
+);
 if ($isMobile) {
   header('Content-Type: text/html; charset=UTF-8');
   ?>
