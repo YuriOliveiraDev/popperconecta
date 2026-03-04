@@ -50,6 +50,9 @@ if ($isMobile) {
         Este portal ainda não está disponível para celulares.<br><br>
         Acesse usando um computador para visualizar dashboards e funcionalidades.
       </p>
+      <p style="margin-top:18px;font-size:12px;opacity:.7;word-break:break-word">
+  UA: <?= htmlspecialchars($userAgent, ENT_QUOTES, 'UTF-8') ?>
+</p>
     </div>
   </body>
   </html>
