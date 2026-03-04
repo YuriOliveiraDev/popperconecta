@@ -51,7 +51,7 @@ function totalSlides(){
 
 function pageWidth(){
   if (!viewport) return 0;
-  return viewport.getBoundingClientRect().width;
+  return Math.round(viewport.getBoundingClientRect().width);
 }
 
 function clampIndex(){
@@ -73,8 +73,8 @@ function render(){
   const w = pageWidth();
   if (!w) return;
 
-  track.style.transform = `translateX(${-index * w}px)`;
-  setActiveDot();
+const x = Math.round(index * w);
+track.style.transform = `translate3d(${-x}px,0,0)`;
 }
 
 function buildDots(){

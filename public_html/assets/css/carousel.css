@@ -6,67 +6,133 @@
   --glass-bg: rgba(255,255,255,.85);
   --glass-border: rgba(255,255,255,.4);
   --shadow-soft: 0 12px 40px rgba(0,0,0,.12);
+
+  /* VH real (setado via JS). fallback = 1vh */
+  --vh: 1vh;
+
+  /* opcional (setado via JS em px). fallback = 100vh */
+  --vhpx: 100vh;
 }
 
-/* Container Principal */
+/* =========================================================
+   CONTAINER PRINCIPAL
+   ========================================================= */
 .carousel{
   position: relative;
   margin: 24px 0;
-  background: linear-gradient(135deg, rgba(92,44,140,.05) 0%, rgba(172,200,54,.05) 100%);
   padding: 0;
-  border-radius: 0;         /* sem cantos arredondados */
-  overflow: visible;        /* não corta setas/dots */
+
+  background: linear-gradient(135deg, rgba(92,44,140,.05) 0%, rgba(172,200,54,.05) 100%);
+  border-radius: 0;
+  overflow: visible;  /* não cortar setas/dots */
 }
 
-/* Track */
+/* Quando for modo full (seu HTML usa carousel--full + full-bleed) */
+.carousel.carousel--full{
+  margin: 0;                /* evita gap */
+  background: #000;         /* para TVs */
+}
+
+/* =========================================================
+   VIEWPORT (ALTURA E CORTE)
+   - Aqui está o FIX do “1px embaixo”
+   ========================================================= */
+.carousel__viewport{
+  width: 100%;
+  height: calc(var(--vh) * 100);  /* altura real em Android/TV */
+  overflow: hidden;
+
+  /* evita linha por subpixel / composição */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Se você quiser usar vhpx (altura em px), descomente:
+.carousel__viewport{
+  height: var(--vhpx);
+}
+*/
+
+/* =========================================================
+   TRACK
+   ========================================================= */
 .carousel__track{
   display: flex;
   height: 100%;
-  transition: transform .6s cubic-bezier(.23, 1, .32, 1);
   will-change: transform;
+
+  /* evita artefato/linha */
+  transform: translate3d(0,0,0);
+  backface-visibility: hidden;
+
+  transition: transform .6s cubic-bezier(.23, 1, .32, 1);
 }
 
-/* Slide base */
+/* =========================================================
+   SLIDES: 1 SLIDE = 1 TELA
+   ========================================================= */
 .slide{
+  flex: 0 0 100%;
+  width: 100%;
   min-width: 100%;
   height: 100%;
   box-sizing: border-box;
+
   display: flex;
   justify-content: center;
   padding: 0;
+
+  /* evita linha por rounding */
+  transform: translateZ(0);
 }
 
-/* Compat imagem */
+/* Conteúdo interno */
 .slide__inner{
   width: 100%;
   height: 100%;
 }
 
-/* Slide com imagem: fundo preenche, imagem não estica */
+/* =========================================================
+   SLIDE COM IMAGEM
+   ========================================================= */
 .slide--image{
-  border-radius: 0;         /* sem cantos arredondados */
+  border-radius: 0;
   overflow: hidden;
 }
 
 .slide--image .slide__inner{
-  height: 100%;
   width: 100%;
+  height: 100%;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(92,44,140,.06), rgba(172,200,54,.06));
+
+  background: #000; /* importante: se sobrar área, fica preto */
 }
 
-.slide--image .slide__img-full{
+/* IMAGEM: SEM BASELINE + SEM SOBRA */
+.slide__img-full{
   width: 100%;
   height: 100%;
-  object-fit: contain;      /* não estica; imagem grande diminui, pequena não distorce */
-  object-position:center;
-  display: block;
-  background: transparent;
+  display: block;         /* remove baseline (causa linha) */
+
+  object-fit: contain;    /* ou cover */
+  object-position: center;
+
+  background: #000;
+
+  /* evita artefato de 1px em algumas TVs */
+  transform: translateZ(0);
 }
 
-/* Slide com texto (scroll interno se precisar) */
+/* Se quiser “encher” a tela sempre, use cover:
+.slide__img-full{ object-fit: cover; }
+*/
+
+/* =========================================================
+   SLIDE COM TEXTO
+   ========================================================= */
 .slide--text{
   height: 100%;
   display: flex;
@@ -77,28 +143,38 @@
   width: 100%;
   max-width: 980px;
   margin: 0 auto;
+
   max-height: 100%;
   overflow: auto;
+
   padding: 24px;
 }
 
-/* Setas */
+/* =========================================================
+   SETAS
+   ========================================================= */
 .carousel__arrow{
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
+
   width: 48px;
   height: 48px;
-  border-radius: 50%; /* seta circular ok */
+
+  border-radius: 50%;
   border: none;
+
   background: #fff;
   color: var(--primary-color);
+
   box-shadow: 0 4px 12px rgba(0,0,0,.10);
   cursor: pointer;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   transition: all .2s ease;
 }
 
@@ -116,24 +192,31 @@
   height: 24px;
 }
 
-/* Dots (indicador embaixo, estilo “pílula” quando ativo) */
+/* =========================================================
+   DOTS
+   ========================================================= */
 .carousel__dots{
   position: absolute;
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
+
   display: flex;
   gap: 10px;
+
   z-index: 11;
 }
 
 .carousel__dot{
   width: 10px;
   height: 10px;
+
   border-radius: 999px;
   background: rgba(92,44,140,.22);
+
   border: none;
   cursor: pointer;
+
   transition: all .25s ease;
   padding: 0;
 }
@@ -144,12 +227,8 @@
 }
 
 /* =========================================================
-   BOTÃO FULLSCREEN (ÚNICA VERSÃO) — quase transparente sempre
-   - normal: 0.12
-   - idle (10s): 0.08
-   - fullscreen: 0.05 (força mesmo quando o target é html)
+   BOTÃO FULLSCREEN
    ========================================================= */
-
 .carousel__fullscreen{
   position:absolute;
   top:12px;
@@ -158,6 +237,7 @@
 
   width:34px;
   height:34px;
+
   border-radius:999px;
   border:0;
   cursor:pointer;
@@ -168,6 +248,7 @@
 
   background: rgba(255,255,255,.55);
   color: var(--primary-color);
+
   box-shadow: 0 6px 16px rgba(0,0,0,.08);
 
   opacity: .12; /* quase invisível */
@@ -179,32 +260,25 @@
   height:18px;
 }
 
-/* ao passar mouse/foco volta aparecer */
 .carousel__fullscreen:hover,
 .carousel__fullscreen:focus-visible{
   opacity: .9;
   transform: scale(1.05);
 }
 
-/* idle após 10s */
 .carousel__fullscreen.is-idle{
   opacity: .08;
 }
 
-/* =========================================================
-   QUANDO A PÁGINA ESTIVER EM FULLSCREEN
-   (seu fullscreen target é documentElement => html:fullscreen)
-   ========================================================= */
-
+/* fullscreen (quando o target é html) */
 html:fullscreen .carousel__fullscreen,
 html:-webkit-full-screen .carousel__fullscreen,
 html:-ms-fullscreen .carousel__fullscreen{
-  opacity: .05 !important;           /* quase invisível */
-  background: rgba(255,255,255,.25); /* mais discreto */
-  box-shadow: none;
+  opacity: .05 !important;
+  background: rgba(255,255,255,.22) !important;
+  box-shadow: none !important;
 }
 
-/* no fullscreen, hover/foco volta aparecer */
 html:fullscreen .carousel__fullscreen:hover,
 html:fullscreen .carousel__fullscreen:focus-visible,
 html:-webkit-full-screen .carousel__fullscreen:hover,
@@ -212,59 +286,17 @@ html:-webkit-full-screen .carousel__fullscreen:focus-visible,
 html:-ms-fullscreen .carousel__fullscreen:hover,
 html:-ms-fullscreen .carousel__fullscreen:focus-visible{
   opacity: .9 !important;
-  box-shadow: 0 6px 16px rgba(0,0,0,.08);
-}
-/* ===== FORCE FULLSCREEN BUTTON (COLE NO FIM DO ARQUIVO) ===== */
-
-/* padrão: já deixa bem transparente */
-#fullscreenBtn.carousel__fullscreen{
-  opacity: .12 !important;
-}
-
-/* idle (10s) */
-#fullscreenBtn.carousel__fullscreen.is-idle{
-  opacity: .08 !important;
-}
-
-/* quando QUALQUER elemento estiver em fullscreen (mais amplo) */
-:fullscreen #fullscreenBtn.carousel__fullscreen,
-:-webkit-full-screen #fullscreenBtn.carousel__fullscreen,
-:-ms-fullscreen #fullscreenBtn.carousel__fullscreen{
-  opacity: .05 !important;
-  background: rgba(255,255,255,.22) !important;
-  box-shadow: none !important;
-}
-
-/* quando o target do fullscreen for o HTML (seu caso mais comum) */
-html:fullscreen #fullscreenBtn.carousel__fullscreen,
-html:-webkit-full-screen #fullscreenBtn.carousel__fullscreen,
-html:-ms-fullscreen #fullscreenBtn.carousel__fullscreen{
-  opacity: .05 !important;
-  background: rgba(255,255,255,.22) !important;
-  box-shadow: none !important;
-}
-
-/* ao interagir, volta a aparecer */
-:fullscreen #fullscreenBtn.carousel__fullscreen:hover,
-:fullscreen #fullscreenBtn.carousel__fullscreen:focus-visible,
-:-webkit-full-screen #fullscreenBtn.carousel__fullscreen:hover,
-:-webkit-full-screen #fullscreenBtn.carousel__fullscreen:focus-visible,
-:-ms-fullscreen #fullscreenBtn.carousel__fullscreen:hover,
-:-ms-fullscreen #fullscreenBtn.carousel__fullscreen:focus-visible{
-  opacity: .9 !important;
   background: rgba(255,255,255,.55) !important;
   box-shadow: 0 6px 16px rgba(0,0,0,.08) !important;
 }
-.slide,
-.slide__inner{
-  width:100%;
-  height:100%;
-}
 
-.slide__img-full{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  object-position:center;
-  display:block;
+/* =========================================================
+   FIX EXTRA: evitar “fenda” de 1px por zoom/subpixel
+   (não muda visual, só melhora estabilidade)
+   ========================================================= */
+@media (min-width: 0px){
+  .carousel__viewport, .carousel__track, .slide, .slide__inner, .slide__img-full{
+    outline: 0;
+    border: 0;
+  }
 }

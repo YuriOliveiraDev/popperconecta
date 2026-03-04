@@ -66,7 +66,7 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
       height:100%;
       display:block;
       object-fit: contain;
-      background:#000;
+      background: #fff;
     }
 
     /* remove setas/dots se quiser “limpo” */
@@ -348,6 +348,17 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
   setInterval(poll, POLL_MS);
   setTimeout(poll, 1200);
+})();
+(function setVhPx(){
+  const apply = () => {
+    const h = Math.round(window.innerHeight || document.documentElement.clientHeight || 0);
+    document.documentElement.style.setProperty('--vhpx', h + 'px');
+  };
+  apply();
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+  document.addEventListener('fullscreenchange', () => setTimeout(apply, 50));
+  document.addEventListener('webkitfullscreenchange', () => setTimeout(apply, 50));
 })();
 </script>
 
