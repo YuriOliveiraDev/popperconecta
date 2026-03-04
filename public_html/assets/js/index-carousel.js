@@ -10,7 +10,7 @@ const dotsEl = document.getElementById('dots');
 let index = 0;
 let timer = null;
 
-const AUTOPLAY_MS = 30000;
+const AUTOPLAY_MS = 2000;
 
 function totalSlides(){
   return track ? track.querySelectorAll('.slide').length : 0;
@@ -57,6 +57,7 @@ function buildDots(){
       index = i;
       render();
       restartAutoplay();
+      wakeFsButton(); // mantém botão visível ao interagir
     });
 
     dotsEl.appendChild(b);
@@ -75,6 +76,7 @@ function goPrev(){
   index = Math.max(0, index - 1);
   render();
   restartAutoplay();
+  wakeFsButton();
 }
 
 function goNext(){
@@ -84,6 +86,7 @@ function goNext(){
   index = (index + 1) % total; // loop infinito
   render();
   restartAutoplay();
+  wakeFsButton();
 }
 
 function stopAutoplay(){
@@ -111,7 +114,12 @@ function restartAutoplay(){
 prev?.addEventListener('click', goPrev);
 next?.addEventListener('click', goNext);
 
-window.addEventListener('resize', render);
+// Em alguns devices (TV Box), fullscreen muda o viewport sem disparar resize
+window.addEventListener('resize', () => {
+  render();
+  restartAutoplay();
+});
+
 window.addEventListener('load', () => {
   buildDots();
   render();
@@ -128,26 +136,50 @@ function refreshAll(){
 
 // API pública
 window.carouselRefresh = refreshAll;
-window.carouselGoTo = (i) => { index = Number(i) || 0; render(); restartAutoplay(); };
+window.carouselGoTo = (i) => { index = Number(i) || 0; render(); restartAutoplay(); wakeFsButton(); };
 window.carouselGetIndex = () => index;
 
 // Inicialização defensiva
 setTimeout(refreshAll, 50);
 
-// pausa autoplay quando mouse está em cima do carrossel
-carousel?.addEventListener('mouseenter', stopAutoplay);
-carousel?.addEventListener('mouseleave', startAutoplay);
+// pausa autoplay SOMENTE em device com mouse (evita travar em TV Box / touch)
+(() => {
+  if (!carousel) return;
 
+  const canHover = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  if (canHover) {
+    carousel.addEventListener('pointerenter', stopAutoplay);
+    carousel.addEventListener('pointerleave', startAutoplay);
+  }
+})();
 
 /* =========================================================
    FULLSCREEN (botão no canto)
    - Precisa existir no HTML:
      <button id="fullscreenBtn" class="carousel__fullscreen">...</button>
+
+   REQUER CSS:
+     .carousel__fullscreen.is-idle { opacity: .18; }
    ========================================================= */
+
+// controle do "sumir" do botão fullscreen após 10s
+let __fsBtnRef = null;
+let __fsIdleT = null;
+function wakeFsButton(){
+  if (!__fsBtnRef) return;
+  __fsBtnRef.classList.remove('is-idle');
+  if (__fsIdleT) window.clearTimeout(__fsIdleT);
+  __fsIdleT = window.setTimeout(() => {
+    __fsBtnRef && __fsBtnRef.classList.add('is-idle');
+  }, 10000);
+}
 
 (function(){
   const fsBtn = document.getElementById('fullscreenBtn');
   if (!fsBtn) return;
+
+  __fsBtnRef = fsBtn;
 
   // Melhor para TV: tela cheia na página toda (some header/footer via CSS :fullscreen)
   const fsTarget = document.documentElement;
@@ -195,15 +227,40 @@ carousel?.addEventListener('mouseleave', startAutoplay);
     }
   }
 
+  function onFsChange(){
+    setIcon();
+
+    // fullscreen muda dimensões: recalcula e garante autoplay
+    requestAnimationFrame(() => {
+      render();
+      restartAutoplay();
+    });
+
+    // alguns devices demoram a estabilizar layout
+    setTimeout(() => {
+      render();
+      restartAutoplay();
+    }, 120);
+
+    wakeFsButton();
+  }
+
   fsBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     toggleFs();
+    wakeFsButton();
   });
 
-  document.addEventListener('fullscreenchange', setIcon);
-  document.addEventListener('webkitfullscreenchange', setIcon);
-  document.addEventListener('MSFullscreenChange', setIcon);
+  // acorda o botão quando usuário mexe (controle/mouse/teclado)
+  ['mousemove','pointermove','keydown','touchstart','click'].forEach((ev) => {
+    document.addEventListener(ev, wakeFsButton, { passive: true });
+  });
+
+  document.addEventListener('fullscreenchange', onFsChange);
+  document.addEventListener('webkitfullscreenchange', onFsChange);
+  document.addEventListener('MSFullscreenChange', onFsChange);
 
   setIcon();
+  wakeFsButton();
 })();
