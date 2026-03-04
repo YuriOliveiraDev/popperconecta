@@ -114,7 +114,7 @@
 /* IMAGEM: SEM BASELINE + SEM SOBRA */
 .slide__img-full{
   width: 100%;
-  height: 100%;
+  height: 100vh;
   display: block;         /* remove baseline (causa linha) */
 
   object-fit: contain;    /* ou cover */
