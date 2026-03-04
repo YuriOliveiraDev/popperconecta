@@ -51,16 +51,19 @@ header('Expires: 0'); // ✅ Essencial para o header.php funcionar $u = current_
               id="kpi-projecao-mes">R$ 0,00</strong> <span class="kpi-trend" id="kpi-projecao-mes-trend"></span>
             <div class="kpi-detail">Baseado no ritmo atual</div>
           </div> <!-- KPI: Hoje -->
-          <div class="kpi-card"> <span class="kpi-label">Hoje (faturado)</span> <strong class="kpi-value"
+          <div class="kpi-card"> <span class="kpi-label">Hoje</span> <strong class="kpi-value"
               id="kpi-hoje-total">R$ 0,00</strong> <span class="kpi-trend" id="kpi-hoje-trend"></span>
             <div class="kpi-detail"> Faturado: <span id="kpi-hoje-fat">R$ 0,00</span> · Imediato p/ hoje:
               <span id="kpi-hoje-ag">R$ 0,00</span> <br> Agendado: <span id="kpi-hoje-ag2">R$ 0,00</span> </div>
+
           </div> <!-- KPI: Meta dinâmica (card especial) -->
           <div class="kpi-dynamic" role="group" aria-label="Meta dinâmica por dia">
+            <div class="kpi-label">Meta necessária por dia</div>
             <div class="kpi-dynamic__value" id="metaDinamica">R$ 0,00</div>
-            <div class="kpi-dynamic__label">Meta necessária por dia</div>
             <div class="kpi-dynamic__sub" id="metaRestante">—</div>
             <div class="kpi-dynamic__info"> <span id="metaTeorica"></span> <span id="gapHoje"></span> </div>
+
+
           </div> <!-- Gráficos -->
           <div class="chart-card">
             <h3 class="chart-title" id="titleProgressMonth">Progresso (Mês)</h3>

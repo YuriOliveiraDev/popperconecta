@@ -364,3 +364,53 @@ html:-ms-fullscreen .carousel__fullscreen:focus-visible {
   height: 100vh !important;
   object-fit: contain !important;
 }
+.slide--dashboard{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.slide__doc--dashboard{
+  width:100%;
+  max-width:1200px;
+  margin:auto;
+}
+
+.dash-slide-title{
+  font-size:40px;
+  font-weight:700;
+  text-align:center;
+  margin-bottom:30px;
+}
+
+.dash-slide-grid{
+  display:grid;
+  grid-template-columns: repeat(3,1fr);
+  gap:25px;
+}
+
+.dash-box{
+  background:white;
+  border-radius:16px;
+  padding:25px;
+  text-align:center;
+  box-shadow:0 10px 30px rgba(0,0,0,.1);
+}
+
+.dash-box span{
+  display:block;
+  font-size:16px;
+  color:#666;
+}
+
+.dash-box strong{
+  font-size:32px;
+  color:#5c2c8c;
+}
+
+.dash-slide-footer{
+  margin-top:25px;
+  text-align:center;
+  font-size:14px;
+  color:#888;
+}

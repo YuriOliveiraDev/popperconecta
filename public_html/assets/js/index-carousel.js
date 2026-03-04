@@ -68,7 +68,7 @@ const IN_IFRAME = (() => {
 let index = 0;
 let timer = null;
 
-const AUTOPLAY_MS = 2000;
+const AUTOPLAY_MS = 1000;
 
 function totalSlides(){
   return track ? track.querySelectorAll('.slide').length : 0;
