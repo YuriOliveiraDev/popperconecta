@@ -1,3 +1,28 @@
+// FIX altura real para Android / TV Box / Fullscreen
+(function setRealVH(){
+
+  function apply(){
+    const vh = window.innerHeight * 0.01;
+
+    document.documentElement.style.setProperty('--vh', vh + 'px');
+    document.documentElement.style.setProperty('--vhpx', window.innerHeight + 'px');
+  }
+
+  apply();
+
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+
+  document.addEventListener('fullscreenchange', () => {
+    setTimeout(apply, 60);
+  });
+
+  document.addEventListener('webkitfullscreenchange', () => {
+    setTimeout(apply, 60);
+  });
+
+})();
+
 // ✅ Força altura real do iframe (resolve TV Box que ignora 100vh/dvh)
 (function forceIframeSize(){
   const frame = document.getElementById('frame');
@@ -70,11 +95,18 @@ function render(){
   if (!track || !viewport) return;
 
   clampIndex();
-  const w = pageWidth();
-  if (!w) return;
 
-const x = Math.round(index * w);
-track.style.transform = `translate3d(${-x}px,0,0)`;
+  const w = pageWidth();
+  // Se a largura ainda não está pronta, agenda novo render (evita travar dots/posição)
+  if (!w) {
+    requestAnimationFrame(render);
+    return;
+  }
+
+  const x = Math.round(index * w);
+  track.style.transform = `translate3d(${-x}px,0,0)`;
+
+  setActiveDot();
 }
 
 function buildDots(){
@@ -279,15 +311,117 @@ function wakeFsButton(){
   setIcon();
   wakeFsButton();
 })();
-// ✅ Corrige o VH real (resolve faixa branca embaixo em TV Box/Android)
-(function setRealVh(){
-  const apply = () => {
-    const vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-  };
-  apply();
-  window.addEventListener('resize', apply);
-  window.addEventListener('orientationchange', apply);
-  document.addEventListener('fullscreenchange', apply);
-  document.addEventListener('webkitfullscreenchange', apply);
+/* =========================================================
+   AUTO-UPDATE (tempo real via polling)
+   - atualiza slides em fullscreen sem reload
+   ========================================================= */
+(() => {
+  const FEED_URL = '/api/comunicados-feed.php';
+  const POLL_MS = 8000;
+
+  let currentVersion = null;
+  let inFlight = false;
+
+  function esc(s){
+    return String(s ?? '')
+      .replace(/&/g,'&amp;')
+      .replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;')
+      .replace(/'/g,'&#039;');
+  }
+
+  function buildSlideHTML(item){
+    const id = Number(item.id) || 0;
+    const titulo = esc(item.titulo || '');
+    const conteudo = esc(item.conteudo || '');
+    const img = item.imagem_path ? esc(item.imagem_path) : '';
+
+    // ✅ adapte este HTML ao seu layout real do slide
+    return `
+      <div class="slide" data-id="${id}">
+        ${img ? `<img class="slide__img" src="${img}" alt="">` : ''}
+        <div class="slide__content">
+          ${titulo ? `<h3 class="slide__title">${titulo}</h3>` : ''}
+          ${conteudo ? `<p class="slide__text">${conteudo}</p>` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  function getCurrentSlideId(){
+    try{
+      const slides = track?.querySelectorAll('.slide');
+      if (!slides || !slides.length) return null;
+      const el = slides[index];
+      const id = el?.getAttribute('data-id');
+      return id ? String(id) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function goToSlideById(id){
+    if (!id || !track) return false;
+    const slides = Array.from(track.querySelectorAll('.slide'));
+    const idx = slides.findIndex(s => String(s.getAttribute('data-id')) === String(id));
+    if (idx >= 0) {
+      index = idx;
+      return true;
+    }
+    return false;
+  }
+
+  async function poll(){
+    if (inFlight) return;
+    inFlight = true;
+
+    try{
+      const res = await fetch(`${FEED_URL}?_=${Date.now()}`, {
+        cache: 'no-store',
+        credentials: 'same-origin',
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || !data.ok) return;
+
+      // primeira vez só “aprende” a versão
+      if (currentVersion === null) {
+        currentVersion = data.version || '';
+        return;
+      }
+
+      // se não mudou, não faz nada
+      if ((data.version || '') === currentVersion) return;
+
+      // mudou: aplica atualização
+      const keepId = getCurrentSlideId();
+
+      const items = Array.isArray(data.items) ? data.items : [];
+      if (track) {
+        track.innerHTML = items.map(buildSlideHTML).join('');
+      }
+
+      // tenta manter o slide atual por ID
+      const kept = keepId ? goToSlideById(keepId) : false;
+      if (!kept) index = 0;
+
+      currentVersion = data.version || '';
+
+      // reconstrói dots e recalcula transform/autoplay
+      if (window.carouselRefresh) window.carouselRefresh();
+
+    } catch (e){
+      // em TV Box é melhor só logar baixo e seguir
+      console.warn('carousel feed poll falhou:', e);
+    } finally {
+      inFlight = false;
+    }
+  }
+
+  // start
+  setInterval(poll, POLL_MS);
+  setTimeout(poll, 1200);
 })();

@@ -455,10 +455,6 @@ html:fullscreen #mainCarousel{
 html:fullscreen #mainCarousel .slide{
   height: 100vh !important;
 }
-html:fullscreen #mainCarousel .slide__img-full{
-  object-fit: contain;
-}
-
 /* Botões discretos */
 html:fullscreen #mainCarousel .carousel__arrow,
 html:fullscreen #mainCarousel .carousel__dots,

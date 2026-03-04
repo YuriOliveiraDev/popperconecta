@@ -1,11 +1,13 @@
 /* assets/css/carousel.css */
 
-:root{
-  --primary-color:#5c2c8c; /* Roxo Popper */
-  --accent-color:#acc836;  /* Verde Popper */
-  --glass-bg: rgba(255,255,255,.85);
-  --glass-border: rgba(255,255,255,.4);
-  --shadow-soft: 0 12px 40px rgba(0,0,0,.12);
+:root {
+  --primary-color: #5c2c8c;
+  /* Roxo Popper */
+  --accent-color: #acc836;
+  /* Verde Popper */
+  --glass-bg: rgba(255, 255, 255, .85);
+  --glass-border: rgba(255, 255, 255, .4);
+  --shadow-soft: 0 12px 40px rgba(0, 0, 0, .12);
 
   /* VH real (setado via JS). fallback = 1vh */
   --vh: 1vh;
@@ -17,32 +19,32 @@
 /* =========================================================
    CONTAINER PRINCIPAL
    ========================================================= */
-.carousel{
+.carousel {
   position: relative;
   margin: 24px 0;
   padding: 0;
 
-  background: linear-gradient(135deg, rgba(92,44,140,.05) 0%, rgba(172,200,54,.05) 100%);
+  background: linear-gradient(135deg, rgba(92, 44, 140, .05) 0%, rgba(172, 200, 54, .05) 100%);
   border-radius: 0;
-  overflow: visible;  /* não cortar setas/dots */
+  overflow: visible;
+  /* não cortar setas/dots */
 }
 
 /* Quando for modo full (seu HTML usa carousel--full + full-bleed) */
-.carousel.carousel--full{
-  margin: 0;                /* evita gap */
-  background: #000;         /* para TVs */
+.carousel.carousel--full {
+  margin: 0;
+  /* evita gap */
+  background: #fff;
+  /* para TVs */
 }
 
 /* =========================================================
    VIEWPORT (ALTURA E CORTE)
    - Aqui está o FIX do “1px embaixo”
    ========================================================= */
-.carousel__viewport{
+.carousel__viewport {
   width: 100%;
-  height: calc(var(--vh) * 100);  /* altura real em Android/TV */
-  overflow: hidden;
-
-  /* evita linha por subpixel / composição */
+  height: 100vh;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -56,13 +58,13 @@
 /* =========================================================
    TRACK
    ========================================================= */
-.carousel__track{
+.carousel__track {
   display: flex;
   height: 100%;
   will-change: transform;
 
   /* evita artefato/linha */
-  transform: translate3d(0,0,0);
+  transform: translate3d(0, 0, 0);
   backface-visibility: hidden;
 
   transition: transform .6s cubic-bezier(.23, 1, .32, 1);
@@ -71,36 +73,46 @@
 /* =========================================================
    SLIDES: 1 SLIDE = 1 TELA
    ========================================================= */
-.slide{
-  flex: 0 0 100%;
-  width: 100%;
-  min-width: 100%;
-  height: 100%;
-  box-sizing: border-box;
 
-  display: flex;
-  justify-content: center;
-  padding: 0;
-
-  /* evita linha por rounding */
-  transform: translateZ(0);
-}
-
-/* Conteúdo interno */
-.slide__inner{
-  width: 100%;
-  height: 100%;
-}
 
 /* =========================================================
    SLIDE COM IMAGEM
    ========================================================= */
-.slide--image{
+.slide--image {
   border-radius: 0;
   overflow: hidden;
 }
 
-.slide--image .slide__inner{
+.slide {
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.slide__inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* IMAGEM FULLSCREEN REAL */
+.slide__img-full {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit:  contain;
+  object-position: center;
+
+  display: block;
+}
+
+.slide--image .slide__inner {
   width: 100%;
   height: 100%;
 
@@ -108,22 +120,8 @@
   align-items: center;
   justify-content: center;
 
-  background: #000; /* importante: se sobrar área, fica preto */
-}
-
-/* IMAGEM: SEM BASELINE + SEM SOBRA */
-.slide__img-full{
-  width: 100%;
-  height: 100vh;
-  display: block;         /* remove baseline (causa linha) */
-
-  object-fit: contain;    /* ou cover */
-  object-position: center;
-
   background: #fff;
-
-  /* evita artefato de 1px em algumas TVs */
-  transform: translateZ(0);
+  /* importante: se sobrar área, fica preto */
 }
 
 /* Se quiser “encher” a tela sempre, use cover:
@@ -133,13 +131,13 @@
 /* =========================================================
    SLIDE COM TEXTO
    ========================================================= */
-.slide--text{
+.slide--text {
   height: 100%;
   display: flex;
   align-items: center;
 }
 
-.slide--text .slide__doc{
+.slide--text .slide__doc {
   width: 100%;
   max-width: 980px;
   margin: 0 auto;
@@ -153,7 +151,7 @@
 /* =========================================================
    SETAS
    ========================================================= */
-.carousel__arrow{
+.carousel__arrow {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -168,7 +166,7 @@
   background: #fff;
   color: var(--primary-color);
 
-  box-shadow: 0 4px 12px rgba(0,0,0,.10);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .10);
   cursor: pointer;
 
   display: flex;
@@ -178,16 +176,21 @@
   transition: all .2s ease;
 }
 
-.carousel__arrow:hover{
+.carousel__arrow:hover {
   background: var(--primary-color);
   color: #fff;
   transform: translateY(-50%) scale(1.06);
 }
 
-.carousel__arrow--prev{ left: 12px; }
-.carousel__arrow--next{ right: 12px; }
+.carousel__arrow--prev {
+  left: 12px;
+}
 
-.carousel__arrow svg{
+.carousel__arrow--next {
+  right: 12px;
+}
+
+.carousel__arrow svg {
   width: 24px;
   height: 24px;
 }
@@ -195,7 +198,7 @@
 /* =========================================================
    DOTS
    ========================================================= */
-.carousel__dots{
+.carousel__dots {
   position: absolute;
   bottom: 12px;
   left: 50%;
@@ -207,12 +210,12 @@
   z-index: 11;
 }
 
-.carousel__dot{
+.carousel__dot {
   width: 10px;
   height: 10px;
 
   border-radius: 999px;
-  background: rgba(92,44,140,.22);
+  background: rgba(92, 44, 140, .22);
 
   border: none;
   cursor: pointer;
@@ -221,7 +224,7 @@
   padding: 0;
 }
 
-.carousel__dot.is-active{
+.carousel__dot.is-active {
   width: 30px;
   background: var(--primary-color);
 }
@@ -229,53 +232,54 @@
 /* =========================================================
    BOTÃO FULLSCREEN
    ========================================================= */
-.carousel__fullscreen{
-  position:absolute;
-  top:12px;
-  right:12px;
-  z-index:12;
+.carousel__fullscreen {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 12;
 
-  width:34px;
-  height:34px;
+  width: 34px;
+  height: 34px;
 
-  border-radius:999px;
-  border:0;
-  cursor:pointer;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  background: rgba(255,255,255,.55);
+  background: rgba(255, 255, 255, .55);
   color: var(--primary-color);
 
-  box-shadow: 0 6px 16px rgba(0,0,0,.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08);
 
-  opacity: .12; /* quase invisível */
+  opacity: .12;
+  /* quase invisível */
   transition: opacity .25s ease, transform .2s ease, background .2s ease;
 }
 
-.carousel__fullscreen svg{
-  width:18px;
-  height:18px;
+.carousel__fullscreen svg {
+  width: 18px;
+  height: 18px;
 }
 
 .carousel__fullscreen:hover,
-.carousel__fullscreen:focus-visible{
+.carousel__fullscreen:focus-visible {
   opacity: .9;
   transform: scale(1.05);
 }
 
-.carousel__fullscreen.is-idle{
+.carousel__fullscreen.is-idle {
   opacity: .08;
 }
 
 /* fullscreen (quando o target é html) */
 html:fullscreen .carousel__fullscreen,
 html:-webkit-full-screen .carousel__fullscreen,
-html:-ms-fullscreen .carousel__fullscreen{
+html:-ms-fullscreen .carousel__fullscreen {
   opacity: .05 !important;
-  background: rgba(255,255,255,.22) !important;
+  background: rgba(255, 255, 255, .22) !important;
   box-shadow: none !important;
 }
 
@@ -284,19 +288,79 @@ html:fullscreen .carousel__fullscreen:focus-visible,
 html:-webkit-full-screen .carousel__fullscreen:hover,
 html:-webkit-full-screen .carousel__fullscreen:focus-visible,
 html:-ms-fullscreen .carousel__fullscreen:hover,
-html:-ms-fullscreen .carousel__fullscreen:focus-visible{
+html:-ms-fullscreen .carousel__fullscreen:focus-visible {
   opacity: .9 !important;
-  background: rgba(255,255,255,.55) !important;
-  box-shadow: 0 6px 16px rgba(0,0,0,.08) !important;
+  background: rgba(255, 255, 255, .55) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, .08) !important;
 }
 
 /* =========================================================
    FIX EXTRA: evitar “fenda” de 1px por zoom/subpixel
    (não muda visual, só melhora estabilidade)
    ========================================================= */
-@media (min-width: 0px){
-  .carousel__viewport, .carousel__track, .slide, .slide__inner, .slide__img-full{
+@media (min-width: 0px) {
+
+  .carousel__viewport,
+  .carousel__track,
+  .slide,
+  .slide__inner,
+  .slide__img-full {
     outline: 0;
     border: 0;
   }
+}
+
+.slide__img-full {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  max-height: none !important;
+
+  object-fit: contain;
+  object-position: center;
+
+  display: block;
+}
+
+/* ===============================
+   FORÇA CAROUSEL EM FULLSCREEN
+   =============================== */
+
+:fullscreen .carousel,
+:-webkit-full-screen .carousel {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #fff !important;
+}
+
+:fullscreen .carousel__viewport,
+:-webkit-full-screen .carousel__viewport {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+:fullscreen .slide,
+:-webkit-full-screen .slide {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+:fullscreen .slide__inner,
+:-webkit-full-screen .slide__inner {
+  width: 100vw !important;
+  height: 100vh !important;
+}
+
+:fullscreen .slide__img-full,
+:-webkit-full-screen .slide__img-full {
+  width: 100vw !important;
+  height: 100vh !important;
+  object-fit: contain !important;
 }

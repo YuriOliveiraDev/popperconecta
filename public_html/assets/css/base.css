@@ -1531,12 +1531,6 @@ html, body{
     max-height: 720px;
   }
 }
-
-/* imagem do slide não pode “forçar” altura além do viewport */
-.slide__img-full{
-  height: 100%;
-  max-height: 100%;
-}
 @media (max-width: 1366px) and (max-height: 768px){
   .slide--insight .insight{
     display: grid !important;
@@ -1877,3 +1871,4 @@ body.dashboard-exec{
 /* destaca TOP 10 (sem cortar o resto) */
 .top-item.is-top .top-name{ font-size:13.5px; }
 .top-item.is-top .top-rank{ background: rgba(59,130,246,.18); }
+
