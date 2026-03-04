@@ -255,3 +255,16 @@ html:-ms-fullscreen #fullscreenBtn.carousel__fullscreen{
   background: rgba(255,255,255,.55) !important;
   box-shadow: 0 6px 16px rgba(0,0,0,.08) !important;
 }
+.slide,
+.slide__inner{
+  width:100%;
+  height:100%;
+}
+
+.slide__img-full{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}

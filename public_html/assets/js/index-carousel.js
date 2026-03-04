@@ -1,3 +1,31 @@
+// ✅ Força altura real do iframe (resolve TV Box que ignora 100vh/dvh)
+(function forceIframeSize(){
+  const frame = document.getElementById('frame');
+  if (!frame) return;
+
+  const apply = () => {
+    const h = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 0);
+    const w = Math.max(1, window.innerWidth  || document.documentElement.clientWidth  || 0);
+
+    frame.style.height = h + 'px';
+    frame.style.width  = w + 'px';
+
+    // evita “barrinha” por arredondamento/subpixel
+    frame.style.transform = 'translateZ(0)';
+  };
+
+  apply();
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+
+  // fullscreen em TVs muda dimensão sem resize às vezes
+  document.addEventListener('fullscreenchange', () => setTimeout(apply, 50));
+  document.addEventListener('webkitfullscreenchange', () => setTimeout(apply, 50));
+
+  // alguns devices estabilizam depois
+  setTimeout(apply, 120);
+  setTimeout(apply, 500);
+})();
 /* global window, document */
 
 const carousel = document.getElementById('mainCarousel');
@@ -6,6 +34,11 @@ const track = document.getElementById('track');
 const prev = document.getElementById('prevBtn');
 const next = document.getElementById('nextBtn');
 const dotsEl = document.getElementById('dots');
+
+// ✅ detecta se está dentro de iframe (modo TV/Tablet shell)
+const IN_IFRAME = (() => {
+  try { return window.self !== window.top; } catch { return true; }
+})();
 
 let index = 0;
 let timer = null;
@@ -27,11 +60,16 @@ function clampIndex(){
   index = Math.max(0, Math.min(total - 1, index));
 }
 
+function setActiveDot(){
+  if (!dotsEl) return;
+  const dots = dotsEl.querySelectorAll('.carousel__dot');
+  dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
+}
+
 function render(){
   if (!track || !viewport) return;
 
   clampIndex();
-
   const w = pageWidth();
   if (!w) return;
 
@@ -57,36 +95,13 @@ function buildDots(){
       index = i;
       render();
       restartAutoplay();
-      wakeFsButton(); // mantém botão visível ao interagir
+      wakeFsButton();
     });
 
     dotsEl.appendChild(b);
   }
 
   setActiveDot();
-}
-
-function setActiveDot(){
-  if (!dotsEl) return;
-  const dots = dotsEl.querySelectorAll('.carousel__dot');
-  dots.forEach((d, i) => d.classList.toggle('is-active', i === index));
-}
-
-function goPrev(){
-  index = Math.max(0, index - 1);
-  render();
-  restartAutoplay();
-  wakeFsButton();
-}
-
-function goNext(){
-  const total = totalSlides();
-  if (total <= 0) return;
-
-  index = (index + 1) % total; // loop infinito
-  render();
-  restartAutoplay();
-  wakeFsButton();
 }
 
 function stopAutoplay(){
@@ -109,6 +124,23 @@ function startAutoplay(){
 
 function restartAutoplay(){
   startAutoplay();
+}
+
+function goPrev(){
+  index = Math.max(0, index - 1);
+  render();
+  restartAutoplay();
+  wakeFsButton();
+}
+
+function goNext(){
+  const total = totalSlides();
+  if (total <= 0) return;
+
+  index = (index + 1) % total;
+  render();
+  restartAutoplay();
+  wakeFsButton();
 }
 
 prev?.addEventListener('click', goPrev);
@@ -142,7 +174,7 @@ window.carouselGetIndex = () => index;
 // Inicialização defensiva
 setTimeout(refreshAll, 50);
 
-// pausa autoplay SOMENTE em device com mouse (evita travar em TV Box / touch)
+// pausa autoplay SOMENTE em device com mouse
 (() => {
   if (!carousel) return;
 
@@ -155,17 +187,14 @@ setTimeout(refreshAll, 50);
 })();
 
 /* =========================================================
-   FULLSCREEN (botão no canto)
-   - Precisa existir no HTML:
-     <button id="fullscreenBtn" class="carousel__fullscreen">...</button>
-
-   REQUER CSS:
-     .carousel__fullscreen.is-idle { opacity: .18; }
+   FULLSCREEN
+   ✅ DESLIGA EM IFRAME (TV/Tablet shell cuida disso)
    ========================================================= */
 
 // controle do "sumir" do botão fullscreen após 10s
 let __fsBtnRef = null;
 let __fsIdleT = null;
+
 function wakeFsButton(){
   if (!__fsBtnRef) return;
   __fsBtnRef.classList.remove('is-idle');
@@ -176,12 +205,13 @@ function wakeFsButton(){
 }
 
 (function(){
+  if (IN_IFRAME) return; // ✅ TV/Tablet: fullscreen é responsabilidade do /tv/index.php
+
   const fsBtn = document.getElementById('fullscreenBtn');
   if (!fsBtn) return;
 
   __fsBtnRef = fsBtn;
 
-  // Melhor para TV: tela cheia na página toda (some header/footer via CSS :fullscreen)
   const fsTarget = document.documentElement;
 
   function isFs(){
@@ -215,11 +245,8 @@ function wakeFsButton(){
 
   async function toggleFs(){
     try{
-      if (isFs()) {
-        await exitFs();
-      } else {
-        await reqFs(fsTarget);
-      }
+      if (isFs()) await exitFs();
+      else await reqFs(fsTarget);
     } catch (e) {
       console.warn('Fullscreen falhou:', e);
     } finally {
@@ -229,19 +256,8 @@ function wakeFsButton(){
 
   function onFsChange(){
     setIcon();
-
-    // fullscreen muda dimensões: recalcula e garante autoplay
-    requestAnimationFrame(() => {
-      render();
-      restartAutoplay();
-    });
-
-    // alguns devices demoram a estabilizar layout
-    setTimeout(() => {
-      render();
-      restartAutoplay();
-    }, 120);
-
+    requestAnimationFrame(() => { render(); restartAutoplay(); });
+    setTimeout(() => { render(); restartAutoplay(); }, 120);
     wakeFsButton();
   }
 
@@ -252,7 +268,6 @@ function wakeFsButton(){
     wakeFsButton();
   });
 
-  // acorda o botão quando usuário mexe (controle/mouse/teclado)
   ['mousemove','pointermove','keydown','touchstart','click'].forEach((ev) => {
     document.addEventListener(ev, wakeFsButton, { passive: true });
   });
@@ -264,118 +279,15 @@ function wakeFsButton(){
   setIcon();
   wakeFsButton();
 })();
-
-/* =========================================================
-   AUTO-UPDATE (tempo real via polling)
-   - atualiza slides em fullscreen sem reload
-   ========================================================= */
-(() => {
-  const FEED_URL = '/api/comunicados-feed.php';
-  const POLL_MS = 8000;
-
-  let currentVersion = null;
-  let inFlight = false;
-
-  function esc(s){
-    return String(s ?? '')
-      .replace(/&/g,'&amp;')
-      .replace(/</g,'&lt;')
-      .replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;')
-      .replace(/'/g,'&#039;');
-  }
-
-  function buildSlideHTML(item){
-    const id = Number(item.id) || 0;
-    const titulo = esc(item.titulo || '');
-    const conteudo = esc(item.conteudo || '');
-    const img = item.imagem_path ? esc(item.imagem_path) : '';
-
-    // ✅ adapte este HTML ao seu layout real do slide
-    return `
-      <div class="slide" data-id="${id}">
-        ${img ? `<img class="slide__img" src="${img}" alt="">` : ''}
-        <div class="slide__content">
-          ${titulo ? `<h3 class="slide__title">${titulo}</h3>` : ''}
-          ${conteudo ? `<p class="slide__text">${conteudo}</p>` : ''}
-        </div>
-      </div>
-    `;
-  }
-
-  function getCurrentSlideId(){
-    try{
-      const slides = track?.querySelectorAll('.slide');
-      if (!slides || !slides.length) return null;
-      const el = slides[index];
-      const id = el?.getAttribute('data-id');
-      return id ? String(id) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function goToSlideById(id){
-    if (!id || !track) return false;
-    const slides = Array.from(track.querySelectorAll('.slide'));
-    const idx = slides.findIndex(s => String(s.getAttribute('data-id')) === String(id));
-    if (idx >= 0) {
-      index = idx;
-      return true;
-    }
-    return false;
-  }
-
-  async function poll(){
-    if (inFlight) return;
-    inFlight = true;
-
-    try{
-      const res = await fetch(`${FEED_URL}?_=${Date.now()}`, {
-        cache: 'no-store',
-        credentials: 'same-origin',
-        headers: { 'Accept': 'application/json' }
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!data || !data.ok) return;
-
-      // primeira vez só “aprende” a versão
-      if (currentVersion === null) {
-        currentVersion = data.version || '';
-        return;
-      }
-
-      // se não mudou, não faz nada
-      if ((data.version || '') === currentVersion) return;
-
-      // mudou: aplica atualização
-      const keepId = getCurrentSlideId();
-
-      const items = Array.isArray(data.items) ? data.items : [];
-      if (track) {
-        track.innerHTML = items.map(buildSlideHTML).join('');
-      }
-
-      // tenta manter o slide atual por ID
-      const kept = keepId ? goToSlideById(keepId) : false;
-      if (!kept) index = 0;
-
-      currentVersion = data.version || '';
-
-      // reconstrói dots e recalcula transform/autoplay
-      if (window.carouselRefresh) window.carouselRefresh();
-
-    } catch (e){
-      // em TV Box é melhor só logar baixo e seguir
-      console.warn('carousel feed poll falhou:', e);
-    } finally {
-      inFlight = false;
-    }
-  }
-
-  // start
-  setInterval(poll, POLL_MS);
-  setTimeout(poll, 1200);
+// ✅ Corrige o VH real (resolve faixa branca embaixo em TV Box/Android)
+(function setRealVh(){
+  const apply = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  };
+  apply();
+  window.addEventListener('resize', apply);
+  window.addEventListener('orientationchange', apply);
+  document.addEventListener('fullscreenchange', apply);
+  document.addEventListener('webkitfullscreenchange', apply);
 })();
