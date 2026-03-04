@@ -7,6 +7,13 @@ require_once __DIR__ . '/app/db.php';
 
 require_login();
 
+/* =========================================================
+   ANTI-CACHE (TV Box / fullscreen)
+   ========================================================= */
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $u = current_user();
 $activePage = 'home';
 
@@ -23,7 +30,13 @@ function h(?string $s): string {
 // =========================
 // COMUNICADOS
 // =========================
-$stmt = db()->prepare('SELECT titulo, conteudo, imagem_path FROM comunicados WHERE ativo = TRUE ORDER BY ordem ASC, id ASC');
+// ✅ inclui id para data-id nos slides
+$stmt = db()->prepare('
+  SELECT id, titulo, conteudo, imagem_path
+  FROM comunicados
+  WHERE ativo = TRUE
+  ORDER BY ordem ASC, id ASC
+');
 $stmt->execute();
 $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -221,7 +234,6 @@ if ($insight) {
   <main>
     <section class="carousel carousel--full full-bleed" id="mainCarousel">
 
-      <!-- ✅ Ícone fullscreen no canto -->
       <button class="carousel__fullscreen" type="button" id="fullscreenBtn" aria-label="Tela cheia">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
@@ -240,7 +252,7 @@ if ($insight) {
         <div class="carousel__track" id="track">
 
           <?php if (empty($comunicados)): ?>
-            <article class="slide slide--text">
+            <article class="slide slide--text" data-id="0">
               <div class="slide__doc">
                 <div class="doc__title">Bem-vindo</div>
                 <div class="doc__body">Fique atento aos novos comunicados da Popper aqui.</div>
@@ -249,6 +261,7 @@ if ($insight) {
           <?php else: ?>
             <?php foreach ($comunicados as $c): ?>
               <?php
+                $id = (int)($c['id'] ?? 0);
                 $img = trim((string)($c['imagem_path'] ?? ''));
                 $titulo = trim((string)($c['titulo'] ?? ''));
                 $conteudo = trim((string)($c['conteudo'] ?? ''));
@@ -257,13 +270,13 @@ if ($insight) {
               ?>
 
               <?php if ($hasImage): ?>
-                <article class="slide slide--image">
+                <article class="slide slide--image" data-id="<?= (int)$id ?>">
                   <div class="slide__inner">
                     <img class="slide__img-full" src="<?= h($img) ?>" alt="Comunicado">
                   </div>
                 </article>
               <?php else: ?>
-                <article class="slide slide--text">
+                <article class="slide slide--text" data-id="<?= (int)$id ?>">
                   <div class="slide__doc">
                     <?php if ($titulo !== ''): ?>
                       <div class="doc__title"><?= h($titulo) ?></div>
@@ -325,6 +338,160 @@ if ($insight) {
     requestAnimationFrame(go0);
     setTimeout(go0, 120);
     window.addEventListener('pageshow', go0);
+  })();
+  </script>
+
+  <!-- ✅ AUTO-UPDATE dos comunicados (sem reload / mantém fullscreen) -->
+  <script>
+  (function(){
+    const FEED_URL = '/api/comunicados-feed.php';
+    const POLL_MS = 8000;
+
+    const trackEl = document.getElementById('track');
+    if (!trackEl) return;
+
+    let currentVersion = null;
+    let inFlight = false;
+
+    function esc(s){
+      return String(s ?? '')
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&#039;');
+    }
+
+    function buildSlideHTML(item){
+      const id = Number(item.id) || 0;
+      const img = (item.imagem_path || '').trim();
+      const titulo = (item.titulo || '').trim();
+      const conteudo = (item.conteudo || '').trim();
+      const hasImage = img !== '';
+      const hasText = (titulo !== '' || conteudo !== '');
+
+      if (hasImage) {
+        return `
+          <article class="slide slide--image" data-id="${id}">
+            <div class="slide__inner">
+              <img class="slide__img-full" src="${esc(img)}" alt="Comunicado">
+            </div>
+          </article>
+        `;
+      }
+
+      if (!hasText) {
+        return `
+          <article class="slide slide--text" data-id="${id}">
+            <div class="slide__doc">
+              <div class="doc__title">Comunicado</div>
+              <div class="doc__body">Sem conteúdo.</div>
+            </div>
+          </article>
+        `;
+      }
+
+      const body = conteudo ? esc(conteudo).replace(/\n/g,'<br>') : '';
+
+      return `
+        <article class="slide slide--text" data-id="${id}">
+          <div class="slide__doc">
+            ${titulo ? `<div class="doc__title">${esc(titulo)}</div>` : ''}
+            ${body ? `<div class="doc__body">${body}</div>` : ''}
+          </div>
+        </article>
+      `;
+    }
+
+    function getCurrentSlideId(){
+      try{
+        if (!window.carouselGetIndex) return null;
+        const idx = Number(window.carouselGetIndex()) || 0;
+        const slides = trackEl.querySelectorAll('.slide');
+        const el = slides[idx];
+        const id = el && el.getAttribute('data-id');
+        return id ? String(id) : null;
+      } catch(e){
+        return null;
+      }
+    }
+
+    function goToSlideById(id){
+      try{
+        if (!id || !window.carouselGoTo) return false;
+        const slides = Array.from(trackEl.querySelectorAll('.slide'));
+        const idx = slides.findIndex(s => String(s.getAttribute('data-id')) === String(id));
+        if (idx >= 0) {
+          window.carouselGoTo(idx);
+          return true;
+        }
+        return false;
+      } catch(e){
+        return false;
+      }
+    }
+
+    async function poll(){
+      if (inFlight) return;
+      inFlight = true;
+
+      try{
+        const res = await fetch(`${FEED_URL}?_=${Date.now()}`, {
+          cache: 'no-store',
+          credentials: 'same-origin',
+          headers: { 'Accept': 'application/json' }
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (!data || !data.ok) return;
+
+        if (currentVersion === null) {
+          currentVersion = data.version || '';
+          return;
+        }
+
+        if ((data.version || '') === currentVersion) return;
+
+        const keepId = getCurrentSlideId();
+
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        if (!items.length) {
+          trackEl.innerHTML = `
+            <article class="slide slide--text" data-id="0">
+              <div class="slide__doc">
+                <div class="doc__title">Bem-vindo</div>
+                <div class="doc__body">Fique atento aos novos comunicados da Popper aqui.</div>
+              </div>
+            </article>
+          `;
+        } else {
+          trackEl.innerHTML = items.map(buildSlideHTML).join('');
+        }
+
+        currentVersion = data.version || '';
+
+        // reconstrói dots / recalcula transform / garante autoplay
+        if (window.carouselRefresh) window.carouselRefresh();
+
+        // tenta manter slide atual por ID
+        if (keepId) {
+          const ok = goToSlideById(keepId);
+          if (!ok && window.carouselGoTo) window.carouselGoTo(0);
+        } else if (window.carouselGoTo) {
+          window.carouselGoTo(0);
+        }
+
+      } catch (e) {
+        console.warn('carousel feed poll falhou:', e);
+      } finally {
+        inFlight = false;
+      }
+    }
+
+    setInterval(poll, POLL_MS);
+    setTimeout(poll, 1200);
   })();
   </script>
 
