@@ -466,3 +466,55 @@ html:fullscreen #mainCarousel:hover .carousel__dots,
 html:fullscreen #mainCarousel:hover .carousel__fullscreen{
   opacity: 1;
 }
+
+.carousel__fullscreen{
+  position:absolute;
+  top:14px;
+  right:18px;
+  z-index:30;
+
+  width:30px;
+  height:30px;
+
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.15);
+
+  background: rgba(15,23,42,.25);
+  backdrop-filter: blur(4px);
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  cursor:pointer;
+
+  opacity:.35;
+  transition: all .25s ease;
+}
+
+/* ícone menor */
+.carousel__fullscreen svg{
+  width:14px;
+  height:14px;
+  color:#fff;
+  opacity:.8;
+}
+
+/* hover */
+.carousel__fullscreen:hover{
+  opacity:.9;
+  background: rgba(15,23,42,.55);
+  transform: scale(1.05);
+}
+
+html:fullscreen .carousel__fullscreen,
+html:-webkit-full-screen .carousel__fullscreen{
+  opacity:.12 !important;
+  background: rgba(15,23,42,.15) !important;
+  border-color: rgba(255,255,255,.08);
+}
+
+html:fullscreen .carousel__fullscreen:hover,
+html:-webkit-full-screen .carousel__fullscreen:hover{
+  opacity:.9 !important;
+}
