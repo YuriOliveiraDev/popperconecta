@@ -120,7 +120,7 @@
   object-fit: contain;    /* ou cover */
   object-position: center;
 
-  background: #000;
+  background: #fff;
 
   /* evita artefato de 1px em algumas TVs */
   transform: translateZ(0);
