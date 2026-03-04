@@ -11,6 +11,7 @@ header('Expires: 0'); // ✅ Essencial para o header.php funcionar $u = current_
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="/assets/js/view-detect.js?v=1"></script>
   <title>Dashboard —
     <?= htmlspecialchars((string) APP_NAME, ENT_QUOTES, 'UTF-8') ?>
   </title> <!-- CSS global + específicos -->

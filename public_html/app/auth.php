@@ -7,9 +7,17 @@ declare(strict_types=1);
    - PHP bloqueia só quando for mobile
    =============================== */
 
-$view = $_COOKIE['pc_view'] ?? '';        // 'mobile' ou 'ok'
-$allow = $_COOKIE['pc_allow_mobile'] ?? ''; // '1' (escape manual)
+$userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+$isTVBox = (bool)preg_match('/\bSTV-|Android TV|SMART-TV|SmartTV|HbbTV|AFT|BRAVIA|MiTV|TV Box|Tizen|Web0S\b/i', $userAgent);
 
+// cookie setado pelo JS
+$view  = $_COOKIE['pc_view'] ?? '';
+$allow = $_COOKIE['pc_allow_mobile'] ?? '';
+
+if (!$isTVBox && $allow !== '1' && $view === 'mobile') {
+  // ... sua tela "Indisponível no mobile" ...
+  exit;
+}
 if ($allow !== '1' && $view === 'mobile') {
   header('Content-Type: text/html; charset=UTF-8');
   ?>
