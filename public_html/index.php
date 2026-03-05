@@ -405,514 +405,484 @@ try {
   <script src="/assets/js/header.js"></script>
   <script src="/assets/js/dropdowns.js"></script>
   <script src="/assets/js/index-carousel.js"></script>
-  
+  <!-- ENTRADA SUAVE -->
+  <script>
 
-<script>
-/* ======================================================
-   ENTRADA SUAVE
-====================================================== */
-(function () {
-  const goReady = () => document.body.classList.add('is-ready');
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', goReady, { once: true });
-  } else {
-    goReady();
-  }
-})();
-
-/* ======================================================
-   BASE / HELPERS
-====================================================== */
-const now = new Date();
-const CURRENT_YM = now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
-
-function brl(v) {
-  return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v || 0));
-}
-function brlShort(n) {
-  const v = Number(n || 0);
-  if (v >= 1_000_000) return "R$ " + (v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
-  if (v >= 1_000) return "R$ " + (v / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " mil";
-  return "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-}
-function tickShort(n) {
-  const v = Number(n || 0);
-  if (v >= 1_000_000) return (v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
-  if (v >= 1_000) return (v / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " mil";
-  return v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
-}
-
-/* ======================================================
-   AUTO SCROLL TOPS
-   - desce por 30s, volta topo instantâneo, repete
-   - só roda quando slide "tops" está ativo/visível
-====================================================== */
-const _autoScrollHandles = new Map();
-
-function stopAutoScroll(containerId) {
-  const h = _autoScrollHandles.get(containerId);
-  if (!h) return;
-  h.stop = true;
-  if (h.raf) cancelAnimationFrame(h.raf);
-  _autoScrollHandles.delete(containerId);
-}
-function stopAllAutoScroll() {
-  stopAutoScroll("listTopProdutos");
-  stopAutoScroll("listTopClientes");
-}
-function isTopsSlideActive() {
-  const slide = document.querySelector('.slide[data-id="tops"]');
-  if (!slide) return true;
-  if (slide.classList.contains("is-active")) return true; // se seu carousel seta isso
-  const r = slide.getBoundingClientRect();
-  return r.width > 40 && r.height > 40 && r.bottom > 0 && r.right > 0;
-}
-
-/**
- * Loop:
- * - por durationMs (30s) ele desce suave até "Top 20"
- * - no final volta pro topo de uma vez e reinicia
- */
-function startAutoScrollLoop(containerId, durationMs = 30000, opts = {}) {
-  stopAutoScroll(containerId);
-
-  const el = document.getElementById(containerId);
-  if (!el) return;
-
-  const {
-    pxPerSecond = 14, // 🔽 velocidade (Top Produtos mais lento)
-    maxItems = 20,    // até Top 20
-  } = opts;
-
-  const h = { stop: false, raf: 0, t0: 0 };
-  _autoScrollHandles.set(containerId, h);
-
-  const tick = (ts) => {
-    if (h.stop) return;
-
-    const list = document.getElementById(containerId);
-    if (!list) return;
-
-    // só rola quando o slide está ativo/visível
-    if (!isTopsSlideActive()) {
-      h.raf = requestAnimationFrame(tick);
-      return;
-    }
-
-    const first = list.querySelector(".top-item");
-    const itemH = first ? Math.max(1, first.offsetHeight) : 0;
-
-    const hardMax = Math.max(0, list.scrollHeight - list.clientHeight);
-    if (hardMax <= 2) {
-      list.scrollTop = 0;
-      h.raf = requestAnimationFrame(tick);
-      return;
-    }
-
-    const target = itemH ? Math.min(hardMax, itemH * maxItems) : hardMax;
-
-    if (!h.t0) h.t0 = ts;
-    const elapsed = ts - h.t0;
-
-    if (elapsed >= durationMs) {
-      // volta topo instantâneo e reinicia
-      list.scrollTop = 0;
-      h.t0 = ts;
-      h.raf = requestAnimationFrame(tick);
-      return;
-    }
-
-    // desce suave por velocidade (px/s), travando no target
-    const desired = (elapsed / 1000) * pxPerSecond;
-    list.scrollTop = Math.min(desired, target);
-
-    h.raf = requestAnimationFrame(tick);
-  };
-
-  h.raf = requestAnimationFrame(tick);
-}
-
-function startTopAutoScroll() {
-  stopAllAutoScroll();
-
-  const a = document.getElementById("listTopProdutos");
-  const b = document.getElementById("listTopClientes");
-  if (a) a.scrollTop = 0;
-  if (b) b.scrollTop = 0;
-
-  // ✅ ajuste fino aqui
-  startAutoScrollLoop("listTopProdutos", 30000, { pxPerSecond: 12, maxItems: 20 });
-  startAutoScrollLoop("listTopClientes", 30000, { pxPerSecond: 16, maxItems: 20 });
-}
-
-/* ======================================================
-   CARREGA KPIs
-====================================================== */
-const API = "/api/dashboard-data.php?dash=executivo";
-
-async function loadDashboard() {
-  try {
-    const r = await fetch(API + "&_=" + Date.now(), { cache: "no-store" });
-    const data = await r.json();
-    if (!data || !data.values) return;
-
-    const v = data.values;
-
-    const set = (id, val) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = val;
-    };
-
-    set("tv-meta", brl(v.meta_mes));
-    set("tv-realizado", brl(v.realizado_ate_hoje));
-    set("tv-falta", brl(v.falta_meta_mes));
-
-    set("tv-mes", brl(v.mes_total));
-    set("tv-mes-fat", brl(v.mes_faturado));
-    set("tv-mes-im", brl(v.mes_im));
-    set("tv-mes-ag", brl(v.mes_ag));
-
-    set("tv-dias", v.dias_uteis_trabalhados + " / " + v.dias_uteis_trabalhar);
-    set("tv-prod", Math.round((v.realizado_dia_util_pct || 0) * 100) + "%");
-
-    set("tv-deveria", brl(v.deveria_ate_hoje));
-    set("tv-ating", Math.round((v.atingimento_mes_pct || 0) * 100) + "%");
-
-    set("tv-projecao", brl(v.fechar_em));
-    set("tv-proj-pct", Math.round((v.equivale_pct || 0) * 100) + "%");
-
-    set("tv-hoje", brl(v.hoje_total));
-    set("tv-hoje-fat", brl(v.hoje_faturado));
-    set("tv-hoje-im", brl(v.hoje_im));
-    set("tv-hoje-ag", brl(v.hoje_ag));
-
-    set("tv-meta-dia", brl(v.a_faturar_dia_util));
-    set("tv-dias-rest", v.dias_uteis_trabalhar - v.dias_uteis_trabalhados);
-    set("tv-restante", brl(v.falta_meta_mes));
-    set("tv-meta-teo", brl(v.meta_dia_util));
-
-    set("tv-updated", data.updated_at || "--");
-
-    const gap = (v.realizado_dia_util || 0) - (v.meta_dia_util || 0);
-    const gapEl = document.getElementById("tv-gap");
-    if (gapEl) {
-      gapEl.textContent = gap >= 0 ? "Acima da meta do dia" : "Abaixo da meta do dia";
-      gapEl.className = gap >= 0 ? "kpi-green" : "kpi-red";
-    }
-
-    const metaBar = document.getElementById("meta-bar");
-    const metaPct = document.getElementById("meta-pct");
-    if (metaBar) {
-      const pct = (v.atingimento_mes_pct || 0) * 100;
-      metaBar.style.width = Math.min(pct, 100) + "%";
-      if (metaPct) metaPct.textContent = Math.round(pct) + "%";
-    }
-
-    const metaDiaBar = document.getElementById("meta-dia-bar");
-    const metaDiaPct = document.getElementById("meta-dia-pct");
-    if (metaDiaBar) {
-      const realizado = v.realizado_dia_util || 0;
-      const meta = v.a_faturar_dia_util || 0;
-      let pct = 0;
-      if (meta > 0) pct = (realizado / meta) * 100;
-      metaDiaBar.style.width = Math.min(pct, 100) + "%";
-      if (metaDiaPct) metaDiaPct.textContent = Math.round(pct) + "%";
-    }
-
-    loadCharts(v);
-  } catch (e) {
-    console.warn("Erro dashboard:", e);
-  }
-}
-
-/* ======================================================
-   GRÁFICOS
-====================================================== */
-if (window.Chart && window.ChartDataLabels) Chart.register(ChartDataLabels);
-
-let chartMes, chartAno, chartRitmo;
-
-function loadCharts(v) {
-  if (!window.Chart) return;
-
-  const commonBarOptions = {
-    resizeDelay: 80,
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: { duration: 350 },
-    plugins: {
-      legend: { display: false },
-      datalabels: {
-        color: "#ffffff",
-        textStrokeColor: "rgba(0,0,0,.35)",
-        textStrokeWidth: 3,
-        anchor: "center",
-        align: "center",
-        clamp: true,
-        clip: true,
-        font: { weight: "700", size: 12 },
-        formatter: (val) => brlShort(val)
+    /* ======================================================
+       ENTRADA SUAVE
+    ====================================================== */
+    (function () {
+      const goReady = () => document.body.classList.add('is-ready');
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', goReady, { once: true });
+      } else {
+        goReady();
       }
-    },
-    scales: {
-      y: { beginAtZero: true, ticks: { callback: (value) => tickShort(value) } }
+    })();
+
+    const now = new Date();
+    const CURRENT_YM =
+      now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+    /* ======================================================
+       FORMATADOR
+    ====================================================== */
+
+    function brl(v) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v || 0);
     }
-  };
 
-  const barDatasetBase = {
-    borderSkipped: "bottom",
-    borderRadius: { topLeft: 14, topRight: 14, bottomLeft: 0, bottomRight: 0 }
-  };
 
-  const elMes = document.getElementById("chartMes");
-  const elAno = document.getElementById("chartAno");
-  const elRit = document.getElementById("chartRitmo");
+    /* ======================================================
+       CARREGA KPIs
+    ====================================================== */
 
-  if (elMes) {
-    if (chartMes) chartMes.destroy();
-    chartMes = new Chart(elMes, {
-      type: "bar",
-      data: {
-        labels: ["Realizado", "Meta"],
-        datasets: [{
-          ...barDatasetBase,
-          data: [v.realizado_ate_hoje || 0, v.meta_mes || 0],
-          backgroundColor: ["#6b46c1", "#b5d334"]
-        }]
-      },
-      options: commonBarOptions
-    });
-  }
+    const API = "/api/dashboard-data.php?dash=executivo";
 
-  if (elAno) {
-    if (chartAno) chartAno.destroy();
-    chartAno = new Chart(elAno, {
-      type: "bar",
-      data: {
-        labels: ["Realizado", "Meta"],
-        datasets: [{
-          ...barDatasetBase,
-          data: [v.realizado_ano_acum || 0, v.meta_ano || 0],
-          backgroundColor: ["#6b46c1", "#b5d334"]
-        }]
-      },
-      options: commonBarOptions
-    });
-  }
+    async function loadDashboard() {
 
-  if (elRit) {
-    if (chartRitmo) chartRitmo.destroy();
-    chartRitmo = new Chart(elRit, {
-      type: "bar",
-      data: {
-        labels: ["Meta/dia", "Realizado/dia"],
-        datasets: [{
-          ...barDatasetBase,
-          data: [v.meta_dia_util || 0, v.realizado_dia_util || 0],
-          backgroundColor: ["#f59e0b", "#22c55e"]
-        }]
-      },
-      options: {
-        ...commonBarOptions,
+      try {
+
+        const r = await fetch(API + "&_=" + Date.now(), { cache: "no-store" });
+        const data = await r.json();
+
+        if (!data || !data.values) return;
+
+        const v = data.values;
+
+        const set = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val;
+        };
+
+        set("tv-meta", brl(v.meta_mes));
+        set("tv-realizado", brl(v.realizado_ate_hoje));
+        set("tv-falta", brl(v.falta_meta_mes));
+
+        set("tv-mes", brl(v.mes_total));
+        set("tv-mes-fat", brl(v.mes_faturado));
+        set("tv-mes-im", brl(v.mes_im));
+        set("tv-mes-ag", brl(v.mes_ag));
+
+        set("tv-dias", v.dias_uteis_trabalhados + " / " + v.dias_uteis_trabalhar);
+        set("tv-prod", Math.round((v.realizado_dia_util_pct || 0) * 100) + "%");
+
+        set("tv-deveria", brl(v.deveria_ate_hoje));
+        set("tv-ating", Math.round((v.atingimento_mes_pct || 0) * 100) + "%");
+
+        set("tv-projecao", brl(v.fechar_em));
+        set("tv-proj-pct", Math.round((v.equivale_pct || 0) * 100) + "%");
+
+        set("tv-hoje", brl(v.hoje_total));
+        set("tv-hoje-fat", brl(v.hoje_faturado));
+        set("tv-hoje-im", brl(v.hoje_im));
+        set("tv-hoje-ag", brl(v.hoje_ag));
+
+        set("tv-meta-dia", brl(v.a_faturar_dia_util));
+        set("tv-dias-rest", v.dias_uteis_trabalhar - v.dias_uteis_trabalhados);
+        set("tv-restante", brl(v.falta_meta_mes));
+        set("tv-meta-teo", brl(v.meta_dia_util));
+
+        set("tv-updated", data.updated_at || "--");
+
+        /* GAP */
+
+        const gap = (v.realizado_dia_util || 0) - (v.meta_dia_util || 0);
+        const gapEl = document.getElementById("tv-gap");
+
+        if (gapEl) {
+          gapEl.textContent = gap >= 0 ? "Acima da meta do dia" : "Abaixo da meta do dia";
+          gapEl.className = gap >= 0 ? "kpi-green" : "kpi-red";
+        }
+
+        /* BARRA META MÊS */
+
+        const metaBar = document.getElementById("meta-bar");
+        const metaPct = document.getElementById("meta-pct");
+
+        if (metaBar) {
+          const pct = (v.atingimento_mes_pct || 0) * 100;
+
+          metaBar.style.width = Math.min(pct, 100) + "%";
+
+          if (metaPct) {
+            metaPct.textContent = Math.round(pct) + "%";
+          }
+        }
+
+        /* BARRA META DIA */
+
+        const metaDiaBar = document.getElementById("meta-dia-bar");
+        const metaDiaPct = document.getElementById("meta-dia-pct");
+
+        if (metaDiaBar) {
+
+          const realizado = v.realizado_dia_util || 0;
+          const meta = v.a_faturar_dia_util || 0;
+
+          let pct = 0;
+          if (meta > 0) pct = (realizado / meta) * 100;
+
+          metaDiaBar.style.width = Math.min(pct, 100) + "%";
+
+          if (metaDiaPct) {
+            metaDiaPct.textContent = Math.round(pct) + "%";
+          }
+        }
+        loadCharts(v);
+
+      } catch (e) {
+
+        console.warn("Erro dashboard:", e);
+
+      }
+
+    }
+
+    /* ======================================================
+       GRÁFICOS (barras arredondadas + números formatados)
+    ====================================================== */
+
+    Chart.register(ChartDataLabels); // ✅ tem que vir ANTES de criar charts
+
+    let chartMes, chartAno, chartRitmo;
+
+    function brlShort(n) {
+      const v = Number(n || 0);
+      if (v >= 1_000_000) return "R$ " + (v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
+      if (v >= 1_000) return "R$ " + (v / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " mil";
+      return "R$ " + v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+    }
+
+    function tickShort(n) {
+      const v = Number(n || 0);
+      if (v >= 1_000_000) return (v / 1_000_000).toLocaleString("pt-BR", { maximumFractionDigits: 1 }) + " mi";
+      if (v >= 1_000) return (v / 1_000).toLocaleString("pt-BR", { maximumFractionDigits: 0 }) + " mil";
+      return v.toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+    }
+
+    function loadCharts(v) {
+      const commonBarOptions = {
+        resizeDelay: 80,
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 350 },
         plugins: {
-          ...commonBarOptions.plugins,
+          legend: { display: false },
           datalabels: {
+            color: "#ffffff",          // letras brancas
+            textStrokeColor: "rgba(0,0,0,.35)", // contorno p/ contraste
+            textStrokeWidth: 3,
             anchor: "center",
             align: "center",
             clamp: true,
             clip: true,
-            color: "#ffffff",
-            textStrokeColor: "rgba(0,0,0,.35)",
-            textStrokeWidth: 3,
-            font: { weight: "800", size: 12 },
-            display: (ctx) => {
-              const val = ctx.dataset?.data?.[ctx.dataIndex];
-              const n = Number(val);
-              return Number.isFinite(n) && n > 0;
-            },
+            font: { weight: "700", size: 12 },
             formatter: (val) => brlShort(val)
+
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { callback: (value) => tickShort(value) }
           }
         }
-      }
-    });
-  }
-}
+      };
 
-/* ======================================================
-   FATURAMENTO DIÁRIO
-====================================================== */
-let chartDiario;
+      const barDatasetBase = {
+        borderSkipped: "bottom",
+        borderRadius: { topLeft: 14, topRight: 14, bottomLeft: 0, bottomRight: 0 }
+      };
 
-async function loadDailyChart() {
-  try {
-    if (!window.Chart) return;
-
-    const r = await fetch("/api/dashboard-executivo-save.php?ym=" + CURRENT_YM + "&_=" + Date.now(), { cache: "no-store" });
-    const data = await r.json();
-    if (!data || !data.diario_mes) return;
-
-    const labels = Object.keys(data.diario_mes).sort((a, b) => Number(a) - Number(b));
-    const valores = Object.values(data.diario_mes);
-
-    const el = document.getElementById("chartDiario");
-    if (!el) return;
-
-    if (chartDiario) chartDiario.destroy();
-
-    chartDiario = new Chart(el, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "Faturamento",
-          data: valores,
-          borderColor: "#5c2c8c",
-          backgroundColor: "rgba(92,44,140,.12)",
-          fill: true,
-          tension: .35,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          datalabels: {
-            anchor: "end",
-            align: "top",
-            offset: 10,
-            color: "#1f2937",
-            formatter: (v) => {
-              const n = Number(v || 0);
-              if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-              if (n >= 1_000) return (n / 1_000).toFixed(0) + "k";
-              return n.toLocaleString("pt-BR");
-            },
-            font: { size: 15, weight: "700" },
-            textStrokeColor: "#ffffff",
-            textStrokeWidth: 3
-          }
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        layout: { padding: { top: 30 } },
-        plugins: {
-          legend: { display: false },
-          datalabels: { anchor: "end", align: "top", offset: 10, clamp: true, clip: false }
+      if (chartMes) chartMes.destroy();
+      chartMes = new Chart(document.getElementById("chartMes"), {
+        type: "bar",
+        data: {
+          labels: ["Realizado", "Meta"],
+          datasets: [{
+            ...barDatasetBase,
+            data: [v.realizado_ate_hoje || 0, v.meta_mes || 0],
+            backgroundColor: ["#6b46c1", "#b5d334"]
+          }]
         },
-        scales: { y: { beginAtZero: true } }
+        options: commonBarOptions
+      });
+
+      if (chartAno) chartAno.destroy();
+      chartAno = new Chart(document.getElementById("chartAno"), {
+        type: "bar",
+        data: {
+          labels: ["Realizado", "Meta"],
+          datasets: [{
+            ...barDatasetBase,
+            data: [v.realizado_ano_acum || 0, v.meta_ano || 0],
+            backgroundColor: ["#6b46c1", "#b5d334"]
+          }]
+        },
+        options: commonBarOptions
+      });
+
+      if (chartRitmo) chartRitmo.destroy();
+      chartRitmo = new Chart(document.getElementById("chartRitmo"), {
+        type: "bar",
+        data: {
+          labels: ["Meta/dia", "Realizado/dia"],
+          datasets: [{
+            ...barDatasetBase,
+            data: [v.meta_dia_util || 0, v.realizado_dia_util || 0],
+            backgroundColor: ["#f59e0b", "#22c55e"]
+          }]
+        },
+        options: {
+          ...commonBarOptions,
+          plugins: {
+            ...commonBarOptions.plugins,
+            datalabels: {
+              anchor: "center",
+              align: "center",
+              clamp: true,
+              clip: true,
+
+              color: "#ffffff",                 // ✅ letras brancas
+              textStrokeColor: "rgba(0,0,0,.35)",// ✅ contorno leve p/ contrastar
+              textStrokeWidth: 3,
+
+              font: { weight: "800", size: 12 },
+
+              // (opcional) só mostra se tiver valor > 0
+              display: (ctx) => {
+                const val = ctx.dataset?.data?.[ctx.dataIndex];
+                const n = Number(val);
+                return Number.isFinite(n) && n > 0;
+              },
+
+              formatter: (val) => brlShort(val)
+            }
+          }
+        }
+      });
+    }
+
+    /* ======================================================
+       FATURAMENTO DIÁRIO
+    ====================================================== */
+
+    let chartDiario;
+
+    async function loadDailyChart() {
+
+      try {
+        const r = await fetch("/api/dashboard-executivo-save.php?ym=" + CURRENT_YM + "&_=" + Date.now());
+        const data = await r.json();
+
+        if (!data || !data.diario_mes) return;
+
+        const labels = Object.keys(data.diario_mes).sort((a, b) => Number(a) - Number(b));
+        const valores = Object.values(data.diario_mes);
+
+        if (chartDiario) chartDiario.destroy();
+
+        chartDiario = new Chart(document.getElementById("chartDiario"), {
+
+          type: "line",
+
+          data: {
+            labels: labels,
+            datasets: [{
+              label: "Faturamento",
+              data: valores,
+              borderColor: "#5c2c8c",
+              backgroundColor: "rgba(92,44,140,.12)",
+              fill: true,
+              tension: .35,
+
+              pointRadius: 4,
+              pointHoverRadius: 6,
+
+              datalabels: {
+                anchor: "end",
+                align: "top",
+                offset: 10,   // sobe um pouco os números
+
+                color: "#1f2937",
+
+                formatter: (v) => {
+                  if (v === null || v === undefined) return "0";
+
+                  if (v >= 1000000) return (v / 1000000).toFixed(1) + "M";
+                  if (v >= 1000) return (v / 1000).toFixed(0) + "k";
+
+                  return v;
+                },
+
+                font: {
+                  size: 15,
+                  weight: "700"
+                },
+
+                textStrokeColor: "#ffffff",
+                textStrokeWidth: 3
+              }
+            }]
+          },
+
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            layout: {
+              padding: {
+                top: 30
+              }
+            },
+
+            plugins: {
+              legend: { display: false },
+              datalabels: {
+                anchor: "end",
+                align: "top",
+                offset: 10,
+                clamp: true,
+                clip: false
+              }
+            },
+
+            scales: {
+              y: { beginAtZero: true }
+            }
+          }
+
+        });
+
+        const mes = now.toLocaleString("pt-BR", { month: "short" });
+        const ano = now.getFullYear();
+
+        const titulo = document.getElementById("ttlChart");
+        if (titulo) titulo.textContent = "Faturamento Diário (" + mes + "/" + ano + ")";
+
+      } catch (e) {
+        console.warn("Erro gráfico diário", e);
       }
-    });
 
-    const mes = now.toLocaleString("pt-BR", { month: "short" });
-    const ano = now.getFullYear();
-    const titulo = document.getElementById("ttlChart");
-    if (titulo) titulo.textContent = "Faturamento Diário (" + mes + "/" + ano + ")";
-  } catch (e) {
-    console.warn("Erro gráfico diário", e);
-  }
-}
-
-/* ======================================================
+    }
+    
+    /* ======================================================
    TOPS (Slide 3)
-====================================================== */
+   - Top Produtos + Top Clientes (mês atual)
+   ====================================================== */
+
 const TOP_N = 10;
 
-function asNumber(v) {
+// helpers (reaproveita seu estilo)
+function asNumber(v){
   const n = Number(v);
   return Number.isFinite(n) ? n : 0;
 }
-function moneyBR(v) {
-  return asNumber(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+function moneyBR(v){
+  return asNumber(v).toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
 }
-function escapeHtml(str) {
-  return String(str ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function escapeHtml(str){
+  return String(str ?? '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#039;");
 }
-function normalizeEntries(input) {
+
+/**
+ * Aceita:
+ * - objeto { "A": 123, "B": 456 }
+ * - array [ ["A", 123], ["B", 456] ]
+ * - array de objetos [ {name:"A", value:123}, ... ]
+ */
+function normalizeEntries(input){
   if (!input) return [];
 
   if (Array.isArray(input)) {
     return input
       .map(it => {
         if (Array.isArray(it)) return [it[0], it[1]];
-        if (it && typeof it === "object") return [it.name ?? it.label ?? it.key, it.value ?? it.val ?? it.total];
+        if (it && typeof it === 'object') return [it.name ?? it.label ?? it.key, it.value ?? it.val ?? it.total];
         return [null, null];
       })
-      .filter(([n]) => n != null && String(n).trim() !== "");
+      .filter(([n]) => n != null && String(n).trim() !== '');
   }
 
-  if (typeof input === "object") return Object.entries(input);
+  if (typeof input === 'object') return Object.entries(input);
   return [];
 }
 
-function renderTopList(containerId, badgeId, input) {
+function renderTopList(containerId, badgeId, input){
   const wrap = document.getElementById(containerId);
   if (!wrap) return;
 
   const entries = normalizeEntries(input)
     .map(([name, val]) => [String(name), asNumber(val)])
-    .filter(([name]) => name.trim() !== "")
-    .sort((a, b) => b[1] - a[1]);
+    .filter(([name]) => name.trim() !== '')
+    .sort((a,b) => b[1] - a[1]);
 
-  const total = entries.reduce((acc, [, v]) => acc + v, 0);
+  const total = entries.reduce((acc, [,v]) => acc + v, 0);
   const max = entries.length ? entries[0][1] : 0;
 
   const badge = document.getElementById(badgeId);
-  if (badge) badge.textContent = entries.length ? `Top ${Math.min(TOP_N, entries.length)} / ${entries.length}` : "—";
+  if (badge) badge.textContent = entries.length ? `Top ${Math.min(TOP_N, entries.length)} / ${entries.length}` : '—';
 
-  wrap.innerHTML = "";
-  wrap.scrollTop = 0;
-
+  wrap.innerHTML = '';
   if (!entries.length) {
     wrap.innerHTML = `<div style="opacity:.7;padding:8px 6px;">Sem dados</div>`;
     return;
   }
 
-  for (let idx = 0; idx < entries.length; idx++) {
+  for (let idx=0; idx<entries.length; idx++){
     const [name, val] = entries[idx];
     const rank = idx + 1;
 
     const pct = total > 0 ? (val / total) * 100 : 0;
     const width = max > 0 ? (val / max) * 100 : 0;
 
-    const row = document.createElement("div");
-    let cls = "top-item";
-    if (rank === 1) cls += " is-top1";
-    else if (rank === 2) cls += " is-top2";
-    else if (rank === 3) cls += " is-top3";
-    else if (rank <= TOP_N) cls += " is-top";
+    const row = document.createElement('div');
+    let cls = 'top-item';
+    if (rank === 1) cls += ' is-top1';
+    else if (rank === 2) cls += ' is-top2';
+    else if (rank === 3) cls += ' is-top3';
+    else if (rank <= TOP_N) cls += ' is-top';
 
     row.className = cls;
+
     row.innerHTML = `
       <div class="top-rank">${rank}</div>
+
       <div class="top-main">
         <div class="top-name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
         <div class="top-sub"><span>${pct.toFixed(1)}%</span></div>
         <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
       </div>
+
       <div class="top-val">${moneyBR(val)}</div>
     `;
+
     wrap.appendChild(row);
   }
 }
 
-function fmtYM(ym) {
-  const [Y, M] = String(ym).split("-").map(Number);
-  const meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-  const mm = Number.isFinite(M) ? meses[M - 1] : "--";
+function fmtYM(ym){
+  const [Y, M] = String(ym).split('-').map(Number);
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const mm = Number.isFinite(M) ? meses[M-1] : '--';
   return `${mm}/${String(Y).slice(-2)}`;
 }
 
-async function loadTopsCarousel() {
-  try {
+async function loadTopsCarousel(){
+  try{
     const ym = CURRENT_YM;
 
-    const rProd = await fetch("/api/dashboard-executivo-save.php?ym=" + ym + "&_=" + Date.now(), { cache: "no-store" });
+    // 1) Produtos (já existe no dashboard-executivo-save)
+    const rProd = await fetch("/api/dashboard-executivo-save.php?ym=" + ym + "&_=" + Date.now(), { cache:"no-store" });
     const prodPayload = await rProd.json();
 
-    const rCli = await fetch("/api/clientes_insights.php?ym=" + ym + "&_=" + Date.now(), { cache: "no-store" });
+    // 2) Clientes (vem do clientes_insights)
+    const rCli = await fetch("/api/clientes_insights.php?ym=" + ym + "&_=" + Date.now(), { cache:"no-store" });
     const cliPayload = await rCli.json();
 
     const upd = prodPayload?.updated_at || cliPayload?.updated_at || "--";
@@ -923,45 +893,94 @@ async function loadTopsCarousel() {
     const upEl = document.getElementById("topsUpdated");
     if (upEl) upEl.textContent = upd;
 
+    // TOP PRODUTOS (objeto {produto: valor})
     renderTopList("listTopProdutos", "badgeTopProdutos", prodPayload?.top_produtos || null);
 
+    // TOP CLIENTES (array [{cliente, valor}]) -> converte para formato aceito pelo normalizeEntries()
     const top50 = cliPayload?.ranking?.top50 || [];
-    const clientesAsEntries = Array.isArray(top50) ? top50.map(x => [x.cliente, x.valor]) : null;
+    const clientesAsEntries = Array.isArray(top50)
+      ? top50.map(x => [x.cliente, x.valor])
+      : null;
+
     renderTopList("listTopClientes", "badgeTopClientes", clientesAsEntries);
 
-    // ✅ reinicia o auto-scroll sempre que renderizar
-    setTimeout(startTopAutoScroll, 180);
-
-  } catch (e) {
+  } catch(e){
     console.warn("Erro tops carousel:", e);
     renderTopList("listTopProdutos", "badgeTopProdutos", null);
     renderTopList("listTopClientes", "badgeTopClientes", null);
-    stopAllAutoScroll();
   }
 }
+    
+
+
+
+    loadDashboard();
+    loadTopsCarousel();
+    /* espera o carousel montar */
+    setTimeout(() => {
+      loadDailyChart();
+    }, 800);
+    /* atualização */
+
+setInterval(loadTopsCarousel, 1800000);
+    setInterval(loadDashboard, 1800000);
+    setInterval(loadDailyChart, 1800000);
+    Chart.register(ChartDataLabels);
 
 /* ======================================================
-   BOOT
-====================================================== */
-(function boot() {
-  const run = async () => {
-    await loadDashboard();
-    await loadTopsCarousel();
-    setTimeout(loadDailyChart, 800);
-  };
+   AUTO SCROLL TOP LISTS (Top Produtos / Top Clientes)
+   ====================================================== */
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", run, { once: true });
-  } else {
-    run();
+function autoScrollTopList(containerId, maxItems = 20) {
+
+  const el = document.getElementById(containerId);
+  if (!el) return;
+
+  let direction = 1;
+  let pos = 0;
+
+  const item = el.querySelector(".top-item");
+  if (!item) return;
+
+  const itemHeight = item.offsetHeight;
+
+  const maxScroll = itemHeight * maxItems;
+
+  function step() {
+
+    pos += direction * 0.35; // velocidade suave
+
+    if (pos >= maxScroll) {
+      direction = -1;
+      setTimeout(()=>{}, 2000); // pausa leve
+    }
+
+    if (pos <= 0) {
+      direction = 1;
+      setTimeout(()=>{}, 2000);
+    }
+
+    el.scrollTop = pos;
+
+    requestAnimationFrame(step);
   }
 
-  setInterval(loadTopsCarousel, 1800000);
-  setInterval(loadDashboard, 1800000);
-  setInterval(loadDailyChart, 1800000);
-})();
-</script>
+  requestAnimationFrame(step);
+}
 
+
+/* inicia quando carregar os tops */
+function startTopAutoScroll(){
+
+  autoScrollTopList("listTopProdutos", 20);
+  autoScrollTopList("listTopClientes", 20);
+
+}
+
+/* espera os dados renderizarem */
+setTimeout(startTopAutoScroll, 2000);
+
+  </script>
 </body>
 
 </html>
