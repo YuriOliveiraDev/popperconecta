@@ -3,13 +3,9 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/app/auth.php';
-
 require_login();
 
-require_once __DIR__ . '/app/header.php';
 require_once __DIR__ . '/app/config-totvs.php';
-
-
 
 const CACHE_DIR = __DIR__ . '/cache';
 const CACHE_TTL = 600;              
@@ -317,6 +313,8 @@ $topProdPct = $rankByPct($priceAggProd);
 $topProdR   = $rankByDesc($priceAggProd);
 
 $descPctGeral = ($totTabela > 0) ? ($totDesc / $totTabela) : 0.0;
+
+require_once __DIR__ . '/app/header.php';
 ?>
 <link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/assets/css/loader.css') ?>" />
 <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />

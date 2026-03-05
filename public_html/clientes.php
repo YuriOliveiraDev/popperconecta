@@ -4,13 +4,11 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/app/auth.php';
-
 require_login();
 
-require_once __DIR__ . '/app/header.php';
-require_once __DIR__ . '/app/config-totvs.php';
-
-
+// =========================================================
+// CONTEXTO (header usa $dashboards e $activePage)
+// =========================================================
 $u = current_user();
 $activePage = 'clientes';
 
@@ -23,18 +21,23 @@ try {
   $dashboards = null;
 }
 
-// meses (igual padrão do executivo)
+require_once __DIR__ . '/app/header.php';
+require_once __DIR__ . '/app/config-totvs.php';
+
+// =========================================================
+// MESES (ORDEM FIXA: MAIS ANTIGO -> MAIS RECENTE)
+// =========================================================
+// meses do ano atual (Jan → Dez)
 $months = [];
-$now = new DateTime('now', new DateTimeZone('America/Sao_Paulo'));
-for ($i = 0; $i < 12; $i++) {
-  $d = (clone $now)->modify("-{$i} months");
+$year = (int) date('Y');
+
+for ($m = 1; $m <= 12; $m++) {
   $months[] = [
-    'ym' => $d->format('Y-m'),
-    'label_short' => $d->format('m/y'),
+    'ym' => sprintf('%04d-%02d', $year, $m),
+    'label_short' => sprintf('%02d/%02d', $m, $year % 100),
   ];
 }
 ?>
-<div class="canvasTip" id="canvasTip"></div>
 <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
 <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
 <link rel="stylesheet" href="/assets/css/carousel.css?v=<?= filemtime(__DIR__ . '/assets/css/carousel.css') ?>" />
@@ -42,23 +45,27 @@ for ($i = 0; $i < 12; $i++) {
 <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 <link rel="stylesheet" href="/assets/css/clientes.css?v=<?= filemtime(__DIR__ . '/assets/css/clientes.css') ?>" />
 <link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/assets/css/loader.css') ?>" />
+
 <div class="wrap" id="wrap">
-<script src="/assets/js/loader.js"></script>
-<script>
-  (function(){
-    try{
-      if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
-        window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
-      } else {
-        document.addEventListener('DOMContentLoaded', function(){
-          if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
-            window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
-          }
-        }, { once:true });
-      }
-    }catch(e){}
-  })();
-</script>
+  <!-- Tooltip único (remove duplicado) -->
+  <div class="canvasTip" id="canvasTip"></div>
+
+  <script src="/assets/js/loader.js"></script>
+  <script>
+    (function () {
+      try {
+        if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+          window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
+        } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+              window.PopperLoading.show('Carregando…', 'Montando dashboard de clientes');
+            }
+          }, { once: true });
+        }
+      } catch (e) { }
+    })();
+  </script>
 
   <div class="pageHead">
     <div class="headTop">
@@ -135,7 +142,8 @@ for ($i = 0; $i < 12; $i++) {
         <button class="btn" id="btnRefresh" title="Atualizar (force=1)">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M21 12a9 9 0 1 1-2.64-6.36" stroke="rgba(15,23,42,.85)" stroke-width="2" stroke-linecap="round" />
-            <path d="M21 3v6h-6" stroke="rgba(15,23,42,.85)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M21 3v6h-6" stroke="rgba(15,23,42,.85)" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
           Atualizar
         </button>
@@ -155,7 +163,8 @@ for ($i = 0; $i < 12; $i++) {
       <div class="cardSub" id="insHint">Selecione um cliente</div>
     </div>
     <div class="insTag" id="insTag">—</div>
-    <div class="insText" id="insText">Selecione um cliente no dropdown para ver insights automáticos (crescimento, margem, desconto e inatividade).</div>
+    <div class="insText" id="insText">Selecione um cliente no dropdown para ver insights automáticos (crescimento,
+      margem, desconto e inatividade).</div>
   </div>
 
   <div class="grid">
@@ -228,21 +237,22 @@ for ($i = 0; $i < 12; $i++) {
       <div class="listRank" id="scoreClientesList"></div>
     </div>
   </div>
-  <div class="card span-12">
-  <div class="cardHead">
-    <div>
-      <div class="cardTitle">Matriz Clientes</div>
-      <div class="cardSub">Faturamento × Margem</div>
-    </div>
-  </div>
-<div id="canvasTip" class="canvasTip"></div>
-  <canvas class="chart" id="cMatrix"></canvas>
-</div>
-<?php require_once __DIR__ . '/app/footer.php'; ?>
-<script src="/assets/js/loader.js"></script>
-<script src="/assets/js/clientes.js?v=<?= filemtime(__DIR__ . '/assets/js/clientes.js') ?>"></script>
-<script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
-<script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
 
+  <div class="card span-12">
+    <div class="cardHead">
+      <div>
+        <div class="cardTitle">Matriz Clientes</div>
+        <div class="cardSub">Faturamento × Margem</div>
+      </div>
+    </div>
+    <canvas class="chart" id="cMatrix"></canvas>
+  </div>
+
+  <?php require_once __DIR__ . '/app/footer.php'; ?>
+
+  <!-- Evita duplicar loader.js (já carregado acima) -->
+  <script src="/assets/js/clientes.js?v=<?= filemtime(__DIR__ . '/assets/js/clientes.js') ?>"></script>
+  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
+  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
 
 </div>

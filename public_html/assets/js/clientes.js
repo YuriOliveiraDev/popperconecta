@@ -1,9 +1,18 @@
-
 /* =========================================================
    CLIENTES DASHBOARD — JS COMPLETO (Top50 + ABC + Matriz)
+   + mês em ordem fixa + default no mês mais recente
    ========================================================= */
 
 const $ = (id) => document.getElementById(id);
+
+// ---------- Month pills: garante ordem fixa (ASC) ----------
+function sortMonthPillsAsc() {
+  const bar = document.getElementById('monthBar');
+  if (!bar) return;
+  const pills = Array.from(bar.querySelectorAll('.pill'));
+  pills.sort((a, b) => String(a.dataset.ym || '').localeCompare(String(b.dataset.ym || '')));
+  pills.forEach(p => bar.appendChild(p));
+}
 
 // ---------- format helpers ----------
 function brl(v) {
@@ -45,6 +54,7 @@ function setActiveMonth(ym) {
     b.classList.toggle('is-active', b.dataset.ym === ym);
   });
 }
+
 // ---------- Loader helpers (PopperLoading) ----------
 function loaderShow(title, sub) {
   if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
@@ -57,7 +67,7 @@ function loaderHide() {
   }
 }
 function isInitialLoad() {
-  return !DATA; // se ainda não carregou nada, é o primeiro load da página
+  return !DATA;
 }
 
 // ---------- list render ----------
@@ -100,7 +110,7 @@ function renderScoreList(elId, items, limit = 20, onClick) {
 
   const norm = (s) => {
     const n = Number(s ?? 0);
-    return n > 1 ? (n / 100) : n; // 0..1 ou 0..100
+    return n > 1 ? (n / 100) : n;
   };
 
   const mapped = (items || []).map(x => ({
@@ -271,7 +281,6 @@ function paretoChart(canvas, items) {
   const ctx = canvasCtx(canvas);
   const W = canvas.clientWidth, H = canvas.clientHeight;
 
-  // padR maior pra NÃO cortar 0%..100%
   const padL = 54, padR = 56, padT = 14, padB = 34;
 
   if (!items || !items.length) {
@@ -351,7 +360,6 @@ function paretoChart(canvas, items) {
   ref(0.80, '80% (A)');
   ref(0.95, '95% (A+B)');
 
-  // hitbox info pro tooltip
   canvas._paretoHit = { plot, n, barW, gap, items };
 }
 
@@ -384,7 +392,6 @@ function enableParetoTooltip(canvas) {
       `<div style="font-weight:1000">${esc(it.cliente ?? '')}</div>` +
       `<div style="opacity:.92;margin-top:4px">Faturamento: ${brl(it.valor ?? 0)}</div>`;
 
-    // posiciona e não deixa sair da tela
     tip.style.display = 'block';
     tip.style.left = (e.clientX + 14) + 'px';
     tip.style.top = (e.clientY + 14) + 'px';
@@ -398,7 +405,7 @@ function enableParetoTooltip(canvas) {
   canvas.onmouseleave = () => { tip.style.display = 'none'; };
 }
 
-// ---------- Matriz BCG (Faturamento x Margem) ----------
+// ---------- Matriz (Faturamento x Margem) ----------
 function matrixChart(canvas, items, selectedKey = '') {
   const ctx = canvasCtx(canvas);
   const tip = document.getElementById('canvasTip');
@@ -413,17 +420,13 @@ function matrixChart(canvas, items, selectedKey = '') {
     return;
   }
 
-  // pads
   const pad = { l: 64, r: 42, t: 22, b: 46 };
   const plot = { x: pad.l, y: pad.t, w: W - pad.l - pad.r, h: H - pad.t - pad.b };
 
-  // max faturamento
   const maxFat = Math.max(...items.map(i => Number(i.valor || 0))) || 1;
 
-  // margens: usa faixa executiva (-20%..+40%) p/ espalhar
   const minMarg = -0.20;
   const maxMarg = 0.40;
-
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
   const xScale = (v) => {
@@ -436,14 +439,12 @@ function matrixChart(canvas, items, selectedKey = '') {
     return plot.y + plot.h - plot.h * norm;
   };
 
-  // medias para quadrantes (fat media e margem media reais)
   const avgFat = items.reduce((a, b) => a + Number(b.valor || 0), 0) / items.length;
   const avgMarg = items.reduce((a, b) => a + Number(b.margem_pct || 0), 0) / items.length;
 
   const midX = xScale(avgFat);
   const midY = yScale(avgMarg);
 
-  // fundo e borda
   ctx.save();
   ctx.fillStyle = '#fff';
   ctx.fillRect(0, 0, W, H);
@@ -457,13 +458,11 @@ function matrixChart(canvas, items, selectedKey = '') {
   ctx.beginPath(); ctx.moveTo(plot.x, midY); ctx.lineTo(plot.x + plot.w, midY); ctx.stroke();
   ctx.setLineDash([]);
 
-  // eixos
   ctx.fillStyle = 'rgba(15,23,42,.55)';
   font(ctx, 11, 900);
   ctx.fillText('Margem % ↑', plot.x - 52, plot.y - 6);
   ctx.fillText('Faturamento →', plot.x + plot.w - 96, plot.y + plot.h + 32);
 
-  // legenda
   const legend = [
     { label: '⭐ Estratégico', color: 'rgba(34,197,94,.90)' },
     { label: '💰 Volume', color: 'rgba(245,158,11,.90)' },
@@ -480,7 +479,6 @@ function matrixChart(canvas, items, selectedKey = '') {
     ly += 16;
   });
 
-  // pontos + hit
   const points = [];
   const logNorm = (v) => (Math.log10(Math.max(0, Number(v || 0)) + 1) / Math.log10(maxFat + 1));
 
@@ -491,14 +489,13 @@ function matrixChart(canvas, items, selectedKey = '') {
     const x = xScale(valor);
     const y = yScale(marg);
 
-    // cor por quadrante (usando medias reais)
     const highFat = valor >= avgFat;
     const highMarg = marg >= avgMarg;
 
-    let color = 'rgba(239,68,68,.85)';        // risco
-    if (highFat && highMarg) color = 'rgba(34,197,94,.85)';       // estratégico
-    else if (highFat && !highMarg) color = 'rgba(245,158,11,.85)';// volume
-    else if (!highFat && highMarg) color = 'rgba(59,130,246,.85)';// potencial
+    let color = 'rgba(239,68,68,.85)';
+    if (highFat && highMarg) color = 'rgba(34,197,94,.85)';
+    else if (highFat && !highMarg) color = 'rgba(245,158,11,.85)';
+    else if (!highFat && highMarg) color = 'rgba(59,130,246,.85)';
 
     const s = 4 + logNorm(valor) * 14;
     const isSel = selectedKey && String(it.key || '') === String(selectedKey);
@@ -523,7 +520,6 @@ function matrixChart(canvas, items, selectedKey = '') {
   ctx.restore();
   canvas._matrixHit = points;
 
-  // tooltip
   if (!tip) return;
 
   canvas.onmousemove = (e) => {
@@ -573,14 +569,9 @@ async function load(force = false) {
   $('wrap')?.classList.add('loading');
   setErr('');
 
-  // loader: inicial vs refresh vs mês
-  if (isInitialLoad()) {
-    loaderShow('Carregando…', 'Montando dashboard de clientes');
-  } else if (force) {
-    loaderShow('Atualizando…', 'Forçando leitura (sem cache)');
-  } else {
-    loaderShow('Atualizando…', 'Aplicando cache e recalculando');
-  }
+  if (isInitialLoad()) loaderShow('Carregando…', 'Montando dashboard de clientes');
+  else if (force) loaderShow('Atualizando…', 'Forçando leitura (sem cache)');
+  else loaderShow('Atualizando…', 'Aplicando cache e recalculando');
 
   const qs = new URLSearchParams();
   qs.set('ym', ACTIVE_YM || '');
@@ -602,7 +593,6 @@ async function load(force = false) {
 
     $('cacheInfo') && ($('cacheInfo').textContent = (j.meta?.forced ? 'MISS (force)' : 'HIT/10min'));
 
-    // dropdown usa top50 se existir
     const sel = $('clienteSelect');
     if (sel) {
       const prev = sel.value;
@@ -623,15 +613,9 @@ async function load(force = false) {
     render();
   } catch (e) {
     setErr('Erro ao carregar: ' + (e?.message || e));
-
-    // se der erro, mostra loader em estado de erro (opcional)
-    if (window.PopperLoading?.error) {
-      window.PopperLoading.error(e?.message || 'Falha ao carregar');
-    }
+    if (window.PopperLoading?.error) window.PopperLoading.error(e?.message || 'Falha ao carregar');
   } finally {
     $('wrap')?.classList.remove('loading');
-
-    // dá um respiro pra evitar "piscar" muito rápido
     setTimeout(() => loaderHide(), 120);
   }
 }
@@ -655,7 +639,6 @@ function render() {
 
   const selKey = $('clienteSelect')?.value || '';
 
-  // Insight
   const ins = (DATA.insight?.por_cliente && selKey) ? DATA.insight.por_cliente[selKey] : null;
   if (ins && ins.text) {
     $('insTag') && ($('insTag').textContent = ins.tag || '📊 Insight');
@@ -669,11 +652,9 @@ function render() {
 
   $('rankMeta') && ($('rankMeta').textContent = 'Total mês: ' + brl(DATA.kpis?.faturamento_mes || 0));
 
-  // base top (ranking)
   const rankingBase = (DATA.ranking?.top50?.length ? DATA.ranking.top50 : (DATA.ranking?.top10 || []));
   const ranking = rankingBase.map(x => ({ key: x.key, cliente: x.cliente, valor: x.valor }));
 
-  // lista top50
   renderRankList('topClientesList', ranking, 'valor', 'cliente', 50, (it) => {
     const sel = $('clienteSelect');
     if (sel && it.key) {
@@ -682,7 +663,6 @@ function render() {
     }
   });
 
-  // ABC
   const abc = (DATA.abc?.items || []).slice(0, 20).map(x => ({ cliente: x.cliente, valor: x.valor }));
   const cABC = $('cABC');
   if (cABC) {
@@ -690,26 +670,22 @@ function render() {
     enableParetoTooltip(cABC);
   }
 
-  // Evolução
   const evo = (DATA.evolucao?.[selKey] || { labels: [], valores: [] });
   $('evoMeta') && ($('evoMeta').textContent = selKey ? ('Cliente: ' + (ranking.find(r => r.key === selKey)?.cliente || '')) : '—');
   $('cEvo') && lineChart($('cEvo'), evo.labels || [], evo.valores || []);
 
-  // Margem (top10)
   const marg = (DATA.margem?.top10 || []).map(x => ({ cliente: x.cliente, valor: x.margem_pct }));
   $('cMargem') && vbarChart($('cMargem'), marg, 'valor', 'cliente',
     (it, v) => (v >= 0.25 ? 'rgba(34,197,94,.72)' : (v >= 0.12 ? 'rgba(245,158,11,.78)' : 'rgba(239,68,68,.78)')),
     5
   );
 
-  // Frequência
   const bins = (DATA.frequencia?.bins || []);
   $('cFreq') && vbarChart($('cFreq'), bins.map(b => ({ label: b.label, valor: b.count })), 'valor', 'label',
     () => 'rgba(15,23,42,.78)',
     4
   );
 
-  // Score list
   const scoreBase = (DATA.score?.top50?.length ? DATA.score.top50 : (DATA.score?.top10 || []));
   renderScoreList('scoreClientesList', scoreBase, 20, (it) => {
     const sel = $('clienteSelect');
@@ -719,47 +695,44 @@ function render() {
     }
   });
 
-  // MATRIZ (Top50) — precisa existir <canvas id="cMatrix">
   const cMatrix = $('cMatrix');
   if (cMatrix) {
-    // margem base: top50 se existir (ideal), senão top10
     const margBase = (DATA.margem?.top50?.length ? DATA.margem.top50 : (DATA.margem?.top10 || []));
-
     const matrixData = ranking.map(c => ({
       key: c.key,
       cliente: c.cliente,
       valor: Number(c.valor || 0),
       margem_pct: Number((margBase.find(m => m.key === c.key)?.margem_pct) || 0)
     }));
-
     matrixChart(cMatrix, matrixData, selKey);
   }
 }
 
 // ---------- init ----------
 (function init() {
+  // garante DOM ordenado (caso HTML venha fora de ordem)
+  sortMonthPillsAsc();
+
   const params = new URLSearchParams(location.search);
   const ym = params.get('ym');
-  const firstBtn = document.querySelector('#monthBar .pill');
+
+  // agora que está ordenado ASC, o último é o mês mais recente
+  const lastBtn = document.querySelector('#monthBar .pill:last-child');
 
   if (ym && /^\d{4}-\d{2}$/.test(ym)) setActiveMonth(ym);
-  else if (firstBtn?.dataset?.ym) setActiveMonth(firstBtn.dataset.ym);
+  else if (lastBtn?.dataset?.ym) setActiveMonth(lastBtn.dataset.ym);
   else setActiveMonth(new Date().toISOString().slice(0, 7));
 
   document.querySelectorAll('#monthBar .pill').forEach(btn => {
     btn.addEventListener('click', () => {
       const ym = btn.dataset.ym;
-
-      // evita clicar no mesmo mês e ficar recarregando à toa
       if (ym && ym === ACTIVE_YM) return;
 
       setActiveMonth(ym);
 
-      // loader específico de troca de mês
       const label = (btn.textContent || '').trim();
       loaderShow('Carregando…', 'Trocando para ' + (label || ym || 'mês selecionado'));
 
-      // atualiza URL primeiro (fica consistente)
       const url = new URL(location.href);
       url.searchParams.set('ym', ym);
       history.replaceState({}, '', url.toString());
@@ -768,10 +741,12 @@ function render() {
     });
   });
 
-$('btnRefresh')?.addEventListener('click', ()=>{
-  loaderShow('Atualizando…', 'Forçando leitura (sem cache)');
-  load(true);
-});  $('clienteSelect')?.addEventListener('change', () => render());
+  $('btnRefresh')?.addEventListener('click', () => {
+    loaderShow('Atualizando…', 'Forçando leitura (sem cache)');
+    load(true);
+  });
+
+  $('clienteSelect')?.addEventListener('change', () => render());
 
   window.addEventListener('resize', () => { if (DATA) render(); });
 
