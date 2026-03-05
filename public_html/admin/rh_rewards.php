@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 require_once __DIR__ . '/../app/permissions.php';
-require_perm('admin.rh');
+require_admin_perm('admin.rh');
 
 $u = current_user();
 

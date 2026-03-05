@@ -348,7 +348,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: { top: 30 } },
+        layout: { padding: { top: 48, right: 8, left: 8 } },
         plugins: {
           legend: { display: false },
           datalabels: { anchor: "end", align: "top", offset: 10, clamp: true, clip: false }

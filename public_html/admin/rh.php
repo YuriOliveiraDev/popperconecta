@@ -3,7 +3,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 require_once __DIR__ . '/../app/permissions.php'; // ✅ ADICIONADO: para require_perm()
-require_perm('admin.rh'); // ✅ CORRIGIDO: use require_perm() com 'admin.rh'
+
 
 $u = current_user();
 $activePage = 'admin'; // destaca no header

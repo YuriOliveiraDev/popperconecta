@@ -275,7 +275,7 @@ try {
 
               <div class="chart-card grid-col-span-3 exec-chart">
                 <h3 class="chart-title" id="ttlChart">Faturamento Diário (mês)</h3>
-                <div class="chart-box">
+                <div class="chart-box chart-box--daily">
                   <canvas id="chartDiario"></canvas>
                 </div>
               </div>

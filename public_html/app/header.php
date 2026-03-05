@@ -53,12 +53,12 @@ if (is_array($u) && isset($u['profile_photo_path']) && is_string($u['profile_pho
 // Admin items por permissão
 $adminItems = [];
 if (is_array($u)) {
-  foreach (PERMISSION_CATALOG as $perm => $meta) {
+  foreach (ADMIN_PERMISSION_CATALOG as $perm => $meta) {
     if (user_can($perm, $u)) {
       $adminItems[] = [
         'url' => (string) ($meta['url'] ?? '#'),
         'label' => (string) ($meta['label'] ?? $perm),
-        'icon' => (string) ($meta['icon'] ?? '⚙️'),
+        'icon' => (string) ($meta['icon'] ?? ''),
       ];
     }
   }
@@ -141,79 +141,120 @@ else
         </div>
       <?php endif; ?>
 
-      <!-- DASHBOARD -->
-      <div class="topbar__dropdown" style="margin-left:8px;" id="dashWrap">
-        <a class="topbar__dropdown-trigger" href="#" id="dashTrigger" aria-haspopup="true"
-          aria-expanded="false">Dashboard</a>
+      <?php
+      // ====== DASHBOARD MENU (com permissões) ======
+      $canComercial =
+        user_can('dash.comercial.faturamento', $u) ||
+        user_can('dash.comercial.executivo', $u) ||
+        user_can('dash.comercial.insight', $u) ||
+        user_can('dash.comercial.clientes', $u);
 
-        <div class="topbar__dropdown-menu" id="dashMenu" role="menu" aria-label="Dashboard">
-          <!-- Grupo: Comercial -->
-          <div class="topbar__dropdown-group" data-submenu>
-            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
-              aria-expanded="false">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Comercial</span>
-              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-            </button>
+      $canFinanceiro =
+        user_can('dash.financeiro.contasp', $u);
 
-            <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
-              <a class="topbar__dropdown-item" href="/dashboard.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Faturamento</span>
-              </a>
+      $canComex =
+        user_can('dash.comex.importacoes', $u);
 
-              <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Executivo</span>
-              </a>
+      // se não tiver nenhum dashboard permitido, some o dropdown inteiro
+      $canAnyDash = $canComercial || $canFinanceiro || $canComex;
+      ?>
 
-              <a class="topbar__dropdown-item" href="/insight_comercial.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Insight</span>
-              </a>
+      <?php if ($canAnyDash): ?>
+        <div class="topbar__dropdown" style="margin-left:8px;" id="dashWrap">
+          <a class="topbar__dropdown-trigger" href="#" id="dashTrigger" aria-haspopup="true"
+            aria-expanded="false">Dashboard</a>
 
-              <a class="topbar__dropdown-item" href="/clientes.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Clientes</span>
-              </a>
-            </div>
-          </div>
+          <div class="topbar__dropdown-menu" id="dashMenu" role="menu" aria-label="Dashboard">
 
-          <!-- Grupo: Financeiro -->
-          <div class="topbar__dropdown-group" data-submenu>
-            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
-              aria-expanded="false">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Financeiro</span>
-              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-            </button>
+            <?php if ($canComercial): ?>
+              <!-- Grupo: Comercial -->
+              <div class="topbar__dropdown-group" data-submenu>
+                <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+                  aria-expanded="false">
+                  <span class="topbar__dropdown-icon"></span>
+                  <span class="topbar__dropdown-label">Comercial</span>
+                  <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+                </button>
 
-            <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
-              <a class="topbar__dropdown-item" href="/admin/dashboardContasP.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Contas a Pagar</span>
-              </a>
-            </div>
-          </div>
+                <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
 
-          <!-- Grupo: Comex -->
-          <div class="topbar__dropdown-group" data-submenu>
-            <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
-              aria-expanded="false">
-              <span class="topbar__dropdown-icon"></span>
-              <span class="topbar__dropdown-label">Comex</span>
-              <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
-            </button>
+                  <?php if (user_can('dash.comercial.faturamento', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/dashboard.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Faturamento</span>
+                    </a>
+                  <?php endif; ?>
 
-            <div class="topbar__dropdown-submenu" role="menu" aria-label="Comex">
-              <a class="topbar__dropdown-item" href="/importacoes.php">
-                <span class="topbar__dropdown-icon"></span>
-                <span class="topbar__dropdown-label">Importações</span>
-              </a>
-            </div>
+                  <?php if (user_can('dash.comercial.executivo', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/dashboard-executivo.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Executivo</span>
+                    </a>
+                  <?php endif; ?>
+
+                  <?php if (user_can('dash.comercial.insight', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/insight_comercial.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Insight</span>
+                    </a>
+                  <?php endif; ?>
+
+                  <?php if (user_can('dash.comercial.clientes', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/clientes.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Clientes</span>
+                    </a>
+                  <?php endif; ?>
+
+                </div>
+              </div>
+            <?php endif; ?>
+
+            <?php if ($canFinanceiro): ?>
+              <!-- Grupo: Financeiro -->
+              <div class="topbar__dropdown-group" data-submenu>
+                <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+                  aria-expanded="false">
+                  <span class="topbar__dropdown-icon"></span>
+                  <span class="topbar__dropdown-label">Financeiro</span>
+                  <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+                </button>
+
+                <div class="topbar__dropdown-submenu" role="menu" aria-label="Financeiro">
+                  <?php if (user_can('dash.financeiro.contasp', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/admin/dashboardContasP.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Contas a Pagar</span>
+                    </a>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+
+            <?php if ($canComex): ?>
+              <!-- Grupo: Comex -->
+              <div class="topbar__dropdown-group" data-submenu>
+                <button class="topbar__dropdown-item topbar__dropdown-item--group" type="button" aria-haspopup="true"
+                  aria-expanded="false">
+                  <span class="topbar__dropdown-icon"></span>
+                  <span class="topbar__dropdown-label">Comex</span>
+                  <span class="topbar__dropdown-caret" aria-hidden="true">›</span>
+                </button>
+
+                <div class="topbar__dropdown-submenu" role="menu" aria-label="Comex">
+                  <?php if (user_can('dash.comex.importacoes', $u)): ?>
+                    <a class="topbar__dropdown-item" href="/importacoes.php">
+                      <span class="topbar__dropdown-icon"></span>
+                      <span class="topbar__dropdown-label">Importações</span>
+                    </a>
+                  <?php endif; ?>
+                </div>
+              </div>
+            <?php endif; ?>
+
           </div>
         </div>
-      </div>
+      <?php endif; ?>
 
       <div class="topbar__dropdown" style="margin-left:8px;">
         <a class="topbar__dropdown-trigger<?= ($activePage === 'coins' ? ' link--active' : '') ?>" href="/coins.php"
@@ -283,7 +324,8 @@ else
                 <?php if (!empty($n['message'])): ?>
                   <div class="notif__item-msg"><?= htmlspecialchars((string) $n['message'], ENT_QUOTES, 'UTF-8') ?></div>
                 <?php endif; ?>
-                <div class="notif__item-date"><?= htmlspecialchars((string) ($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+                <div class="notif__item-date">
+                  <?= htmlspecialchars((string) ($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
                 </div>
               </a>
             <?php endforeach; ?>

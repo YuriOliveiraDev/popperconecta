@@ -4,13 +4,15 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/db.php';
 require_once __DIR__ . '/../app/permissions.php';
-require_admin();
+
+// ✅ protege por permissão do Admin (Usuários)
+require_admin_perm('admin.users');
 
 $u = current_user(); // header.php
 $me = $u;
 $activePage = 'admin'; // destaca no header
 
-// Dropdown "Dashboards" no header
+// Dropdown "Dashboards" no header (se você ainda usa em algum lugar)
 try {
   $dashboards = db()
     ->query("SELECT slug, name, icon FROM dashboards WHERE is_active = TRUE ORDER BY sort_order ASC")
@@ -58,12 +60,9 @@ function upload_profile_photo_for_user(int $userId): array
   $mime = (string) $imgInfo['mime'];
 
   $ext = null;
-  if ($mime === 'image/jpeg')
-    $ext = 'jpg';
-  if ($mime === 'image/png')
-    $ext = 'png';
-  if ($mime === 'image/webp')
-    $ext = 'webp';
+  if ($mime === 'image/jpeg') $ext = 'jpg';
+  if ($mime === 'image/png')  $ext = 'png';
+  if ($mime === 'image/webp') $ext = 'webp';
 
   if ($ext === null)
     return ['ok' => false, 'path' => null, 'error' => 'Formato de foto inválido. Use PNG, JPG ou WEBP.'];
@@ -83,7 +82,11 @@ function upload_profile_photo_for_user(int $userId): array
 }
 
 // Carrega dados do usuário
-$stmt = db()->prepare('SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions FROM users WHERE id = ? LIMIT 1');
+$stmt = db()->prepare('
+  SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions
+  FROM users
+  WHERE id = ? LIMIT 1
+');
 $stmt->execute([$id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -93,9 +96,16 @@ if (!$user) {
   exit;
 }
 
-$allowedPerms = array_keys(PERMISSION_CATALOG);
-$curPerms = user_perms($user);
-$curPerms = array_values(array_unique(array_intersect($curPerms, $allowedPerms)));
+// ✅ listas permitidas
+$allowedAdminPerms = array_keys(ADMIN_PERMISSION_CATALOG);
+$allowedDashPerms  = array_keys(DASHBOARD_CATALOG);
+
+// permissões atuais do usuário (todas)
+$curAllPerms = user_perms($user);
+
+// separa para marcar checkboxes certinho
+$curAdminPerms = array_values(array_unique(array_intersect($curAllPerms, $allowedAdminPerms)));
+$curDashPerms  = array_values(array_unique(array_intersect($curAllPerms, $allowedDashPerms)));
 
 // EXCLUI USUÁRIO
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
@@ -132,10 +142,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
   $newPass = trim($_POST['new_pass'] ?? '');
   $removePhoto = (int) ($_POST['remove_photo'] ?? 0) === 1;
 
-  $perms = $_POST['perms'] ?? [];
-  if (!is_array($perms))
-    $perms = [];
-  $perms = array_values(array_unique(array_intersect($perms, $allowedPerms)));
+  // ✅ recebe separado
+  $permsAdmin = $_POST['perms_admin'] ?? [];
+  $permsDash  = $_POST['perms_dash'] ?? [];
+
+  if (!is_array($permsAdmin)) $permsAdmin = [];
+  if (!is_array($permsDash))  $permsDash  = [];
+
+  $permsAdmin = array_values(array_unique(array_intersect($permsAdmin, $allowedAdminPerms)));
+  $permsDash  = array_values(array_unique(array_intersect($permsDash,  $allowedDashPerms)));
+
+  // ✅ junta tudo no mesmo JSON
+  $perms = array_values(array_unique(array_merge($permsAdmin, $permsDash)));
   $permsJson = json_encode($perms, JSON_UNESCAPED_UNICODE);
 
   if ($name === '' || $email === '' || $setor === '') {
@@ -172,7 +190,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
 
           if ($newPass !== '') {
             $hash = password_hash($newPass, PASSWORD_DEFAULT);
-            $stmt = db()->prepare('UPDATE users SET name=?, email=?, phone=?, birth_date=?, gender=?, profile_photo_path=?, role=?, setor=?, hierarquia=?, is_active=?, permissions=?, password_hash=? WHERE id=?');
+            $stmt = db()->prepare('
+              UPDATE users
+              SET name=?, email=?, phone=?, birth_date=?, gender=?, profile_photo_path=?, role=?, setor=?, hierarquia=?, is_active=?, permissions=?, password_hash=?
+              WHERE id=?
+            ');
             $stmt->execute([
               $name,
               $email,
@@ -189,7 +211,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
               $id
             ]);
           } else {
-            $stmt = db()->prepare('UPDATE users SET name=?, email=?, phone=?, birth_date=?, gender=?, profile_photo_path=?, role=?, setor=?, hierarquia=?, is_active=?, permissions=? WHERE id=?');
+            $stmt = db()->prepare('
+              UPDATE users
+              SET name=?, email=?, phone=?, birth_date=?, gender=?, profile_photo_path=?, role=?, setor=?, hierarquia=?, is_active=?, permissions=?
+              WHERE id=?
+            ');
             $stmt->execute([
               $name,
               $email,
@@ -209,12 +235,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
           db()->commit();
           $success = 'Usuário atualizado com sucesso.';
 
-          $stmt = db()->prepare('SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions FROM users WHERE id = ? LIMIT 1');
+          // recarrega usuário para refletir foto/perms
+          $stmt = db()->prepare('
+            SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions
+            FROM users
+            WHERE id = ? LIMIT 1
+          ');
           $stmt->execute([$id]);
           $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-          $curPerms = user_perms($user);
-          $curPerms = array_values(array_unique(array_intersect($curPerms, $allowedPerms)));
+          $curAllPerms = user_perms($user);
+          $curAdminPerms = array_values(array_unique(array_intersect($curAllPerms, $allowedAdminPerms)));
+          $curDashPerms  = array_values(array_unique(array_intersect($curAllPerms, $allowedDashPerms)));
         } catch (Throwable $e) {
           db()->rollBack();
           throw $e;
@@ -244,32 +276,24 @@ function selected(string $a, string $b): string
 
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
-  <link rel="stylesheet"
-    href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
-  <link rel="stylesheet"
-    href="/assets/css/user-edit.css?v=<?= filemtime(__DIR__ . '/../assets/css/user-edit.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
+  <link rel="stylesheet" href="/assets/css/user-edit.css?v=<?= filemtime(__DIR__ . '/../assets/css/user-edit.css') ?>" />
   <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 
   <style>
     .avatar-lg{
-      width:80px;
-      height:80px;
-      border-radius:8px; /* quadrado com bordas suaves */
-      object-fit:cover;
-      border:1px solid rgba(15,23,42,.12);
-      background:#fff;
+      width:80px;height:80px;border-radius:8px;object-fit:cover;
+      border:1px solid rgba(15,23,42,.12);background:#fff;
     }
     .avatar-lg--emoji{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:28px;
-      background:rgba(255,255,255,.75);
-      border:1px solid rgba(15,23,42,.12);
-      color:rgba(15,23,42,.55);
+      display:flex;align-items:center;justify-content:center;font-size:28px;
+      background:rgba(255,255,255,.75);border:1px solid rgba(15,23,42,.12);color:rgba(15,23,42,.55);
     }
     .photo-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
     .help-row{margin-top:8px;}
+    .perm-title{font-weight:900;margin:10px 0 6px 0;}
+    .perm-group{margin-top:10px;}
+    .perm-group__name{font-weight:900;opacity:.75;margin:8px 0;}
   </style>
 </head>
 
@@ -296,8 +320,8 @@ function selected(string $a, string $b): string
         <div class="alert alert--error"><?= htmlspecialchars($error, ENT_QUOTES, 'UTF-8') ?></div>
       <?php endif; ?>
 
-      <form method="post" class="form form--edit" action="/admin/user_edit.php?id=<?= (int) $user['id'] ?>"
-        enctype="multipart/form-data">
+      <form method="post" class="form form--edit" action="/admin/user_edit.php?id=<?= (int) $user['id'] ?>" enctype="multipart/form-data">
+
         <div class="field field--full">
           <label class="field__label">Foto</label>
 
@@ -312,13 +336,7 @@ function selected(string $a, string $b): string
 
             <div style="min-width:260px;flex:1;">
               <div class="file-field__row">
-                <input
-                  class="file-input"
-                  id="userProfilePhoto"
-                  name="profile_photo"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                />
+                <input class="file-input" id="userProfilePhoto" name="profile_photo" type="file" accept="image/png,image/jpeg,image/webp" />
                 <label class="file-btn" for="userProfilePhoto">🖼️ Escolher foto</label>
 
                 <div class="file-meta">
@@ -341,36 +359,32 @@ function selected(string $a, string $b): string
 
         <div class="field">
           <label class="field__label" for="name">Nome completo</label>
-          <input class="field__control" id="name" name="name" type="text" required
-            value="<?= htmlspecialchars((string) $user['name'], ENT_QUOTES, 'UTF-8') ?>" />
+          <input class="field__control" id="name" name="name" type="text" required value="<?= htmlspecialchars((string)$user['name'], ENT_QUOTES, 'UTF-8') ?>" />
         </div>
 
         <div class="field">
           <label class="field__label" for="email">E-mail</label>
-          <input class="field__control" id="email" name="email" type="email" required
-            value="<?= htmlspecialchars((string) $user['email'], ENT_QUOTES, 'UTF-8') ?>" />
+          <input class="field__control" id="email" name="email" type="email" required value="<?= htmlspecialchars((string)$user['email'], ENT_QUOTES, 'UTF-8') ?>" />
         </div>
 
         <div class="field">
           <label class="field__label" for="phone">Telefone</label>
-          <input class="field__control" id="phone" name="phone" type="tel" maxlength="20"
-            value="<?= htmlspecialchars((string) ($user['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+          <input class="field__control" id="phone" name="phone" type="tel" maxlength="20" value="<?= htmlspecialchars((string)($user['phone'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
 
         <div class="field">
           <label class="field__label" for="birth_date">Data de nascimento</label>
-          <input class="field__control" id="birth_date" name="birth_date" type="date"
-            value="<?= htmlspecialchars((string) ($user['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
+          <input class="field__control" id="birth_date" name="birth_date" type="date" value="<?= htmlspecialchars((string)($user['birth_date'] ?? ''), ENT_QUOTES, 'UTF-8') ?>" />
         </div>
 
         <div class="field">
           <label class="field__label" for="gender">Gênero</label>
           <select class="field__control" id="gender" name="gender">
-            <option value="" <?= selected('', (string) ($user['gender'] ?? '')) ?>>Selecione...</option>
-            <option value="M" <?= selected('M', (string) ($user['gender'] ?? '')) ?>>Masculino</option>
-            <option value="F" <?= selected('F', (string) ($user['gender'] ?? '')) ?>>Feminino</option>
-            <option value="O" <?= selected('O', (string) ($user['gender'] ?? '')) ?>>Outro</option>
-            <option value="N" <?= selected('N', (string) ($user['gender'] ?? '')) ?>>Prefere não informar</option>
+            <option value="" <?= selected('', (string)($user['gender'] ?? '')) ?>>Selecione...</option>
+            <option value="M" <?= selected('M', (string)($user['gender'] ?? '')) ?>>Masculino</option>
+            <option value="F" <?= selected('F', (string)($user['gender'] ?? '')) ?>>Feminino</option>
+            <option value="O" <?= selected('O', (string)($user['gender'] ?? '')) ?>>Outro</option>
+            <option value="N" <?= selected('N', (string)($user['gender'] ?? '')) ?>>Prefere não informar</option>
           </select>
         </div>
 
@@ -378,11 +392,11 @@ function selected(string $a, string $b): string
           <label class="field__label" for="setor">Setor</label>
           <select class="field__control" id="setor" name="setor" required>
             <?php
-            $curSetor = (string) ($user['setor'] ?? '');
-            echo '<option value="">Selecione...</option>';
-            foreach ($setores as $s) {
-              echo '<option value="' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '" ' . ($s === $curSetor ? 'selected' : '') . '>' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '</option>';
-            }
+              $curSetor = (string)($user['setor'] ?? '');
+              echo '<option value="">Selecione...</option>';
+              foreach ($setores as $s) {
+                echo '<option value="' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '" ' . ($s === $curSetor ? 'selected' : '') . '>' . htmlspecialchars($s, ENT_QUOTES, 'UTF-8') . '</option>';
+              }
             ?>
           </select>
         </div>
@@ -391,10 +405,10 @@ function selected(string $a, string $b): string
           <label class="field__label" for="hierarquia">Hierarquia</label>
           <select class="field__control" id="hierarquia" name="hierarquia" required>
             <?php
-            $cur = (string) ($user['hierarquia'] ?? 'Assistente');
-            foreach ($hierarquias as $h) {
-              echo '<option value="' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '" ' . ($cur === $h ? 'selected' : '') . '>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</option>';
-            }
+              $cur = (string)($user['hierarquia'] ?? 'Assistente');
+              foreach ($hierarquias as $h) {
+                echo '<option value="' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '" ' . ($cur === $h ? 'selected' : '') . '>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</option>';
+              }
             ?>
           </select>
         </div>
@@ -407,25 +421,57 @@ function selected(string $a, string $b): string
           </select>
         </div>
 
+        <!-- ✅ ADMIN PERMS -->
         <div class="field field--full">
-          <label class="field__label">Permissões (Administração)</label>
+          <div class="perm-title">Permissões (Administração)</div>
           <div class="perm-grid">
-            <?php foreach (PERMISSION_CATALOG as $perm => $meta): ?>
+            <?php foreach (ADMIN_PERMISSION_CATALOG as $perm => $meta): ?>
               <label class="perm-item">
-                <input type="checkbox" name="perms[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>"
-                  <?= in_array($perm, $curPerms, true) ? 'checked' : '' ?>>
-                <span><?= htmlspecialchars((string) ($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
+                <input type="checkbox" name="perms_admin[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>"
+                  <?= in_array($perm, $curAdminPerms, true) ? 'checked' : '' ?>>
+                <span><?= htmlspecialchars((string)($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
               </label>
             <?php endforeach; ?>
           </div>
-          <div class="perm-help">Marque as áreas do Admin que este usuário poderá acessar.</div>
+          <div class="perm-help">Marque as áreas do Admin que este usuário poderá acessar (somente se ele for Admin).</div>
+        </div>
+
+        <!-- ✅ DASH PERMS -->
+        <div class="field field--full">
+          <div class="perm-title">Permissões (Dashboards)</div>
+
+          <?php
+            $groups = [];
+            foreach (DASHBOARD_CATALOG as $perm => $meta) {
+              $g = (string)($meta['group'] ?? 'Outros');
+              if (!isset($groups[$g])) $groups[$g] = [];
+              $groups[$g][$perm] = $meta;
+            }
+          ?>
+
+          <?php foreach ($groups as $groupName => $items): ?>
+            <div class="perm-group">
+              <div class="perm-group__name"><?= htmlspecialchars($groupName, ENT_QUOTES, 'UTF-8') ?></div>
+              <div class="perm-grid">
+                <?php foreach ($items as $perm => $meta): ?>
+                  <label class="perm-item">
+                    <input type="checkbox" name="perms_dash[]" value="<?= htmlspecialchars($perm, ENT_QUOTES, 'UTF-8') ?>"
+                      <?= in_array($perm, $curDashPerms, true) ? 'checked' : '' ?>>
+                    <span><?= htmlspecialchars((string)($meta['label'] ?? $perm), ENT_QUOTES, 'UTF-8') ?></span>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+            </div>
+          <?php endforeach; ?>
+
+          <div class="perm-help">Marque quais dashboards este usuário pode visualizar.</div>
         </div>
 
         <div class="field">
           <label class="field__label" for="is_active">Status</label>
           <select class="field__control" id="is_active" name="is_active" required>
-            <option value="1" <?= ((int) ($user['is_active'] ?? 0) === 1) ? 'selected' : '' ?>>Ativo</option>
-            <option value="0" <?= ((int) ($user['is_active'] ?? 0) === 0) ? 'selected' : '' ?>>Inativo</option>
+            <option value="1" <?= ((int)($user['is_active'] ?? 0) === 1) ? 'selected' : '' ?>>Ativo</option>
+            <option value="0" <?= ((int)($user['is_active'] ?? 0) === 0) ? 'selected' : '' ?>>Inativo</option>
           </select>
         </div>
 
@@ -441,12 +487,12 @@ function selected(string $a, string $b): string
         </div>
       </form>
 
-      <form method="post" action="/admin/user_edit.php?id=<?= (int) $user['id'] ?>"
+      <form method="post" action="/admin/user_edit.php?id=<?= (int)$user['id'] ?>"
         onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.');"
         class="delete-form">
         <input type="hidden" name="action" value="delete">
-        <button type="submit" class="btn btn--danger" <?= ((int) $me['id'] === (int) $user['id']) ? 'disabled' : '' ?>
-          title="<?= ((int) $me['id'] === (int) $user['id']) ? 'Você não pode excluir o seu próprio usuário.' : 'Excluir usuário' ?>">
+        <button type="submit" class="btn btn--danger" <?= ((int)$me['id'] === (int)$user['id']) ? 'disabled' : '' ?>
+          title="<?= ((int)$me['id'] === (int)$user['id']) ? 'Você não pode excluir o seu próprio usuário.' : 'Excluir usuário' ?>">
           🗑️ Excluir usuário
         </button>
       </form>
@@ -461,7 +507,7 @@ function selected(string $a, string $b): string
   <script src="/assets/js/user-edit.js?v=<?= filemtime(__DIR__ . '/../assets/js/user-edit.js') ?>"></script>
 
   <script>
-    (function(){
+    (function () {
       const input = document.getElementById('userProfilePhoto');
       const img = document.getElementById('userPhotoPreviewImg');
       const emoji = document.getElementById('userPhotoEmoji');
@@ -470,19 +516,19 @@ function selected(string $a, string $b): string
 
       if (!input || !img || !emoji) return;
 
-      function showEmoji(){
+      function showEmoji() {
         img.style.display = 'none';
         img.removeAttribute('src');
         emoji.style.display = '';
       }
 
-      function showImg(src){
+      function showImg(src) {
         img.src = src;
         img.style.display = '';
         emoji.style.display = 'none';
       }
 
-      input.addEventListener('change', function(){
+      input.addEventListener('change', function () {
         const file = input.files && input.files[0] ? input.files[0] : null;
         if (!file) return;
 
@@ -497,7 +543,7 @@ function selected(string $a, string $b): string
       });
 
       if (remove) {
-        remove.addEventListener('change', function(){
+        remove.addEventListener('change', function () {
           if (!remove.checked) return;
 
           input.value = '';
@@ -509,5 +555,4 @@ function selected(string $a, string $b): string
   </script>
 
 </body>
-
 </html>

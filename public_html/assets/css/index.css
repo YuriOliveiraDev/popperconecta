@@ -881,7 +881,6 @@ html:-webkit-full-screen .carousel__fullscreen:hover {
 
 }
 
-
 .charts-grid {
 
   display: grid;
@@ -1162,4 +1161,169 @@ body.page main,
   #mainCarousel .slide--tops .tops-row--carousel{
     grid-template-columns: 1fr !important;
   }
+}
+/* =========================================================
+   FIX — Chart Diário cortando (canvas absolute precisa de altura)
+   ========================================================= */
+
+/* o wrapper do canvas precisa ter altura */
+.chart-box--daily{
+  position: relative;
+  width: 100%;
+  min-width: 0;
+
+  /* ajuste fino: escolha um desses */
+  height: clamp(260px, 38vh, 520px);
+  /* se quiser fixo:
+  height: 420px;
+  */
+}
+
+/* garante que o canvas preenche o box */
+.chart-box--daily > canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* =========================================================
+   FIX — Slide Charts com altura real (modo normal)
+   ========================================================= */
+
+/* garante que o main tem altura visível descontando o header */
+:root{
+  --header-offset: 74px; /* ajuste se seu header for outro */
+}
+
+body.page main{
+  height: calc(100vh - var(--header-offset)) !important;
+  min-height: calc(100vh - var(--header-offset)) !important;
+  overflow: hidden !important;
+}
+
+/* o carousel e viewport ocupam toda essa altura */
+#mainCarousel,
+#mainCarousel .carousel__viewport,
+#mainCarousel .carousel__track{
+  height: 100% !important;
+}
+
+/* cada slide ocupa 100% */
+#mainCarousel .slide{
+  height: 100% !important;
+}
+
+/* especificamente o slide de charts */
+.slide--charts{
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  align-items: stretch !important; /* importante */
+}
+
+/* grid precisa poder esticar */
+.slide--charts .charts-grid{
+  height: 100% !important;
+  min-height: 0 !important;
+  align-items: stretch !important;
+}
+
+/* cards esticam e não cortam */
+.slide--charts .chart-card{
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* título não cresce; box cresce */
+.slide--charts .chart-card > h3{
+  flex: 0 0 auto !important;
+}
+
+.slide--charts .chart-box{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  position: relative !important;
+}
+
+/* canvas ocupa o box */
+.slide--charts .chart-box canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* =========================================================
+   FIX — Slide Charts com altura real (modo normal)
+   ========================================================= */
+
+/* garante que o main tem altura visível descontando o header */
+:root{
+  --header-offset: 74px; /* ajuste se seu header for outro */
+}
+
+body.page main{
+  height: calc(100vh - var(--header-offset)) !important;
+  min-height: calc(100vh - var(--header-offset)) !important;
+  overflow: hidden !important;
+}
+
+/* o carousel e viewport ocupam toda essa altura */
+#mainCarousel,
+#mainCarousel .carousel__viewport,
+#mainCarousel .carousel__track{
+  height: 100% !important;
+}
+
+/* cada slide ocupa 100% */
+#mainCarousel .slide{
+  height: 100% !important;
+}
+
+/* especificamente o slide de charts */
+.slide--charts{
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  align-items: stretch !important; /* importante */
+}
+
+/* grid precisa poder esticar */
+.slide--charts .charts-grid{
+  height: 100% !important;
+  min-height: 0 !important;
+  align-items: stretch !important;
+}
+
+/* cards esticam e não cortam */
+.slide--charts .chart-card{
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* título não cresce; box cresce */
+.slide--charts .chart-card > h3{
+  flex: 0 0 auto !important;
+}
+
+.slide--charts .chart-box{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  position: relative !important;
+}
+
+/* canvas ocupa o box */
+.slide--charts .chart-box canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
 }
