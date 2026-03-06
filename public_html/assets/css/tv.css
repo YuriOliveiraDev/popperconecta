@@ -1,0 +1,1846 @@
+:root{
+  --bg: #f6f7fb;
+  --bg-dark: #0b1220;
+  --card: #ffffff;
+  --card-soft: #f8fafc;
+  --ink: #0f172a;
+  --muted: rgba(15, 23, 42, .65);
+  --line: rgba(15, 23, 42, .08);
+  --line-strong: rgba(15, 23, 42, .12);
+  --shadow: 0 10px 28px rgba(15, 23, 42, .08);
+
+  --primary: #5c2c8c;
+  --primary-dark: #4a2370;
+  --accent: #acc836;
+  --ok: #16a34a;
+  --err: #dc2626;
+  --info: #2563eb;
+
+  --radius: 16px;
+  --footer-h: 44px;
+  --header-offset: 0px;
+}
+
+*{
+  box-sizing: border-box;
+}
+
+html,
+body{
+  height: 100%;
+  margin: 0;
+  font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body{
+  padding-bottom: var(--footer-h);
+}
+
+/* =========================================================
+   LAYOUT BASE
+========================================================= */
+.page{
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page > main{
+  flex: 1;
+  min-height: calc(100vh - var(--header-offset) - var(--footer-h));
+  padding-top: var(--header-offset);
+  overflow: hidden;
+}
+
+.container{
+  width: min(100% - 32px, 1600px);
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* =========================================================
+   TOPBAR
+========================================================= */
+.topbar{
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--primary);
+  border-bottom: none;
+  box-shadow: none;
+}
+
+.topbar,
+.topbar *{
+  color: #f5f5f7 !important;
+}
+
+.topbar__left,
+.topbar__right{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand{
+  color: inherit;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.muted{
+  color: rgba(255,255,255,.85);
+  font-size: 13px;
+}
+
+/* =========================================================
+   DROPDOWN
+========================================================= */
+.topbar__dropdown{
+  position: relative;
+  display: inline-block;
+}
+
+.topbar__dropdown-trigger{
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background .18s ease;
+}
+
+.topbar__dropdown-trigger:hover{
+  background: rgba(255,255,255,.10);
+}
+
+.topbar__dropdown-trigger::after{
+  content: "";
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-left: 6px;
+  background: no-repeat center/10px 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='white' d='M5.25 7.5 10 12.25 14.75 7.5l1.25 1.25L10 14.75 4 8.75z'/%3E%3C/svg%3E");
+  transform: translateY(1px);
+  transition: transform .2s ease;
+}
+
+.topbar__dropdown-trigger.is-open::after{
+  transform: translateY(1px) rotate(180deg);
+}
+
+.topbar__dropdown-menu{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  min-width: 220px;
+  background: #fff;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(15,23,42,.14);
+  padding: 8px 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: .2s ease;
+  z-index: 200;
+}
+
+.topbar__dropdown-menu.is-open{
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.topbar__dropdown-menu,
+.topbar__dropdown-menu *{
+  color: var(--ink) !important;
+}
+
+.topbar__dropdown-item{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  text-decoration: none;
+}
+
+.topbar__dropdown-item:hover{
+  background: rgba(92,44,140,.08);
+  color: var(--primary) !important;
+}
+
+.topbar__dropdown-divider{
+  height: 1px;
+  margin: 8px 0;
+  background: rgba(15,23,42,.08);
+}
+
+.topbar__dropdown-header{
+  padding: 8px 16px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: rgba(15,23,42,.45) !important;
+}
+
+/* =========================================================
+   BOTÕES
+========================================================= */
+.btn,
+button.btn,
+a.btn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.btn:hover,
+button.btn:hover,
+a.btn:hover{
+  background: var(--primary-dark);
+  border-color: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(15,23,42,.10);
+}
+
+.btn:active,
+button.btn:active,
+a.btn:active{
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.btn--small{
+  min-height: 34px;
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+/* =========================================================
+   CARDS BASE
+========================================================= */
+.card,
+.kpi-card,
+.chart-card,
+.data-table-card,
+.dash-tv-card{
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.card{
+  padding: 18px;
+}
+
+.card__title,
+.chart-title,
+.table-title{
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.card__subtitle{
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* =========================================================
+   TABELAS
+========================================================= */
+.table-wrap{
+  overflow: auto;
+  border-radius: 12px;
+}
+
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td{
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid rgba(15,23,42,.10);
+  white-space: nowrap;
+}
+
+.table thead th{
+  background: rgba(15,23,42,.02);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  font-weight: 800;
+  color: rgba(15,23,42,.55);
+}
+
+.table tbody tr:hover{
+  background: rgba(92,44,140,.04);
+}
+
+.table tbody tr:last-child td{
+  border-bottom: none;
+}
+
+.table .right{
+  text-align: right;
+}
+
+/* =========================================================
+   ALERTAS
+========================================================= */
+.alert{
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid;
+  margin: 14px 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.alert--ok{
+  background: rgba(92,44,140,.10);
+  border-color: rgba(92,44,140,.35);
+  color: var(--ink);
+}
+
+.alert--error{
+  background: rgba(239,68,68,.10);
+  border-color: rgba(239,68,68,.35);
+  color: var(--ink);
+}
+
+.alert--warning{
+  background: rgba(245,158,11,.10);
+  border-color: rgba(245,158,11,.35);
+  color: var(--ink);
+}
+
+.alert--info{
+  background: rgba(59,130,246,.10);
+  border-color: rgba(59,130,246,.35);
+  color: var(--ink);
+}
+
+/* =========================================================
+   FOOTER
+========================================================= */
+.site-footer{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--footer-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #5c2c84;
+  border-top: 1px solid rgba(255,255,255,.18);
+  color: #f5f5f7;
+  font-size: 12px;
+  z-index: 9999;
+}
+
+.site-footer__inner{
+  width: 100%;
+  max-width: 1400px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.site-footer__inner a{
+  color: #fff;
+  font-weight: 800;
+  text-decoration: none;
+  position: relative;
+}
+
+.site-footer__inner a::after{
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 100%;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #60a5fa, #a78bfa);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .2s ease;
+}
+
+.site-footer__inner a:hover::after{
+  transform: scaleX(1);
+}
+
+/* =========================================================
+   CAROUSEL
+========================================================= */
+.carousel{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.carousel__viewport{
+  width: 100%;
+  height: 100%;
+}
+
+.carousel__track{
+  display: flex;
+  height: 100%;
+  will-change: transform;
+  transform: translate3d(0,0,0);
+  transition: transform .6s cubic-bezier(.23, 1, .32, 1);
+}
+
+.slide{
+  position: relative;
+  flex: 0 0 100%;
+  width: 100%;
+  min-width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.slide__inner{
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* =========================================================
+   IMAGEM
+========================================================= */
+.slide--image .slide__inner{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+}
+
+.slide__img-full{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  max-height: none !important;
+}
+
+/* =========================================================
+   TEXTO
+========================================================= */
+.slide--text{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slide--text .slide__doc{
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px;
+}
+
+/* =========================================================
+   FULLSCREEN BTN / SETAS / DOTS
+========================================================= */
+.carousel__arrow{
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255,255,255,.92);
+  color: var(--primary);
+  box-shadow: 0 6px 18px rgba(0,0,0,.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .18s ease;
+}
+
+.carousel__arrow:hover{
+  background: var(--primary);
+  color: #fff;
+  transform: translateY(-50%) scale(1.05);
+}
+
+.carousel__arrow--prev{ left: 12px; }
+.carousel__arrow--next{ right: 12px; }
+
+.carousel__arrow svg{
+  width: 22px;
+  height: 22px;
+}
+
+.carousel__dots{
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 21;
+}
+
+.carousel__dot{
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(92,44,140,.22);
+  cursor: pointer;
+  transition: all .2s ease;
+}
+
+.carousel__dot.is-active{
+  width: 28px;
+  background: var(--primary);
+}
+
+.carousel__fullscreen{
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  z-index: 30;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,.15);
+  background: rgba(15,23,42,.25);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: .35;
+  transition: all .25s ease;
+}
+
+.carousel__fullscreen svg{
+  width: 14px;
+  height: 14px;
+  color: #fff;
+  opacity: .8;
+}
+
+.carousel__fullscreen:hover{
+  opacity: .9;
+  background: rgba(15,23,42,.55);
+  transform: scale(1.05);
+}
+
+/* =========================================================
+   SLIDE DASHBOARD TV
+   CENTRALIZADO
+========================================================= */
+.slide__doc--dashboard{
+  width: 100%;
+  max-width: 1700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.dash-tv-grid{
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.dash-tv-card{
+  background: var(--card-soft);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 28px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* CENTRALIZA CONTEÚDO INTERNO */
+  min-height: 220px;
+}
+
+.dash-tv-highlight{
+  background: linear-gradient(135deg, #5c2c8c, #7a4db8);
+  color: #fff;
+}
+
+.dash-tv-highlight .kpi-label,
+.dash-tv-highlight .kpi-sub,
+.dash-tv-highlight .kpi-detail,
+.dash-tv-highlight .kpi-value{
+  color: #fff !important;
+}
+
+.kpi-label{
+  font-size: 16px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 8px;
+}
+
+.kpi-value{
+  font-size: clamp(32px, 3vw, 44px);
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.kpi-detail{
+  font-size: 15px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.kpi-sub{
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.kpi-green{ color: var(--ok); }
+.kpi-red{ color: var(--err); }
+
+/* =========================================================
+   BARRAS DE META
+========================================================= */
+.meta-progress{
+  position: relative;
+  width: 100%;
+  height: 12px;
+  margin-top: 10px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.meta-progress-bar{
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  transition: width .6s ease;
+}
+
+.meta-dia-bar{
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+}
+
+.meta-progress-pct{
+  position: absolute;
+  right: -38px;
+  top: -18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* =========================================================
+   GRÁFICOS
+========================================================= */
+.slide--charts{
+  height: 100%;
+  padding: 28px 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.charts-grid{
+  width: 100%;
+  max-width: 1700px;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+.chart-wide{
+  grid-column: 1 / span 3;
+}
+
+.chart-card{
+  background: var(--card-soft);
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.chart-card > h3{
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+  flex: 0 0 auto;
+}
+
+.chart-box--small{
+  height: 260px;
+}
+
+.chart-box--daily{
+  height: clamp(200px, 38vh, 520px);
+}
+
+
+
+/* =========================================================
+   TOP LIST
+========================================================= */
+.top-head{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.top-sub{
+  font-size: 12px;
+  opacity: .7;
+  margin-top: -6px;
+}
+
+.top-badge{
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(59,130,246,.10);
+  border: 1px solid rgba(59,130,246,.20);
+}
+
+.top-list{
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 8px;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 6px !important;
+  scroll-behavior: smooth;
+}
+
+.top-item{
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  gap: 12px;
+  padding: 12px 6px;
+  border-top: 1px solid rgba(15,23,42,.06);
+}
+
+.top-item:first-child{
+  border-top: 0;
+}
+
+.top-rank{
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  background: rgba(245,158,11,.18);
+}
+
+.top-main{
+  min-width: 0;
+}
+
+.top-name{
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-subline{
+  font-size: 12px;
+  opacity: .75;
+  margin-top: 3px;
+}
+
+.top-bar{
+  height: 6px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(15,23,42,.10);
+  overflow: hidden;
+}
+
+.top-bar i{
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 999px;
+  background: #1d4ed8;
+}
+
+.top-val{
+  font-size: 13px;
+  font-weight: 900;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   FULLSCREEN
+========================================================= */
+html:fullscreen,
+body:fullscreen{
+  overflow: hidden !important;
+}
+
+html:fullscreen .topbar,
+html:fullscreen footer{
+  display: none !important;
+}
+
+html:fullscreen body,
+html:fullscreen .page,
+html:fullscreen .page > main{
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+html:fullscreen .page > main{
+  min-height: 100vh !important;
+}
+
+html:fullscreen #mainCarousel,
+html:fullscreen #mainCarousel .carousel__viewport,
+html:fullscreen #mainCarousel .carousel__track,
+html:fullscreen #mainCarousel .slide{
+  height: 100vh !important;
+}
+
+html:fullscreen .carousel__fullscreen{
+  opacity: .12 !important;
+  background: rgba(15,23,42,.15) !important;
+}
+
+html:fullscreen .carousel__fullscreen:hover{
+  opacity: .9 !important;
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+@media (max-width: 1200px){
+  .dash-tv-grid,
+  .charts-grid{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .chart-wide{
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px){
+  .topbar{
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar__left,
+  .topbar__right{
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .dash-tv-grid,
+  .charts-grid{
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dash-tv-card{
+    min-height: auto;
+  }
+
+  .kpi-value{
+    font-size: 32px;
+  }
+
+  .carousel__arrow{
+    width: 38px;
+    height: 38px;
+  }
+}
+
+/* =========================================================
+   FIX — centralizar cards no slide dashboard da TV
+   ========================================================= */
+
+/* o slide inteiro vira um flex container centralizado */
+#mainCarousel .slide.slide--dashboard{
+  height: 100% !important;
+  min-height: 100% !important;
+  display: flex !important;
+  align-items: center !important;      /* centraliza vertical */
+  justify-content: center !important;  /* centraliza horizontal */
+  padding: 24px 40px !important;
+  overflow: hidden !important;
+}
+
+/* documento interno ocupa a área e centraliza o grid */
+#mainCarousel .slide--dashboard .slide__doc--dashboard{
+  width: 100% !important;
+  max-width: 1700px !important;
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;  /* centraliza cards no meio */
+}
+
+/* grid dos cards */
+#mainCarousel .slide--dashboard .dash-tv-grid{
+  width: 100% !important;
+  margin: 0 auto !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 24px !important;
+
+  align-content: center !important;    /* centraliza o bloco do grid */
+  justify-content: center !important;
+}
+
+/* cards com altura mais estável */
+#mainCarousel .slide--dashboard .dash-tv-card{
+  min-height: 220px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+}
+
+/* texto inferior do slide */
+#mainCarousel .slide--dashboard .dash-slide-footer{
+  margin-top: 18px !important;
+  text-align: center !important;
+  color: rgba(15, 23, 42, .55) !important;
+  font-size: 12px !important;
+}
+
+/* notebook / tv box menor */
+@media (max-width: 1366px), (max-height: 768px){
+  #mainCarousel .slide.slide--dashboard{
+    padding: 18px 24px !important;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-grid{
+    gap: 16px !important;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-card{
+    min-height: 185px !important;
+    padding: 22px 24px !important;
+  }
+
+  #mainCarousel .slide--dashboard .kpi-value{
+    font-size: 36px !important;
+  }
+}
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body.page main {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+  }
+
+  body.page.is-ready main {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  body.page main {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity .18s ease, transform .18s ease;
+  }
+
+  body.page.is-ready main {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* CENTRALIZA SÓ O CONTEÚDO DO DASHBOARD */
+  #mainCarousel .slide--dashboard .dash-tv-wrap {
+    width: 100%;
+    max-width: 1550px;
+    height: 100%;
+    margin: 0 auto;
+    padding: 24px 40px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 24px;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-card {
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-updated {
+    width: 100%;
+    text-align: center;
+    margin-top: 16px;
+    font-size: 14px;
+    color: #6b7280;
+    opacity: .9;
+  }
+
+  @media (max-width: 1366px), (max-height: 768px) {
+    #mainCarousel .slide--dashboard .dash-tv-wrap {
+      padding: 18px 24px;
+    }
+
+    #mainCarousel .slide--dashboard .dash-tv-grid {
+      gap: 16px;
+    }
+
+    #mainCarousel .slide--dashboard .dash-tv-card {
+      min-height: 185px;
+      padding: 22px 24px;
+    }
+  }
+/* =========================================================
+   PATCH FINAL — TV
+   - aumenta cards dos gráficos
+   - reduz arredondamento
+   - diário full largura
+   - tops lado a lado com letras maiores
+========================================================= */
+
+/* ---------- cards mais “retos” ---------- */
+.chart-card,
+.data-table-card,
+.top-card,
+.dash-tv-card{
+  border-radius: 10px !important;   /* antes estava muito arredondado */
+}
+
+/* ---------- slide de gráficos maior ---------- */
+.slide--charts{
+  padding: 18px 24px !important;
+  align-items: stretch !important;
+}
+
+.charts-grid{
+  max-width: 100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  gap: 18px !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-rows: minmax(320px, auto) !important;
+  align-items: stretch !important;
+}
+
+/* cards dos 3 gráficos de cima maiores */
+.slide--charts .chart-card{
+  padding: 18px 18px 16px !important;
+  min-height: 320px !important;
+  height: 100% !important;
+  border-radius: 10px !important;
+}
+
+/* títulos dos gráficos maiores */
+.slide--charts .chart-card > h3,
+.slide--charts .chart-title{
+  font-size: 28px !important;
+  line-height: 1.15 !important;
+  margin-bottom: 14px !important;
+  font-weight: 800 !important;
+}
+
+/* aumenta área útil dos gráficos */
+.slide--charts .chart-box--small{
+  height: 360px !important;
+}
+
+.slide--charts .chart-box--daily{
+  height: 440px !important;
+}
+
+/* diário full largura */
+.slide--charts .chart-card.chart-wide{
+  grid-column: 1 / -1 !important;
+  min-height: 520px !important;
+  margin-top: 50px;
+}
+
+/* garante largura total mesmo com classe antiga */
+.slide--charts .exec-chart{
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+}
+
+/* ---------- TOPS lado a lado e maiores ---------- */
+.slide--tops{
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+.slide--tops .tops-slide{
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.slide--tops .tops-slide__head{
+  margin-bottom: 10px !important;
+}
+
+.slide--tops .tops-slide__title{
+  font-size: 30px !important;
+  font-weight: 900 !important;
+  line-height: 1.1 !important;
+}
+
+.slide--tops .tops-slide__sub{
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+/* força 2 colunas */
+.slide--tops .tops-row--carousel{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 18px !important;
+  align-items: stretch !important;
+}
+
+/* cards de tops */
+.slide--tops .top-card,
+.slide--tops .data-table-card{
+  grid-column: auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 100% !important;
+  padding: 18px 18px 14px !important;
+  border-radius: 10px !important;
+}
+
+/* cabeçalho dos tops maior */
+.slide--tops .table-title{
+  font-size: 28px !important;
+  font-weight: 900 !important;
+  margin-bottom: 4px !important;
+}
+
+.slide--tops .top-sub{
+  font-size: 16px !important;
+  margin-top: 0 !important;
+}
+
+.slide--tops .top-badge{
+  font-size: 16px !important;
+  padding: 8px 14px !important;
+  border-radius: 999px !important;
+}
+
+/* lista ocupa toda altura */
+.slide--tops .top-list{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow: auto !important;
+  padding-right: 6px !important;
+}
+
+/* item maior */
+.slide--tops .top-item{
+  grid-template-columns: 42px 1fr auto !important;
+  gap: 14px !important;
+  padding: 14px 6px !important;
+}
+
+.slide--tops .top-rank{
+  width: 34px !important;
+  height: 34px !important;
+  font-size: 15px !important;
+  font-weight: 900 !important;
+}
+
+.slide--tops .top-name{
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+  font-weight: 900 !important;
+}
+
+.slide--tops .top-subline{
+  font-size: 15px !important;
+  margin-top: 4px !important;
+}
+
+.slide--tops .top-val{
+  font-size: 22px !important;
+  font-weight: 900 !important;
+}
+
+.slide--tops .top-bar{
+  height: 8px !important;
+  margin-top: 10px !important;
+}
+
+/* ---------- ajuste para 1366x768 / tv box ---------- */
+@media (max-width: 1366px), (max-height: 768px){
+  .slide--charts{
+    padding: 14px 18px !important;
+  }
+
+  .charts-grid{
+    gap: 14px !important;
+    grid-auto-rows: minmax(270px, auto) !important;
+  }
+
+  .slide--charts .chart-card{
+    min-height: 270px !important;
+    padding: 14px 14px 12px !important;
+  }
+
+  .slide--charts .chart-card > h3,
+  .slide--charts .chart-title{
+    font-size: 22px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .slide--charts .chart-box--small{
+    height: 290px !important;
+  }
+
+  .slide--charts .chart-box--daily{
+    height: 340px !important;
+  }
+
+  .slide--charts .chart-card.chart-wide{
+    min-height: 400px !important;
+  }
+
+  .slide--tops{
+    padding: 14px 18px !important;
+  }
+
+  .slide--tops .tops-slide__title{
+    font-size: 24px !important;
+  }
+
+  .slide--tops .tops-slide__sub{
+    font-size: 15px !important;
+  }
+
+  .slide--tops .table-title{
+    font-size: 22px !important;
+  }
+
+  .slide--tops .top-sub{
+    font-size: 13px !important;
+  }
+
+  .slide--tops .top-name{
+    font-size: 17px !important;
+  }
+
+  .slide--tops .top-subline{
+    font-size: 12px !important;
+  }
+
+  .slide--tops .top-val{
+    font-size: 17px !important;
+  }
+
+  .slide--tops .top-rank{
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* =========================================================
+   FIX GRÁFICOS — Chart.js voltar a renderizar
+========================================================= */
+
+.slide--charts{
+  padding: 18px 24px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+.charts-grid{
+  width: 100% !important;
+  max-width: 1700px !important;
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 18px !important;
+
+  /* IMPORTANTE: remove altura forçada */
+  height: auto !important;
+  min-height: 0 !important;
+  align-items: start !important;
+}
+
+.chart-card{
+  background: var(--card-soft) !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  padding: 18px !important;
+
+  display: block !important;   /* tira flex do card */
+  min-height: auto !important;
+  height: auto !important;
+}
+
+.chart-card > h3,
+.chart-card .chart-title{
+  margin: 0 0 12px !important;
+  font-size: 24px !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+}
+
+/* wrapper normal, sem flex */
+.chart-box{
+  position: relative !important;
+  width: 100% !important;
+  min-height: 0 !important;
+  flex: unset !important;
+}
+
+/* alturas fixas reais */
+.chart-box--small{
+  height: 320px !important;
+}
+
+.chart-box--daily{
+margin-top: 30px;
+  height: 320px !important;
+}
+
+/* MUITO IMPORTANTE:
+   volta canvas para fluxo normal do Chart.js */
+.chart-box canvas{
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* diário full largura */
+.chart-wide,
+.exec-chart{
+  grid-column: 1 / -1 !important;
+}
+
+/* notebook / TV box */
+@media (max-width: 1366px), (max-height: 768px){
+  .slide--charts{
+    padding: 14px 18px !important;
+  }
+
+  .chart-card > h3,
+  .chart-card .chart-title{
+    font-size: 20px !important;
+  }
+
+  .chart-box--small{
+    height: 280px !important;
+  }
+
+  .chart-box--daily{
+    height: 340px !important;
+  }
+}
+
+/* =========================================================
+   FULL HEIGHT — slide de gráficos ocupa a tela toda
+========================================================= */
+
+/* slide inteiro */
+#mainCarousel .slide--charts{
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 14px 18px 10px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+}
+
+/* grid ocupa toda a altura útil */
+#mainCarousel .slide--charts .charts-grid{
+  width: 100% !important;
+  max-width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: 1fr 1.15fr !important; /* linha de cima + diário */
+  gap: 14px !important;
+
+  align-items: stretch !important;
+}
+
+/* cards ocupam toda a célula */
+#mainCarousel .slide--charts .chart-card{
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 14px !important;
+  border-radius: 10px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* título mais compacto pra sobrar área pro gráfico */
+#mainCarousel .slide--charts .chart-card > h3,
+#mainCarousel .slide--charts .chart-title{
+  margin: 0 0 8px !important;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  flex: 0 0 auto !important;
+}
+
+/* área do gráfico ocupa o resto do card */
+#mainCarousel .slide--charts .chart-box{
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* os 3 gráficos de cima ficam altos */
+#mainCarousel .slide--charts .chart-box--small{
+  height: 100% !important;
+  min-height: 260px !important;
+}
+
+/* diário ocupa linha inteira embaixo */
+#mainCarousel .slide--charts .exec-chart,
+#mainCarousel .slide--charts .chart-wide,
+#mainCarousel .slide--charts .chart-card.grid-col-span-3{
+  grid-column: 1 / -1 !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* diário usa toda a altura da 2ª linha */
+#mainCarousel .slide--charts .chart-box--daily{
+  height: 100% !important;
+  min-height: 280px !important;
+  margin-top: 0 !important;
+}
+
+/* canvas ocupa tudo */
+#mainCarousel .slide--charts .chart-box canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* TV box / notebook */
+@media (max-width: 1366px), (max-height: 768px){
+  #mainCarousel .slide--charts{
+    padding: 10px 14px 8px !important;
+  }
+
+  #mainCarousel .slide--charts .charts-grid{
+    gap: 10px !important;
+    grid-template-rows: 1fr 1.08fr !important;
+  }
+
+  #mainCarousel .slide--charts .chart-card{
+    padding: 12px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-card > h3,
+  #mainCarousel .slide--charts .chart-title{
+    font-size: 18px !important;
+    margin-bottom: 6px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-box--small{
+    min-height: 220px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-box--daily{
+    min-height: 240px !important;
+  }
+}
+
+/* =========================
+   CHARTS SLIDE FULL
+========================= */
+.slide--charts {
+  padding: 20px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.charts-grid--full {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+  height: calc(100vh - 40px);
+  align-items: stretch;
+}
+
+.chart-card--full {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  border-radius: 24px;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.chart-card--full .chart-title {
+  font-size: 1.35rem;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.chart-box--full {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+.chart-box--full canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.chart-box--full,
+.chart-box--small,
+.chart-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.chart-box--full canvas,
+.chart-box--small canvas,
+.chart-box canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* =========================================================
+   CHARTS SLIDE — FULL HEIGHT REAL
+========================================================= */
+
+#mainCarousel,
+#mainCarousel .carousel__viewport,
+#mainCarousel .carousel__track,
+#mainCarousel .slide {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
+#mainCarousel .slide--charts {
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 16px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+#mainCarousel .slide--charts .charts-grid--full {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+}
+
+#mainCarousel .slide--charts .chart-card--full {
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  box-sizing: border-box !important;
+}
+
+#mainCarousel .slide--charts .chart-card--full .chart-title {
+  flex: 0 0 auto !important;
+  margin: 0 0 10px !important;
+  font-size: 22px !important;
+  line-height: 1.15 !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+}
+
+#mainCarousel .slide--charts .chart-box--full {
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#mainCarousel .slide--charts .chart-box--full canvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* ajuste para telas menores / tv box */
+@media (max-width: 1366px), (max-height: 768px) {
+  #mainCarousel .slide--charts {
+    padding: 12px !important;
+  }
+
+  #mainCarousel .slide--charts .charts-grid--full {
+    gap: 12px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-card--full {
+    padding: 12px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-card--full .chart-title {
+    font-size: 18px !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+/* =========================================================
+   CHARTS SLIDE — FULL HEIGHT DE VERDADE
+========================================================= */
+
+#mainCarousel .slide--charts{
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 14px !important;
+  display: flex !important;
+  overflow: hidden !important;
+}
+
+#mainCarousel .slide--charts .charts-grid,
+#mainCarousel .slide--charts .charts-grid--full{
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-template-rows: minmax(0, 1fr) !important; /* ESSENCIAL */
+  gap: 14px !important;
+
+  align-items: stretch !important;
+  align-content: stretch !important; /* ESSENCIAL */
+}
+
+#mainCarousel .slide--charts .chart-card,
+#mainCarousel .slide--charts .chart-card--full{
+  height: 100% !important;
+  min-height: 0 !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 14px !important;
+  border-radius: 10px !important;
+  box-sizing: border-box !important;
+}
+
+#mainCarousel .slide--charts .chart-title{
+  margin: 0 0 8px !important;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  font-weight: 800 !important;
+  text-align: center !important;
+  flex: 0 0 auto !important;
+}
+
+#mainCarousel .slide--charts .chart-box,
+#mainCarousel .slide--charts .chart-box--small,
+#mainCarousel .slide--charts .chart-box--full{
+  position: relative !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#mainCarousel .slide--charts .chart-box canvas,
+#mainCarousel .slide--charts .chart-box--small canvas,
+#mainCarousel .slide--charts .chart-box--full canvas{
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+/* TV box / notebook */
+@media (max-width: 1366px), (max-height: 768px){
+  #mainCarousel .slide--charts{
+    padding: 10px !important;
+  }
+
+  #mainCarousel .slide--charts .charts-grid,
+  #mainCarousel .slide--charts .charts-grid--full{
+    gap: 10px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-card,
+  #mainCarousel .slide--charts .chart-card--full{
+    padding: 10px !important;
+  }
+
+  #mainCarousel .slide--charts .chart-title{
+    font-size: 17px !important;
+    margin-bottom: 6px !important;
+  }
+}
+
+/* TOPS — scroll real */
+.slide--tops .tops-slide{
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.slide--tops .tops-row--carousel{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+  gap: 18px !important;
+}
+
+.slide--tops .top-card,
+.slide--tops .data-table-card{
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.slide--tops .top-list{
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  max-height: none !important;
+  padding-right: 6px !important;
+  scroll-behavior: auto !important;
+}

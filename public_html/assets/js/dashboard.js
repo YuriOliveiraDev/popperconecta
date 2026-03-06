@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const brl  = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
   const pct0 = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 });
 
   function clampMin(v, min) { return v < min ? min : v; }
@@ -17,7 +17,7 @@
   // ✅ Principal de HOJE = Faturado + IM (igual card Hoje / carousel)
   function hojePrincipal(v) {
     const fatHoje = num(v.hoje_faturado);
-    const imHoje  = num(v.hoje_im ?? v.hoje_agendado);
+    const imHoje = num(v.hoje_im ?? v.hoje_agendado);
     return num(v.hoje_total) || (fatHoje + imHoje);
   }
 
@@ -49,7 +49,7 @@
   // LOADER
   // =========================
   const LOADER_DELAY_MS = 120;
-  const LOADER_MIN_MS   = 350;
+  const LOADER_MIN_MS = 350;
 
   let _loaderTimer = null;
   let _loaderShownAt = 0;
@@ -95,149 +95,308 @@
   }
 
   let chartProgressMonth = null;
-  let chartProgressYear  = null;
-  let chartPace          = null;
+  let chartProgressYear = null;
+  let chartPace = null;
 
-  function makeValueLabelPlugin() {
-    return {
-      id: 'valueLabelPlugin',
-      afterDatasetsDraw(chart) {
-        const { ctx, chartArea } = chart;
-        if (!chartArea) return;
 
-        ctx.save();
-        ctx.font = '12px system-ui, -apple-system, Segoe UI, Roboto, Arial';
-        ctx.fillStyle = 'rgba(15,23,42,.90)';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
+function makeTopLabelsPlugin() {
+  return {
+    id: 'topLabelsPlugin',
+    afterDatasetsDraw(chart) {
+      const { ctx, chartArea } = chart;
+      if (!chartArea) return;
 
-        chart.data.datasets.forEach((dataset, datasetIndex) => {
-          const meta = chart.getDatasetMeta(datasetIndex);
-          if (meta.hidden) return;
+      ctx.save();
 
-          meta.data.forEach((bar, i) => {
-            const val = dataset.data[i];
-            if (val == null) return;
+      chart.data.datasets.forEach((dataset, datasetIndex) => {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        if (meta.hidden) return;
 
-            const label = brl.format(val);
+        meta.data.forEach((bar, i) => {
+          const raw = Number(dataset.data[i] ?? 0);
+          if (!Number.isFinite(raw)) return;
 
-            let y = bar.y - 10;
-            const minY = chartArea.top + 20;
-            if (y < minY) y = minY;
+          const x = bar.x;
+          const y = Math.max(bar.y - 8, chartArea.top + 14);
 
-            ctx.fillText(label, bar.x, y);
-          });
+          let line1 = brl.format(raw);
+          let line2 = '';
+
+          // % apenas nas barras "Realizado"
+          if (dataset.label === 'Realizado') {
+            const metaDataset = chart.data.datasets.find(d => d.label === 'Meta');
+            const metaVal = Number(metaDataset?.data?.[i] ?? 0);
+            const pct = metaVal > 0 ? (raw / metaVal) : 0;
+            line2 = pct0.format(pct);
+          }
+
+          ctx.textAlign = 'center';
+          ctx.fillStyle = 'rgba(51, 65, 85, 0.95)';
+
+          // linha 1 = valor em R$
+          ctx.font = '600 12px Inter, system-ui, sans-serif';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(line1, x, y);
+
+          // linha 2 = percentual (somente realizado)
+          if (line2) {
+            ctx.font = '700 11px Inter, system-ui, sans-serif';
+            ctx.fillStyle = 'rgba(92, 44, 140, 0.95)';
+            ctx.fillText(line2, x, y - 14);
+          }
         });
+      });
 
-        ctx.restore();
-      }
-    };
+      ctx.restore();
+    }
+  };
+}
+function ensureCharts(updatedAt) {
+  const ref = buildRefLabels(updatedAt);
+  const topLabelsPlugin = makeTopLabelsPlugin();
+
+  const elMonth = document.getElementById('salesExpensesChartMonth');
+  const elYear  = document.getElementById('salesExpensesChartYear');
+  const elPace  = document.getElementById('salesBySectorChart');
+
+  if (!chartProgressMonth && elMonth) {
+    chartProgressMonth = new Chart(elMonth, {
+      type: 'bar',
+      data: {
+        labels: ['Mês'],
+        datasets: [
+          {
+            label: 'Realizado',
+            data: [0],
+            backgroundColor: 'rgba(92, 44, 140, 0.85)',
+            borderRadius: 10,
+            borderSkipped: false,
+            categoryPercentage: 0.55,
+            barPercentage: 0.72,
+            maxBarThickness: 88
+          },
+          {
+            label: 'Meta',
+            data: [0],
+            backgroundColor: 'rgba(172, 204, 54, 0.75)',
+            borderRadius: 10,
+            borderSkipped: false,
+            categoryPercentage: 0.55,
+            barPercentage: 0.72,
+            maxBarThickness: 88
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        devicePixelRatio: 2,
+        layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 12,
+              padding: 16
+            }
+          },
+          tooltip: {
+            callbacks: {
+              title: () => `Referência: ${ref.mesAno}`,
+              label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
+            }
+          },
+          datalabels: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            offset: true,
+            stacked: false,
+            grid: { display: false },
+            ticks: {
+              color: '#475569',
+              font: { size: 14, weight: '600' }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grace: '22%',
+            ticks: {
+              callback: (v) => brl.format(v),
+              color: '#64748b',
+              font: { size: 12 }
+            },
+            grid: {
+              color: 'rgba(148,163,184,.18)'
+            }
+          }
+        }
+      },
+      plugins: [topLabelsPlugin]
+    });
   }
 
-  function ensureCharts(updatedAt) {
-    const ref = buildRefLabels(updatedAt);
-    const valueLabelPlugin = makeValueLabelPlugin();
-
-    const elMonth = document.getElementById('salesExpensesChartMonth');
-    const elYear  = document.getElementById('salesExpensesChartYear');
-    const elPace  = document.getElementById('salesBySectorChart');
-
-    if (!chartProgressMonth && elMonth) {
-      chartProgressMonth = new Chart(elMonth, {
-        type: 'bar',
-        data: {
-          labels: ['Mês'],
-          datasets: [
-            { label: 'Realizado', data: [0], backgroundColor: 'rgba(92, 44, 140, 0.85)', borderRadius: 10 },
-            { label: 'Meta',      data: [0], backgroundColor: 'rgba(172, 204, 54, 0.75)', borderRadius: 10 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          layout: { padding: { top: 32 } },
-          plugins: {
-            legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
-            tooltip: {
-              callbacks: {
-                title: () => `Referência: ${ref.mesAno}`,
-                label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
-              }
+  if (!chartProgressYear && elYear) {
+    chartProgressYear = new Chart(elYear, {
+      type: 'bar',
+      data: {
+        labels: ['Ano'],
+        datasets: [
+          {
+            label: 'Realizado',
+            data: [0],
+            backgroundColor: 'rgba(92, 44, 140, 0.85)',
+            borderRadius: 10,
+            borderSkipped: false,
+            categoryPercentage: 0.55,
+            barPercentage: 0.72,
+            maxBarThickness: 88
+          },
+          {
+            label: 'Meta',
+            data: [0],
+            backgroundColor: 'rgba(172, 204, 54, 0.75)',
+            borderRadius: 10,
+            borderSkipped: false,
+            categoryPercentage: 0.55,
+            barPercentage: 0.72,
+            maxBarThickness: 88
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        devicePixelRatio: 2,
+        layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 12,
+              padding: 16
             }
           },
-          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
-        },
-        plugins: [valueLabelPlugin]
-      });
-    }
-
-    if (!chartProgressYear && elYear) {
-      chartProgressYear = new Chart(elYear, {
-        type: 'bar',
-        data: {
-          labels: ['Ano'],
-          datasets: [
-            { label: 'Realizado', data: [0], backgroundColor: 'rgba(92, 44, 140, 0.85)', borderRadius: 10 },
-            { label: 'Meta',      data: [0], backgroundColor: 'rgba(172, 204, 54, 0.75)', borderRadius: 10 }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          layout: { padding: { top: 32 } },
-          plugins: {
-            legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
-            tooltip: {
-              callbacks: {
-                title: () => `Referência: ${ref.ano}`,
-                label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
-              }
+          tooltip: {
+            callbacks: {
+              title: () => `Referência: ${ref.ano}`,
+              label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
             }
           },
-          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
+          datalabels: {
+            display: false
+          }
         },
-        plugins: [valueLabelPlugin]
-      });
-    }
-
-    // ✅ "Meta do dia" agora é META DINÂMICA (a_faturar_dia_util), igual carousel
-    // ✅ "Realizado" é HOJE principal (Faturado + IM p/hoje)
-    if (!chartPace && elPace) {
-      chartPace = new Chart(elPace, {
-        type: 'bar',
-        data: {
-          labels: ['Meta dinâmica do dia', 'Realizado hoje (Fat + IM)'],
-          datasets: [
-            {
-              label: `Dia — ${ref.mesAno}`,
-              data: [0, 0],
-              backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'],
-              borderRadius: 10
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          layout: { padding: { top: 32 } },
-          plugins: {
-            legend: { display: true, position: 'bottom', labels: { usePointStyle: true } },
-            tooltip: {
-              callbacks: {
-                title: () => `Referência: ${ref.mesAno}`,
-                label: (ctx) => `${ctx.label}: ${brl.format(ctx.raw)}`
-              }
+        scales: {
+          x: {
+            offset: true,
+            stacked: false,
+            grid: { display: false },
+            ticks: {
+              color: '#475569',
+              font: { size: 14, weight: '600' }
             }
           },
-          scales: { y: { beginAtZero: true, grace: '20%', ticks: { callback: (v) => brl.format(v) } } }
-        },
-        plugins: [valueLabelPlugin]
-      });
-    }
+          y: {
+            beginAtZero: true,
+            grace: '22%',
+            ticks: {
+              callback: (v) => brl.format(v),
+              color: '#64748b',
+              font: { size: 12 }
+            },
+            grid: {
+              color: 'rgba(148,163,184,.18)'
+            }
+          }
+        }
+      },
+      plugins: [topLabelsPlugin]
+    });
   }
+
+  if (!chartPace && elPace) {
+    chartPace = new Chart(elPace, {
+      type: 'bar',
+      data: {
+        labels: ['Meta dinâmica do dia', 'Realizado hoje (Fat + IM)'],
+        datasets: [
+          {
+            label: `Dia — ${ref.mesAno}`,
+            data: [0, 0],
+            backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'],
+            borderRadius: 10,
+            borderSkipped: false,
+            categoryPercentage: 0.58,
+            barPercentage: 0.62,
+            maxBarThickness: 92
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        devicePixelRatio: 2,
+        layout: { padding: { top: 28, right: 10, bottom: 10, left: 10 } },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {
+              usePointStyle: true,
+              boxWidth: 12,
+              padding: 16
+            }
+          },
+          tooltip: {
+            callbacks: {
+              title: () => `Referência: ${ref.mesAno}`,
+              label: (ctx) => `${ctx.label}: ${brl.format(ctx.raw)}`
+            }
+          },
+          datalabels: {
+            display: false
+          }
+        },
+        scales: {
+          x: {
+            offset: true,
+            stacked: false,
+            grid: { display: false },
+            ticks: {
+              color: '#475569',
+              font: { size: 13, weight: '600' },
+              maxRotation: 0,
+              minRotation: 0
+            }
+          },
+          y: {
+            beginAtZero: true,
+            grace: '18%',
+            ticks: {
+              callback: (v) => brl.format(v),
+              color: '#64748b',
+              font: { size: 12 }
+            },
+            grid: {
+              color: 'rgba(148,163,184,.18)'
+            }
+          }
+        }
+      },
+      plugins: [topLabelsPlugin]
+    });
+  }
+}
 
   function renderFromValues(payload) {
     const v = payload.values || {};
@@ -246,50 +405,50 @@
 
     // ✅ principal do mês = mes_total (FATURADO + IM)
     const fatMes = num(v.mes_faturado);
-    const imMes  = num(v.mes_im ?? v.mes_agendado);
-    const agMes  = num(v.mes_ag);
+    const imMes = num(v.mes_im ?? v.mes_agendado);
+    const agMes = num(v.mes_ag);
     const totalMes = num(v.mes_total) || (fatMes + imMes) || num(v.realizado_ate_hoje);
 
     // ✅ principal HOJE
     const totalHoje = hojePrincipal(v);
 
     setText('titleProgressMonth', `Progresso (Mês) — ${ref.mesAno}`);
-    setText('titleProgressYear',  `Progresso (Ano) — ${ref.ano}`);
-    setText('titlePace',          `Meta dinâmica do dia × Realizado hoje — ${ref.mesAno}`);
+    setText('titleProgressYear', `Progresso (Ano) — ${ref.ano}`);
+    setText('titlePace', `Meta dinâmica do dia × Realizado hoje — ${ref.mesAno}`);
 
-    setText('kpi-meta-mes',     brl.format(num(v.meta_mes)));
+    setText('kpi-meta-mes', brl.format(num(v.meta_mes)));
     setText('kpi-realizado-mes', brl.format(totalMes));
-    setText('kpi-falta-mes',     brl.format(num(v.falta_meta_mes)));
+    setText('kpi-falta-mes', brl.format(num(v.falta_meta_mes)));
 
     setText('kpi-mes-atual', brl.format(totalMes));
-    setText('kpi-mes-fat',   brl.format(fatMes));
-    setText('kpi-mes-ag',    brl.format(imMes));   // IMEDIATO
-    setText('kpi-mes-ag2',   brl.format(agMes));   // AG
+    setText('kpi-mes-fat', brl.format(fatMes));
+    setText('kpi-mes-ag', brl.format(imMes));   // IMEDIATO
+    setText('kpi-mes-ag2', brl.format(agMes));   // AG
 
-    setText('kpi-meta-ano',     brl.format(num(v.meta_ano)));
+    setText('kpi-meta-ano', brl.format(num(v.meta_ano)));
     setText('kpi-realizado-ano', brl.format(num(v.realizado_ano_acum)));
-    setText('kpi-falta-ano',     brl.format(num(v.falta_meta_ano)));
+    setText('kpi-falta-ano', brl.format(num(v.falta_meta_ano)));
 
     // ✅ "ritmo" no KPI vira HOJE (igual seu pedido de referência)
     setText('kpi-ritmo', brl.format(totalHoje));
 
     // mantém esses KPIs como você já tinha
-    setText('kpi-meta-dia',  brl.format(num(v.a_faturar_dia_util))); // dinâmica
+    setText('kpi-meta-dia', brl.format(num(v.a_faturar_dia_util))); // dinâmica
     setText('kpi-a-faturar', brl.format(num(v.meta_dia_util)));      // teórica
 
-    setText('kpi-deveria',     brl.format(num(v.deveria_ate_hoje)));
+    setText('kpi-deveria', brl.format(num(v.deveria_ate_hoje)));
     setText('kpi-atingimento', pct0.format(num(v.atingimento_mes_pct)));
 
     setText('kpi-dias', `${num(v.dias_uteis_trabalhados)} / ${num(v.dias_uteis_trabalhar)}`);
     setText('kpi-produtividade', pct0.format(num(v.realizado_dia_util_pct)));
 
-    setText('kpi-meta-trend',    `Atualizado: ${updatedAt}`);
-    setText('kpi-ano-trend',     `Atualizado: ${updatedAt}`);
-    setText('kpi-ritmo-trend',   `Atualizado: ${updatedAt}`);
+    setText('kpi-meta-trend', `Atualizado: ${updatedAt}`);
+    setText('kpi-ano-trend', `Atualizado: ${updatedAt}`);
+    setText('kpi-ritmo-trend', `Atualizado: ${updatedAt}`);
     setText('kpi-deveria-trend', `Atualizado: ${updatedAt}`);
-    setText('kpi-dias-trend',    `Atualizado: ${updatedAt}`);
+    setText('kpi-dias-trend', `Atualizado: ${updatedAt}`);
 
-    setText('kpi-projecao-mes',       brl.format(num(v.fechar_em)));
+    setText('kpi-projecao-mes', brl.format(num(v.fechar_em)));
     setText('kpi-projecao-mes-trend', `Proj: ${pct0.format(num(v.equivale_pct))} • Atualizado: ${updatedAt}`);
 
     ensureCharts(updatedAt);
@@ -309,7 +468,7 @@
     // ✅ Gráfico do "dia": Meta dinâmica vs Realizado HOJE
     if (chartPace) {
       chartPace.data.datasets[0].label = `Dia — ${ref.mesAno}`;
-      chartPace.data.datasets[0].data  = [num(v.a_faturar_dia_util), totalHoje];
+      chartPace.data.datasets[0].data = [num(v.a_faturar_dia_util), totalHoje];
       chartPace.update('none');
     }
 
@@ -321,13 +480,13 @@
       const diasRest = Math.max(0, num(v.dias_uteis_trabalhar) - num(v.dias_uteis_trabalhados));
 
       const fatMes2 = num(v.mes_faturado);
-      const imMes2  = num(v.mes_im ?? v.mes_agendado);
-      const agMes2  = num(v.mes_ag);
+      const imMes2 = num(v.mes_im ?? v.mes_agendado);
+      const agMes2 = num(v.mes_ag);
       const totalMes2 = num(v.mes_total) || (fatMes2 + imMes2) || num(v.realizado_ate_hoje);
 
       const fatHoje2 = num(v.hoje_faturado);
-      const imHoje2  = num(v.hoje_im ?? v.hoje_agendado);
-      const agHoje2  = num(v.hoje_ag);
+      const imHoje2 = num(v.hoje_im ?? v.hoje_agendado);
+      const agHoje2 = num(v.hoje_ag);
       const totalHoje2 = num(v.hoje_total) || (fatHoje2 + imHoje2);
 
       const rows = [
@@ -377,21 +536,21 @@
     const updatedAt = basePayload.updated_at || '—';
 
     const fatHoje = num(v.hoje_faturado);
-    const imHoje  = num(v.hoje_im ?? v.hoje_agendado);
-    const agHoje  = num(v.hoje_ag);
+    const imHoje = num(v.hoje_im ?? v.hoje_agendado);
+    const agHoje = num(v.hoje_ag);
     const totalHoje = num(v.hoje_total) || (fatHoje + imHoje);
 
     setText('kpi-hoje-total', brl.format(totalHoje));
-    setText('kpi-hoje-fat',   brl.format(fatHoje));
-    setText('kpi-hoje-ag',    brl.format(imHoje));  // IM
-    setText('kpi-hoje-ag2',   brl.format(agHoje));  // AG
+    setText('kpi-hoje-fat', brl.format(fatHoje));
+    setText('kpi-hoje-ag', brl.format(imHoje));  // IM
+    setText('kpi-hoje-ag2', brl.format(agHoje));  // AG
     setText('kpi-hoje-trend', `Atualizado: ${updatedAt}`);
 
-    const diasTotais    = int(v.dias_uteis_trabalhar);
-    const diasPassados  = int(v.dias_uteis_trabalhados);
+    const diasTotais = int(v.dias_uteis_trabalhar);
+    const diasPassados = int(v.dias_uteis_trabalhados);
     const diasRestantes = clampMin(diasTotais - diasPassados, 0);
 
-    const metaMes      = num(v.meta_mes);
+    const metaMes = num(v.meta_mes);
     const realizadoMes = num(v.realizado_ate_hoje);
 
     // meta teórica do dia (fixa)
@@ -407,7 +566,7 @@
     const metaDiaDinamica = (diasRestantes > 0) ? (faltaMes / diasRestantes) : 0;
 
     setText('kpi-meta-hoje', brl.format(metaDiaDinamica)); // ✅ meta dinâmica no card Hoje
-    setText('kpi-gap-hoje',  brl.format(gapHoje));
+    setText('kpi-gap-hoje', brl.format(gapHoje));
     setText('kpi-meta-hoje-trend', gapHoje >= 0 ? 'Acima da meta do dia' : 'Abaixo da meta do dia');
 
     setText('metaDinamica', brl.format(metaDiaDinamica));
@@ -460,10 +619,10 @@
     }
   }
 
-  refresh(false).catch(() => {});
+  refresh(false).catch(() => { });
 
   setInterval(() => {
-    refresh(true).catch(() => {});
+    refresh(true).catch(() => { });
   }, 10 * 60 * 1000);
 
   const btn = document.getElementById('btnForceTotvs');
@@ -492,4 +651,24 @@
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     window.refreshDashboard = refresh;
   }
+  function refreshChartSizes() {
+    [chartProgressMonth, chartProgressYear, chartPace].forEach((chart) => {
+      if (chart) {
+        chart.resize();
+        chart.update('none');
+      }
+    });
+  }
+
+  window.addEventListener('load', () => {
+    setTimeout(refreshChartSizes, 300);
+  });
+
+  window.addEventListener('resize', () => {
+    refreshChartSizes();
+  });
+
+  window.addEventListener('orientationchange', () => {
+    setTimeout(refreshChartSizes, 200);
+  });
 })();
