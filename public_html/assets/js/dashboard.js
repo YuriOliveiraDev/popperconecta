@@ -99,304 +99,304 @@
   let chartPace = null;
 
 
-function makeTopLabelsPlugin() {
-  return {
-    id: 'topLabelsPlugin',
-    afterDatasetsDraw(chart) {
-      const { ctx, chartArea } = chart;
-      if (!chartArea) return;
+  function makeTopLabelsPlugin() {
+    return {
+      id: 'topLabelsPlugin',
+      afterDatasetsDraw(chart) {
+        const { ctx, chartArea } = chart;
+        if (!chartArea) return;
 
-      ctx.save();
+        ctx.save();
 
-      chart.data.datasets.forEach((dataset, datasetIndex) => {
-        const meta = chart.getDatasetMeta(datasetIndex);
-        if (meta.hidden) return;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          if (meta.hidden) return;
 
-        meta.data.forEach((bar, i) => {
-          const raw = Number(dataset.data[i] ?? 0);
-          if (!Number.isFinite(raw)) return;
+          meta.data.forEach((bar, i) => {
+            const raw = Number(dataset.data[i] ?? 0);
+            if (!Number.isFinite(raw)) return;
 
-          const x = bar.x;
-          const y = Math.max(bar.y - 8, chartArea.top + 14);
+            const x = bar.x;
+            const y = Math.max(bar.y - 8, chartArea.top + 14);
 
-          let line1 = brl.format(raw);
-          let line2 = '';
+            let line1 = brl.format(raw);
+            let line2 = '';
 
-          // % apenas nas barras "Realizado"
-          if (dataset.label === 'Realizado') {
-            const metaDataset = chart.data.datasets.find(d => d.label === 'Meta');
-            const metaVal = Number(metaDataset?.data?.[i] ?? 0);
-            const pct = metaVal > 0 ? (raw / metaVal) : 0;
-            line2 = pct0.format(pct);
-          }
+            // % apenas nas barras "Realizado"
+            if (dataset.label === 'Realizado') {
+              const metaDataset = chart.data.datasets.find(d => d.label === 'Meta');
+              const metaVal = Number(metaDataset?.data?.[i] ?? 0);
+              const pct = metaVal > 0 ? (raw / metaVal) : 0;
+              line2 = pct0.format(pct);
+            }
 
-          ctx.textAlign = 'center';
-          ctx.fillStyle = 'rgba(51, 65, 85, 0.95)';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = 'rgba(51, 65, 85, 0.95)';
 
-          // linha 1 = valor em R$
-          ctx.font = '600 12px Inter, system-ui, sans-serif';
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(line1, x, y);
+            // linha 1 = valor em R$
+            ctx.font = '600 12px Inter, system-ui, sans-serif';
+            ctx.textBaseline = 'bottom';
+            ctx.fillText(line1, x, y);
 
-          // linha 2 = percentual (somente realizado)
-          if (line2) {
-            ctx.font = '700 11px Inter, system-ui, sans-serif';
-            ctx.fillStyle = 'rgba(92, 44, 140, 0.95)';
-            ctx.fillText(line2, x, y - 14);
-          }
+            // linha 2 = percentual (somente realizado)
+            if (line2) {
+              ctx.font = '700 11px Inter, system-ui, sans-serif';
+              ctx.fillStyle = 'rgba(92, 44, 140, 0.95)';
+              ctx.fillText(line2, x, y - 14);
+            }
+          });
         });
+
+        ctx.restore();
+      }
+    };
+  }
+  function ensureCharts(updatedAt) {
+    const ref = buildRefLabels(updatedAt);
+    const topLabelsPlugin = makeTopLabelsPlugin();
+
+    const elMonth = document.getElementById('salesExpensesChartMonth');
+    const elYear = document.getElementById('salesExpensesChartYear');
+    const elPace = document.getElementById('salesBySectorChart');
+
+    if (!chartProgressMonth && elMonth) {
+      chartProgressMonth = new Chart(elMonth, {
+        type: 'bar',
+        data: {
+          labels: ['Mês'],
+          datasets: [
+            {
+              label: 'Realizado',
+              data: [0],
+              backgroundColor: 'rgba(92, 44, 140, 0.85)',
+              borderRadius: 10,
+              borderSkipped: false,
+              categoryPercentage: 0.55,
+              barPercentage: 0.72,
+              maxBarThickness: 88
+            },
+            {
+              label: 'Meta',
+              data: [0],
+              backgroundColor: 'rgba(172, 204, 54, 0.75)',
+              borderRadius: 10,
+              borderSkipped: false,
+              categoryPercentage: 0.55,
+              barPercentage: 0.72,
+              maxBarThickness: 88
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          devicePixelRatio: 2,
+          layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                boxWidth: 12,
+                padding: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: () => `Referência: ${ref.mesAno}`,
+                label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
+            }
+          },
+          scales: {
+            x: {
+              offset: true,
+              stacked: false,
+              grid: { display: false },
+              ticks: {
+                color: '#475569',
+                font: { size: 14, weight: '600' }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grace: '22%',
+              ticks: {
+                callback: (v) => brl.format(v),
+                color: '#64748b',
+                font: { size: 12 }
+              },
+              grid: {
+                color: 'rgba(148,163,184,.18)'
+              }
+            }
+          }
+        },
+        plugins: [topLabelsPlugin]
       });
-
-      ctx.restore();
     }
-  };
-}
-function ensureCharts(updatedAt) {
-  const ref = buildRefLabels(updatedAt);
-  const topLabelsPlugin = makeTopLabelsPlugin();
 
-  const elMonth = document.getElementById('salesExpensesChartMonth');
-  const elYear  = document.getElementById('salesExpensesChartYear');
-  const elPace  = document.getElementById('salesBySectorChart');
-
-  if (!chartProgressMonth && elMonth) {
-    chartProgressMonth = new Chart(elMonth, {
-      type: 'bar',
-      data: {
-        labels: ['Mês'],
-        datasets: [
-          {
-            label: 'Realizado',
-            data: [0],
-            backgroundColor: 'rgba(92, 44, 140, 0.85)',
-            borderRadius: 10,
-            borderSkipped: false,
-            categoryPercentage: 0.55,
-            barPercentage: 0.72,
-            maxBarThickness: 88
-          },
-          {
-            label: 'Meta',
-            data: [0],
-            backgroundColor: 'rgba(172, 204, 54, 0.75)',
-            borderRadius: 10,
-            borderSkipped: false,
-            categoryPercentage: 0.55,
-            barPercentage: 0.72,
-            maxBarThickness: 88
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        devicePixelRatio: 2,
-        layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 12,
-              padding: 16
+    if (!chartProgressYear && elYear) {
+      chartProgressYear = new Chart(elYear, {
+        type: 'bar',
+        data: {
+          labels: ['Ano'],
+          datasets: [
+            {
+              label: 'Realizado',
+              data: [0],
+              backgroundColor: 'rgba(92, 44, 140, 0.85)',
+              borderRadius: 10,
+              borderSkipped: false,
+              categoryPercentage: 0.55,
+              barPercentage: 0.72,
+              maxBarThickness: 88
+            },
+            {
+              label: 'Meta',
+              data: [0],
+              backgroundColor: 'rgba(172, 204, 54, 0.75)',
+              borderRadius: 10,
+              borderSkipped: false,
+              categoryPercentage: 0.55,
+              barPercentage: 0.72,
+              maxBarThickness: 88
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          devicePixelRatio: 2,
+          layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                boxWidth: 12,
+                padding: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: () => `Referência: ${ref.ano}`,
+                label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
             }
           },
-          tooltip: {
-            callbacks: {
-              title: () => `Referência: ${ref.mesAno}`,
-              label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
+          scales: {
+            x: {
+              offset: true,
+              stacked: false,
+              grid: { display: false },
+              ticks: {
+                color: '#475569',
+                font: { size: 14, weight: '600' }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grace: '22%',
+              ticks: {
+                callback: (v) => brl.format(v),
+                color: '#64748b',
+                font: { size: 12 }
+              },
+              grid: {
+                color: 'rgba(148,163,184,.18)'
+              }
             }
-          },
-          datalabels: {
-            display: false
           }
         },
-        scales: {
-          x: {
-            offset: true,
-            stacked: false,
-            grid: { display: false },
-            ticks: {
-              color: '#475569',
-              font: { size: 14, weight: '600' }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            grace: '22%',
-            ticks: {
-              callback: (v) => brl.format(v),
-              color: '#64748b',
-              font: { size: 12 }
-            },
-            grid: {
-              color: 'rgba(148,163,184,.18)'
-            }
-          }
-        }
-      },
-      plugins: [topLabelsPlugin]
-    });
-  }
+        plugins: [topLabelsPlugin]
+      });
+    }
 
-  if (!chartProgressYear && elYear) {
-    chartProgressYear = new Chart(elYear, {
-      type: 'bar',
-      data: {
-        labels: ['Ano'],
-        datasets: [
-          {
-            label: 'Realizado',
-            data: [0],
-            backgroundColor: 'rgba(92, 44, 140, 0.85)',
-            borderRadius: 10,
-            borderSkipped: false,
-            categoryPercentage: 0.55,
-            barPercentage: 0.72,
-            maxBarThickness: 88
-          },
-          {
-            label: 'Meta',
-            data: [0],
-            backgroundColor: 'rgba(172, 204, 54, 0.75)',
-            borderRadius: 10,
-            borderSkipped: false,
-            categoryPercentage: 0.55,
-            barPercentage: 0.72,
-            maxBarThickness: 88
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        devicePixelRatio: 2,
-        layout: { padding: { top: 42, right: 10, bottom: 10, left: 10 } },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 12,
-              padding: 16
+    if (!chartPace && elPace) {
+      chartPace = new Chart(elPace, {
+        type: 'bar',
+        data: {
+          labels: ['Meta dinâmica do dia', 'Realizado hoje (Fat + IM)'],
+          datasets: [
+            {
+              label: `Dia — ${ref.mesAno}`,
+              data: [0, 0],
+              backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'],
+              borderRadius: 10,
+              borderSkipped: false,
+              categoryPercentage: 0.58,
+              barPercentage: 0.62,
+              maxBarThickness: 92
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          devicePixelRatio: 2,
+          layout: { padding: { top: 28, right: 10, bottom: 10, left: 10 } },
+          plugins: {
+            legend: {
+              display: true,
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                boxWidth: 12,
+                padding: 16
+              }
+            },
+            tooltip: {
+              callbacks: {
+                title: () => `Referência: ${ref.mesAno}`,
+                label: (ctx) => `${ctx.label}: ${brl.format(ctx.raw)}`
+              }
+            },
+            datalabels: {
+              display: false
             }
           },
-          tooltip: {
-            callbacks: {
-              title: () => `Referência: ${ref.ano}`,
-              label: (ctx) => `${ctx.dataset.label}: ${brl.format(ctx.raw)}`
+          scales: {
+            x: {
+              offset: true,
+              stacked: false,
+              grid: { display: false },
+              ticks: {
+                color: '#475569',
+                font: { size: 13, weight: '600' },
+                maxRotation: 0,
+                minRotation: 0
+              }
+            },
+            y: {
+              beginAtZero: true,
+              grace: '18%',
+              ticks: {
+                callback: (v) => brl.format(v),
+                color: '#64748b',
+                font: { size: 12 }
+              },
+              grid: {
+                color: 'rgba(148,163,184,.18)'
+              }
             }
-          },
-          datalabels: {
-            display: false
           }
         },
-        scales: {
-          x: {
-            offset: true,
-            stacked: false,
-            grid: { display: false },
-            ticks: {
-              color: '#475569',
-              font: { size: 14, weight: '600' }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            grace: '22%',
-            ticks: {
-              callback: (v) => brl.format(v),
-              color: '#64748b',
-              font: { size: 12 }
-            },
-            grid: {
-              color: 'rgba(148,163,184,.18)'
-            }
-          }
-        }
-      },
-      plugins: [topLabelsPlugin]
-    });
+        plugins: [topLabelsPlugin]
+      });
+    }
   }
-
-  if (!chartPace && elPace) {
-    chartPace = new Chart(elPace, {
-      type: 'bar',
-      data: {
-        labels: ['Meta dinâmica do dia', 'Realizado hoje (Fat + IM)'],
-        datasets: [
-          {
-            label: `Dia — ${ref.mesAno}`,
-            data: [0, 0],
-            backgroundColor: ['rgba(245,158,11,.85)', 'rgba(22,163,74,.85)'],
-            borderRadius: 10,
-            borderSkipped: false,
-            categoryPercentage: 0.58,
-            barPercentage: 0.62,
-            maxBarThickness: 92
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        devicePixelRatio: 2,
-        layout: { padding: { top: 28, right: 10, bottom: 10, left: 10 } },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 12,
-              padding: 16
-            }
-          },
-          tooltip: {
-            callbacks: {
-              title: () => `Referência: ${ref.mesAno}`,
-              label: (ctx) => `${ctx.label}: ${brl.format(ctx.raw)}`
-            }
-          },
-          datalabels: {
-            display: false
-          }
-        },
-        scales: {
-          x: {
-            offset: true,
-            stacked: false,
-            grid: { display: false },
-            ticks: {
-              color: '#475569',
-              font: { size: 13, weight: '600' },
-              maxRotation: 0,
-              minRotation: 0
-            }
-          },
-          y: {
-            beginAtZero: true,
-            grace: '18%',
-            ticks: {
-              callback: (v) => brl.format(v),
-              color: '#64748b',
-              font: { size: 12 }
-            },
-            grid: {
-              color: 'rgba(148,163,184,.18)'
-            }
-          }
-        }
-      },
-      plugins: [topLabelsPlugin]
-    });
-  }
-}
 
   function renderFromValues(payload) {
     const v = payload.values || {};
@@ -553,28 +553,23 @@ function ensureCharts(updatedAt) {
     const metaMes = num(v.meta_mes);
     const realizadoMes = num(v.realizado_ate_hoje);
 
-    // meta teórica do dia (fixa)
     const metaDiaTeorica = (diasTotais > 0) ? (metaMes / diasTotais) : 0;
-
-    // gap de HOJE (HOJE vs meta teórica)
-    const gapHoje = totalHoje - metaDiaTeorica;
-
-    // ✅ Se você quer "Meta do dia" como DINÂMICA, pode trocar aqui:
-    // setText('kpi-meta-hoje', brl.format(metaDiaTeorica));
-    // Vou colocar DINÂMICA igual carousel:
     const faltaMes = Math.max(0, metaMes - realizadoMes);
     const metaDiaDinamica = (diasRestantes > 0) ? (faltaMes / diasRestantes) : 0;
 
-    setText('kpi-meta-hoje', brl.format(metaDiaDinamica)); // ✅ meta dinâmica no card Hoje
+    // Gap de HOJE agora comparando com a meta dinâmica
+    const gapHoje = totalHoje - metaDiaDinamica;
+
+    setText('kpi-meta-hoje', brl.format(metaDiaDinamica));
     setText('kpi-gap-hoje', brl.format(gapHoje));
-    setText('kpi-meta-hoje-trend', gapHoje >= 0 ? 'Acima da meta do dia' : 'Abaixo da meta do dia');
+    setText('kpi-meta-hoje-trend', gapHoje >= 0 ? 'Acima da meta necessária do dia' : 'Abaixo da meta necessária do dia');
 
     setText('metaDinamica', brl.format(metaDiaDinamica));
 
     const labelDias = diasRestantes === 1 ? 'dia útil' : 'dias úteis';
     setText('metaRestante', `Faltam ${diasRestantes} ${labelDias} • Restante no mês: ${brl.format(faltaMes)}`);
 
-    setText('metaTeorica', `Meta do dia (teórica): ${brl.format(metaDiaTeorica)} • ${gapHoje >= 0 ? 'Acima' : 'Abaixo'} da meta do dia`);
+    setText('metaTeorica', `Meta do dia (teórica): ${brl.format(metaDiaTeorica)}`);
     setText('gapHoje', `Gap hoje: ${brl.format(gapHoje)}`);
   }
 

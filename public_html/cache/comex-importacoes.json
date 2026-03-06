@@ -703,14 +703,14 @@
         {
             "card_id": "1186477232",
             "container": "PO02.2025 - TONGDA  - ANIVERSÁRIOS - PÁSCOA - JUNINO",
-            "fase": "DESEMBARAÇO",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "28\/12\/2025",
             "previsao_entrega_eta": "11\/02\/2026 05:00"
         },
         {
             "card_id": "1186485059",
             "container": "PO05.2025 YIWU STAR - PÁSCOA JUNINO E COPA DO MUNDO",
-            "fase": "ENTREGA",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "28\/12\/2025",
             "previsao_entrega_eta": "11\/02\/2026 05:00"
         },
@@ -871,14 +871,14 @@
         {
             "card_id": "1234270313",
             "container": "PO05.2025 FUMAÇA AMY",
-            "fase": "DESEMBARAÇO",
+            "fase": "ENTREGA",
             "previsao_embarque_etd": "22\/01\/2026",
             "previsao_entrega_eta": "26\/02\/2026 12:00"
         },
         {
             "card_id": "1235595974",
             "container": "PO01.2026 JUNINO",
-            "fase": "ENTREGA",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "29\/11\/2025",
             "previsao_entrega_eta": "03\/02\/2026 12:37"
         },
@@ -892,7 +892,7 @@
         {
             "card_id": "1236578660",
             "container": "A14.2025 LC",
-            "fase": "ENTREGA",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "11\/12\/2025",
             "previsao_entrega_eta": "18\/01\/2026 12:00"
         },
@@ -906,7 +906,7 @@
         {
             "card_id": "1236586851",
             "container": "A02.2026 LC",
-            "fase": "EM TRÂNSITO",
+            "fase": "NO PORTO",
             "previsao_embarque_etd": "17\/01\/2026",
             "previsao_entrega_eta": "28\/02\/2026 23:00"
         },
@@ -920,7 +920,7 @@
         {
             "card_id": "1253904986",
             "container": "PO02.2026 JUNINO + COPA",
-            "fase": "ENTREGA",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "10\/12\/2025",
             "previsao_entrega_eta": "14\/02\/2026 05:00"
         },
@@ -948,7 +948,7 @@
         {
             "card_id": "1264597082",
             "container": "PO07.2025 YIWU STAR COPA DO MUNDO PÁSCOA E JUNINO",
-            "fase": "DESEMBARAÇO",
+            "fase": "CONCLUÍDO",
             "previsao_embarque_etd": "11\/01\/2026",
             "previsao_entrega_eta": "26\/02\/2026 05:00"
         },
@@ -969,7 +969,7 @@
         {
             "card_id": "1270597494",
             "container": "PO04.2025 MOCHILAS E NECESSAIRE",
-            "fase": "COTAÇÃO FRETE INTERNACIONAL",
+            "fase": "EMBARQUE",
             "previsao_embarque_etd": null,
             "previsao_entrega_eta": null
         },
@@ -985,7 +985,7 @@
             "container": "B24.2025 CABELO MANEIRO",
             "fase": "EM TRÂNSITO",
             "previsao_embarque_etd": "15\/01\/2026",
-            "previsao_entrega_eta": "01\/03\/2026 09:03"
+            "previsao_entrega_eta": "22\/03\/2026 09:03"
         },
         {
             "card_id": "1290908794",
@@ -995,5 +995,5 @@
             "previsao_entrega_eta": null
         }
     ],
-    "cached_at": "2026-03-02T18:01:45-03:00"
+    "cached_at": "2026-03-06T15:16:07-03:00"
 }

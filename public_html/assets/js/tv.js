@@ -166,55 +166,55 @@
         }
     }
 
-function autoScrollTopList(containerId, speed = 0.35) {
-  const el = document.getElementById(containerId);
-  if (!el) return null;
+    function autoScrollTopList(containerId, speed = 0.35) {
+        const el = document.getElementById(containerId);
+        if (!el) return null;
 
-  const item = el.querySelector('.top-item');
-  if (!item) return null;
+        const item = el.querySelector('.top-item');
+        if (!item) return null;
 
-  let direction = 1;
-  let pos = 0;
+        let direction = 1;
+        let pos = 0;
 
-  function step() {
-    const realMax = Math.max(0, el.scrollHeight - el.clientHeight);
-    if (realMax <= 0) {
-      const rafId = requestAnimationFrame(step);
-      if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
-      if (containerId === 'listTopClientes') _topScrollRAFClientes = rafId;
-      return;
+        function step() {
+            const realMax = Math.max(0, el.scrollHeight - el.clientHeight);
+            if (realMax <= 0) {
+                const rafId = requestAnimationFrame(step);
+                if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
+                if (containerId === 'listTopClientes') _topScrollRAFClientes = rafId;
+                return;
+            }
+
+            pos += direction * speed;
+
+            if (pos >= realMax) {
+                pos = realMax;
+                direction = -1;
+            }
+
+            if (pos <= 0) {
+                pos = 0;
+                direction = 1;
+            }
+
+            el.scrollTop = pos;
+
+            const rafId = requestAnimationFrame(step);
+            if (containerId === 'listTopProdutos') {
+                _topScrollRAFProdutos = rafId;
+            } else if (containerId === 'listTopClientes') {
+                _topScrollRAFClientes = rafId;
+            }
+        }
+
+        return requestAnimationFrame(step);
     }
 
-    pos += direction * speed;
-
-    if (pos >= realMax) {
-      pos = realMax;
-      direction = -1;
+    function startTopAutoScroll() {
+        stopTopAutoScroll();
+        _topScrollRAFProdutos = autoScrollTopList('listTopProdutos', 0.45);
+        _topScrollRAFClientes = autoScrollTopList('listTopClientes', 0.50);
     }
-
-    if (pos <= 0) {
-      pos = 0;
-      direction = 1;
-    }
-
-    el.scrollTop = pos;
-
-    const rafId = requestAnimationFrame(step);
-    if (containerId === 'listTopProdutos') {
-      _topScrollRAFProdutos = rafId;
-    } else if (containerId === 'listTopClientes') {
-      _topScrollRAFClientes = rafId;
-    }
-  }
-
-  return requestAnimationFrame(step);
-}
-
-function startTopAutoScroll() {
-  stopTopAutoScroll();
-  _topScrollRAFProdutos = autoScrollTopList('listTopProdutos', 0.45);
-  _topScrollRAFClientes = autoScrollTopList('listTopClientes', 0.50);
-}
 
     function startTopAutoScroll() {
         stopTopAutoScroll();
@@ -642,21 +642,80 @@ function startTopAutoScroll() {
                     fill: true,
                     tension: 0.35,
                     pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#5c2c8c',
+                    pointBorderColor: '#5c2c8c'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: false,
-                layout: { padding: { top: 24, right: 8, left: 8, bottom: 8 } },
+                layout: { padding: { top: 52, right: 8, left: 8, bottom: 8 } },
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => brl.format(ctx.raw || 0)
+                        }
+                    }
                 },
                 scales: {
-                    y: { beginAtZero: true }
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: (v) => brl.format(v)
+                        }
+                    }
                 }
-            }
+            },
+            plugins: [{
+                id: 'dailyPointLabels',
+                afterDatasetsDraw(chart) {
+                    const { ctx, chartArea } = chart;
+                    if (!chartArea) return;
+
+                    const meta = chart.getDatasetMeta(0);
+                    const dataset = chart.data.datasets[0];
+                    if (!meta || !dataset) return;
+
+                    ctx.save();
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillStyle = '#1f2937';
+                    ctx.font = '700 13px Inter, system-ui, sans-serif';
+
+                    const padX = 10;
+
+                    meta.data.forEach((point, i) => {
+                        const raw = Number(dataset.data[i] ?? 0);
+                        if (!Number.isFinite(raw)) return;
+
+                        const text = brl.format(raw);
+                        const x = point.x;
+                        const y = Math.max(point.y - 10, chartArea.top + 16);
+
+                        const isFirst = i === 0;
+                        const isLast = i === meta.data.length - 1;
+
+                        if (isFirst) {
+                            ctx.textAlign = 'left';
+                            ctx.fillText(text, Math.max(chartArea.left + padX, x - 2), y);
+                            return;
+                        }
+
+                        if (isLast) {
+                            ctx.textAlign = 'right';
+                            ctx.fillText(text, Math.min(chartArea.right - padX, x + 2), y);
+                            return;
+                        }
+
+                        ctx.textAlign = 'center';
+                        ctx.fillText(text, x, y);
+                    });
+
+                    ctx.restore();
+                }
+            }]
         });
 
         const now = new Date();
