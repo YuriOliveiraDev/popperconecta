@@ -306,3 +306,249 @@
     color:rgba(15,23,42,.70);
   }
   .d5-subcard .mini-list{max-height:300px;}
+/* =========================================================
+   TOPO / FILTROS
+========================================================= */
+.exec-filter {
+  padding: 18px 20px;
+  border-radius: 18px;
+}
+
+.exec-filter__row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.exec-filter .card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.exec-filter .card__title {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.15;
+  font-weight: 800;
+  color: #1f2a44;
+}
+
+.exec-filter .card__subtitle {
+  margin: 0;
+  font-size: .95rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* linha dos filtros */
+.exec-filter__top {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.exec-filter__dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 12px;
+  align-items: end;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e7eaf0;
+  border-radius: 16px;
+}
+
+.exec-filter__dates-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.exec-filter__dates label {
+  font-size: .78rem;
+  font-weight: 700;
+  color: #667085;
+  margin: 0;
+}
+
+.exec-filter__dates input[type="date"] {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid #d7dce5;
+  border-radius: 12px;
+  background: #fff;
+  font-size: .95rem;
+  font-weight: 600;
+  color: #24324a;
+  outline: none;
+  transition: .18s ease;
+}
+
+.exec-filter__dates input[type="date"]:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .10);
+}
+
+.exec-filter__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.exec-filter__actions .chip,
+.exec-filter__actions button.chip {
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid #cfd6e2;
+  background: #fff;
+  color: #24324a;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: .18s ease;
+}
+
+.exec-filter__actions .chip:hover,
+.exec-filter__actions button.chip:hover {
+  border-color: #7c3aed;
+  color: #7c3aed;
+  background: #f7f1ff;
+}
+
+/* chips de mês */
+.exec-filter__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.exec-filter__chips .chip {
+  min-width: 74px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid #d7dce5;
+  background: #f8fafc;
+  color: #344054;
+  font-size: .90rem;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: .18s ease;
+}
+
+.exec-filter__chips .chip:hover {
+  background: #f4ecff;
+  border-color: #b79af7;
+  color: #6d28d9;
+}
+
+.exec-filter__chips .chip.is-active {
+  background: linear-gradient(180deg, #f4ecff 0%, #eadcff 100%);
+  border-color: #b79af7;
+  color: #5b21b6;
+  box-shadow: 0 3px 10px rgba(124, 58, 237, .10);
+}
+
+/* métricas */
+.rank-meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.rank-meta .chip {
+  min-height: 52px;
+  border-radius: 14px;
+  border: 1px solid #e4e7ec;
+  background: #fff;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: .92rem;
+  font-weight: 700;
+  color: #475467;
+}
+
+.rank-meta .chip b {
+  color: #101828;
+  font-size: 1rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* melhora geral do card */
+.exec-filter.card {
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+  border: 1px solid #ebeef4;
+  box-shadow: 0 10px 24px rgba(16, 24, 40, .04);
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+@media (max-width: 1200px) {
+  .exec-filter__top {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-meta {
+    grid-template-columns: repeat(2, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .exec-filter {
+    padding: 16px;
+  }
+
+  .exec-filter .card__title {
+    font-size: 1.25rem;
+  }
+
+  .exec-filter__dates {
+    padding: 12px;
+  }
+
+  .exec-filter__dates-group {
+    min-width: 100%;
+  }
+
+  .exec-filter__actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .exec-filter__actions .chip,
+  .exec-filter__actions button.chip {
+    flex: 1 1 140px;
+  }
+
+  .exec-filter__chips .chip {
+    min-width: 68px;
+    font-size: .84rem;
+  }
+
+  .rank-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-meta .chip {
+    justify-content: space-between;
+  }
+}

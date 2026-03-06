@@ -39,8 +39,35 @@ $meses = [
 
 $y = (int) substr($activeYm, 0, 4);
 $m = (int) substr($activeYm, 5, 2);
+
 $monthStart = sprintf('%04d-%02d-01', $y, $m);
 $monthEnd = date('Y-m-t', strtotime($monthStart));
+
+// ======================================
+// FILTRO PERSONALIZADO DE DATA
+// ======================================
+$dtIni = isset($_GET['dt_ini']) ? trim((string) $_GET['dt_ini']) : '';
+$dtFim = isset($_GET['dt_fim']) ? trim((string) $_GET['dt_fim']) : '';
+
+$hasCustomRange =
+  preg_match('/^\d{4}-\d{2}-\d{2}$/', $dtIni) &&
+  preg_match('/^\d{4}-\d{2}-\d{2}$/', $dtFim);
+
+if ($hasCustomRange) {
+  $iniTs = strtotime($dtIni . ' 00:00:00');
+  $fimTs = strtotime($dtFim . ' 23:59:59');
+
+  if ($iniTs !== false && $fimTs !== false) {
+    // garante ordem correta mesmo se usuário inverter
+    if ($iniTs > $fimTs) {
+      [$dtIni, $dtFim] = [$dtFim, $dtIni];
+      [$iniTs, $fimTs] = [$fimTs, $iniTs];
+    }
+
+    $monthStart = $dtIni;
+    $monthEnd = $dtFim;
+  }
+}
 
 $monthStartTs = strtotime($monthStart . ' 00:00:00');
 $monthEndTs = strtotime($monthEnd . ' 23:59:59');
@@ -218,7 +245,7 @@ $debug = [
 $error = null;
 $items = [];
 
-$cacheKey = 'rankings_' . CONSULTA_RANKINGS . '_' . $activeYm;
+$cacheKey = 'rankings_' . CONSULTA_RANKINGS . '_' . $monthStart . '_' . $monthEnd;
 $cached = cacheRead($cacheKey);
 
 if ($cached && isset($cached['items']) && is_array($cached['items'])) {
@@ -522,28 +549,57 @@ require_once __DIR__ . '/app/header.php';
 
     <div class="card grid-col-span-3 exec-filter">
       <div class="exec-filter__row">
-        <div class="card__header" style="margin:0;">
-          <h2 class="card__title">Comercial • Rankings & Ticket Médio</h2>
-          <p class="card__subtitle">
-            Período: <?= safe($monthStart) ?> até <?= safe($monthEnd) ?>
-          </p>
+
+        <div class="exec-filter__top">
+          <div class="card__header">
+            <h2 class="card__title">Comercial • Rankings & Ticket Médio</h2>
+            <p class="card__subtitle">
+              <?= $hasCustomRange ? 'Período personalizado' : 'Período do mês' ?>:
+              <?= safe($monthStart) ?> até <?= safe($monthEnd) ?>
+            </p>
+          </div>
+
+          <form method="get" class="exec-filter__dates">
+            <div class="exec-filter__dates-group">
+              <label for="dt_ini">De</label>
+              <input type="date" id="dt_ini" name="dt_ini" value="<?= safe($hasCustomRange ? $monthStart : '') ?>">
+            </div>
+
+            <div class="exec-filter__dates-group">
+              <label for="dt_fim">Até</label>
+              <input type="date" id="dt_fim" name="dt_fim" value="<?= safe($hasCustomRange ? $monthEnd : '') ?>">
+            </div>
+
+            <div class="exec-filter__actions">
+              <button type="submit" class="chip">Aplicar</button>
+              <a class="chip" href="?ym=<?= safe($activeYm) ?>">Limpar</a>
+            </div>
+          </form>
         </div>
 
         <div class="exec-filter__chips" id="chipsMeses" aria-label="Filtros por mês">
           <?php foreach ($meses as $mm => $label): ?>
-            <?php $ym = sprintf('%04d-%02d', $y, $mm); ?>
-            <a class="chip <?= $ym === $activeYm ? 'is-active' : '' ?>" href="?ym=<?= safe($ym) ?>">
+            <?php
+            // se for o ano atual, não mostra meses futuros
+            if ($y === $nowY && $mm > $nowM) {
+              continue;
+            }
+
+            $ym = sprintf('%04d-%02d', $y, $mm);
+            ?>
+            <a class="chip <?= $ym === $activeYm && !$hasCustomRange ? 'is-active' : '' ?>" href="?ym=<?= safe($ym) ?>">
               <?= safe($label) ?>/<?= substr((string) $y, 2, 2) ?>
             </a>
           <?php endforeach; ?>
         </div>
-      </div>
 
-      <div class="rank-meta">
-        <span class="chip">NFs: <b><?= (int) $totalDocs ?></b></span>
-        <span class="chip">Faturado: <b><?= safe(moneyBR($faturadoMes)) ?></b></span>
-        <span class="chip">Ticket: <b><?= safe(moneyBR($ticketMedio)) ?></b></span>
-        <span class="chip">Itens 000070: <b><?= (int) count($itemsMonth) ?></b></span>
+        <div class="rank-meta">
+          <span class="chip">NFs: <b><?= (int) $totalDocs ?></b></span>
+          <span class="chip">Faturado: <b><?= safe(moneyBR($faturadoMes)) ?></b></span>
+          <span class="chip">Ticket: <b><?= safe(moneyBR($ticketMedio)) ?></b></span>
+          <span class="chip">Itens 000070: <b><?= (int) count($itemsMonth) ?></b></span>
+        </div>
+
       </div>
     </div>
 
