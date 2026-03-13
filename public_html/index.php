@@ -59,68 +59,6 @@ try {
   <link rel="stylesheet" href="/assets/css/carousel.css?v=<?= filemtime(__DIR__ . '/assets/css/carousel.css') ?>">
   <link rel="stylesheet" href="/assets/css/index.css?v=<?= filemtime(__DIR__ . '/assets/css/index.css') ?>">
   <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>">
-
-  <style>
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    body.page main {
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity .18s ease, transform .18s ease;
-    }
-
-    body.page.is-ready main {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .slide--dashboard {
-      padding-top: 10px;
-    }
-
-    /* ✅ Atualização centralizada abaixo dos cards */
-    .dash-tv-updated {
-      display: block;
-      width: 100%;
-      text-align: center;
-
-      margin-top: 18px;
-
-      font-size: 15px;
-      color: #6b7280;
-      opacity: .9;
-
-      grid-column: 1 / -1;
-      /* força ocupar toda linha do grid */
-    }
-
-    /* ✅ Faz o slide do dashboard ficar em COLUNA (cards em cima + texto embaixo) */
-    #mainCarousel .slide--dashboard {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: stretch !important;
-      justify-content: flex-start !important;
-    }
-
-    /* opcional: dá espaço entre grid e linha "Atualizado em" */
-    #mainCarousel .slide--dashboard .dash-tv-grid {
-      flex: 1 1 auto;
-    }
-
-    /* texto centralizado embaixo */
-    #mainCarousel .slide--dashboard .dash-tv-updated {
-      width: 100%;
-      text-align: center;
-      margin-top: 14px;
-      font-size: 14px;
-      color: #6b7280;
-      opacity: .9;
-    }
-  </style>
 </head>
 
 <body class="page page--gav">
@@ -213,7 +151,6 @@ try {
                   Faturado: <span id="tv-hoje-fat"></span>
                   · Imediato p/hoje: <span id="tv-hoje-im"></span>
                   <br>
-                  Agendado: <span id="tv-hoje-ag"></span>
                 </div>
               </div>
 
@@ -235,7 +172,6 @@ try {
                   <br>
                   Meta(Média Mensal)do dia: <span id="tv-meta-teo"></span>
                   <br>
-                  <span id="tv-gap"></span>
                 </div>
               </div>
 
@@ -379,7 +315,7 @@ try {
   <script src="/assets/js/dropdowns.js"></script>
   <script src="/assets/js/index-carousel.js"></script>
   <script src="/assets/js/index.js"></script>
-                    <script src="/assets/js/tv.js"></script>
+  <script src="/assets/js/tv.js"></script>
 </body>
 
 </html>

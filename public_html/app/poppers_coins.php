@@ -12,31 +12,55 @@ function ensure_wallet(int $userId): void
     $stmt->execute([$userId]);
 }
 
-function apply_ledger(int $userId, int $amount, string $type, ?string $reason, int $adminId): void
+/**
+ * Aplica lançamento SEM abrir transação.
+ * Ideal para uso em lotes/multiusuários, quando a transação já foi aberta fora.
+ */
+function apply_ledger_no_tx(int $userId, int $amount, string $type, ?string $reason, int $adminId): void
 {
     ensure_wallet($userId);
 
-    db()->beginTransaction();
+    $stmt = db()->prepare("
+        INSERT INTO popper_coin_ledger
+            (user_id, amount, action_type, reason, created_by)
+        VALUES
+            (?, ?, ?, ?, ?)
+    ");
+    $stmt->execute([$userId, $amount, $type, $reason, $adminId]);
+
+    $stmt = db()->prepare("
+        UPDATE popper_coin_wallets
+        SET balance = balance + ?
+        WHERE user_id = ?
+    ");
+    $stmt->execute([$amount, $userId]);
+}
+
+/**
+ * Aplica lançamento com transação própria.
+ * Ideal para uso unitário.
+ */
+function apply_ledger(int $userId, int $amount, string $type, ?string $reason, int $adminId): void
+{
+    $pdo = db();
+
+    $startedHere = false;
+
+    if (!$pdo->inTransaction()) {
+        $pdo->beginTransaction();
+        $startedHere = true;
+    }
 
     try {
-        $stmt = db()->prepare("
-            INSERT INTO popper_coin_ledger
-                (user_id, amount, action_type, reason, created_by)
-            VALUES
-                (?, ?, ?, ?, ?)
-        ");
-        $stmt->execute([$userId, $amount, $type, $reason, $adminId]);
+        apply_ledger_no_tx($userId, $amount, $type, $reason, $adminId);
 
-        $stmt = db()->prepare("
-            UPDATE popper_coin_wallets
-            SET balance = balance + ?
-            WHERE user_id = ?
-        ");
-        $stmt->execute([$amount, $userId]);
-
-        db()->commit();
+        if ($startedHere && $pdo->inTransaction()) {
+            $pdo->commit();
+        }
     } catch (Throwable $e) {
-        db()->rollBack();
+        if ($startedHere && $pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
         throw $e;
     }
 }

@@ -374,15 +374,36 @@ function loadCharts(v) {
 ====================================================== */
 let chartDiario;
 
+function normalizeDailyValue(v) {
+  const n = Number(v);
+
+  // inválido
+  if (!Number.isFinite(n)) return 0;
+
+  // evita lixo decimal / notação científica
+  if (Math.abs(n) < 100) return 0;
+
+  // arredonda para 2 casas só por segurança
+  return Math.round(n * 100) / 100;
+}
+
 function applyDailyChart(payload) {
   if (!payload || !payload.diario_mes) return;
 
-  const labels = Object.keys(payload.diario_mes).sort((a, b) => Number(a) - Number(b));
-  const valores = Object.values(payload.diario_mes);
+  const labels = Object.keys(payload.diario_mes)
+    .sort((a, b) => Number(a) - Number(b));
 
-  if (chartDiario) chartDiario.destroy();
+  const valores = labels.map((dia) => normalizeDailyValue(payload.diario_mes[dia]));
+  const allZero = valores.every(v => v === 0);
 
-  chartDiario = new Chart(document.getElementById("chartDiario"), {
+  if (chartDiario) {
+    try { chartDiario.destroy(); } catch (e) {}
+  }
+
+  const ctx = document.getElementById("chartDiario");
+  if (!ctx) return;
+
+  chartDiario = new Chart(ctx, {
     type: "line",
     data: {
       labels,
@@ -392,23 +413,32 @@ function applyDailyChart(payload) {
         borderColor: "#5c2c8c",
         backgroundColor: "rgba(92,44,140,.12)",
         fill: true,
-        tension: .35,
+
+        // quando tudo for zero, deixa totalmente reto
+        tension: allZero ? 0 : 0.35,
+
         pointRadius: 4,
         pointHoverRadius: 6,
+        spanGaps: true,
+
         datalabels: {
           anchor: "end",
           align: "top",
           offset: 10,
           color: "#1f2937",
           formatter: (v) => {
-            const n = Number(v || 0);
-            if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+            const n = normalizeDailyValue(v);
+
+            if (n === 0) return "0";
+            if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.', ',') + "M";
             if (n >= 1_000) return (n / 1_000).toFixed(0) + "k";
-            return String(n);
+            return String(Math.round(n));
           },
           font: { size: 15, weight: "700" },
           textStrokeColor: "#ffffff",
-          textStrokeWidth: 3
+          textStrokeWidth: 3,
+          clamp: true,
+          clip: false
         }
       }]
     },
@@ -418,9 +448,28 @@ function applyDailyChart(payload) {
       layout: { padding: { top: 48, right: 8, left: 8 } },
       plugins: {
         legend: { display: false },
-        datalabels: { anchor: "end", align: "top", offset: 10, clamp: true, clip: false }
+        datalabels: {
+          anchor: "end",
+          align: "top",
+          offset: 10,
+          clamp: true,
+          clip: false
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => brl(normalizeDailyValue(ctx.raw))
+          }
+        }
       },
-      scales: { y: { beginAtZero: true } }
+      scales: {
+        y: {
+          beginAtZero: true,
+          min: 0,
+          ticks: {
+            callback: (value) => brlShort(value)
+          }
+        }
+      }
     }
   });
 

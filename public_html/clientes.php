@@ -4,8 +4,12 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/app/auth.php';
+require_once __DIR__ . '/app/permissions.php';
+
 require_login();
 
+
+require_dash_perm('dash.comercial.clientes');
 // =========================================================
 // CONTEXTO (header usa $dashboards e $activePage)
 // =========================================================

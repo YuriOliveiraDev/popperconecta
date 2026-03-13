@@ -2,8 +2,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/app/auth.php';
-require_login();
+require_once __DIR__ . '/app/permissions.php';
 
+
+require_login();
+require_dash_perm('dash.comercial.executivo');
 // =========================
 // CONFIG / HEAD
 // =========================

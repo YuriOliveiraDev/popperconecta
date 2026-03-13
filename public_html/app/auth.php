@@ -15,10 +15,6 @@ $view  = $_COOKIE['pc_view'] ?? '';
 $allow = $_COOKIE['pc_allow_mobile'] ?? '';
 
 if (!$isTVBox && $allow !== '1' && $view === 'mobile') {
-  // ... sua tela "Indisponível no mobile" ...
-  exit;
-}
-if ($allow !== '1' && $view === 'mobile') {
   header('Content-Type: text/html; charset=UTF-8');
   ?>
   <!doctype html>
@@ -45,8 +41,6 @@ if ($allow !== '1' && $view === 'mobile') {
         Este portal ainda não está disponível para celulares.<br><br>
         Acesse usando um computador ou TV para visualizar dashboards e funcionalidades.
       </p>
-
-      <!-- Escape opcional (se você quiser liberar manualmente em algum caso) -->
       <a class="btn" href="/mobile-allow.php">Mesmo assim, abrir</a>
     </div>
   </body>
@@ -60,9 +54,16 @@ require_once __DIR__ . '/db.php';
 
 function start_session(): void {
   if (session_status() === PHP_SESSION_NONE) {
-    session_name(SESSION_NAME);
+    $sessionName = defined('SESSION_NAME') && SESSION_NAME !== ''
+      ? SESSION_NAME
+      : 'POPPERSESSID';
 
-    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    session_name($sessionName);
+
+    $isHttps = (
+      (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+      || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443)
+    );
 
     session_set_cookie_params([
       'lifetime' => 0,
@@ -86,24 +87,25 @@ function current_user(): ?array {
   $id = (int)$_SESSION['user']['id'];
 
   try {
-    // ✅ CORREÇÃO: Incluí profile_photo_path, phone, birth_date, gender no SELECT
-    $stmt = db()->prepare('SELECT id, name, email, role, setor, hierarquia, is_active, permissions, phone, birth_date, gender, profile_photo_path FROM users WHERE id = ? LIMIT 1');
+    $stmt = db()->prepare('
+      SELECT id, name, email, role, setor, hierarquia, is_active, permissions, phone, birth_date, gender, profile_photo_path
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    ');
     $stmt->execute([$id]);
     $u = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$u) {
-      // usuário sumiu do banco
       $_SESSION['user'] = null;
       return null;
     }
 
     if ((int)($u['is_active'] ?? 0) !== 1) {
-      // usuário desativado
       $_SESSION['user'] = null;
       return null;
     }
 
-    // ✅ CORREÇÃO: Incluí os campos novos na sessão
     $_SESSION['user'] = [
       'id' => (int)$u['id'],
       'name' => (string)$u['name'],
@@ -121,13 +123,13 @@ function current_user(): ?array {
 
     return $_SESSION['user'];
   } catch (Throwable $e) {
-    // Se o banco falhar, devolve o que tiver na sessão (fallback)
     return $_SESSION['user'] ?? null;
   }
 }
 
 function require_login(): void {
   start_session();
+
   if (empty($_SESSION['user'])) {
     header('Location: /login.php');
     exit;
@@ -136,6 +138,7 @@ function require_login(): void {
 
 function require_admin(): void {
   require_login();
+
   if (($_SESSION['user']['role'] ?? '') !== 'admin') {
     http_response_code(403);
     echo 'Acesso negado.';
@@ -146,39 +149,50 @@ function require_admin(): void {
 function login(string $email, string $pass): bool {
   start_session();
 
-  // ✅ CORREÇÃO: Incluí phone, birth_date, gender, profile_photo_path no SELECT
-  $stmt = db()->prepare('SELECT id, name, email, password_hash, role, is_active, permissions, phone, birth_date, gender, profile_photo_path FROM users WHERE email = ? LIMIT 1');
-  $stmt->execute([$email]);
-  $u = $stmt->fetch();
+  try {
+    $stmt = db()->prepare('
+      SELECT id, name, email, password_hash, role, is_active, permissions, phone, birth_date, gender, profile_photo_path
+      FROM users
+      WHERE email = ?
+      LIMIT 1
+    ');
+    $stmt->execute([$email]);
+    $u = $stmt->fetch(PDO::FETCH_ASSOC);
 
-  if (!$u) return false;
-  if ((int)$u['is_active'] !== 1) return false;
-  if (!password_verify($pass, $u['password_hash'])) return false;
+    if (!$u) return false;
+    if ((int)($u['is_active'] ?? 0) !== 1) return false;
+    if (!isset($u['password_hash']) || !password_verify($pass, $u['password_hash'])) return false;
 
-  session_regenerate_id(true);
+    session_regenerate_id(true);
 
-  // ✅ CORREÇÃO: Incluí os campos novos na sessão
-  $_SESSION['user'] = [
-    'id' => (int)$u['id'],
-    'name' => $u['name'],
-    'email' => $u['email'],
-    'role' => $u['role'],
-    'permissions' => $u['permissions'] ?? null,
-    'phone' => (string)($u['phone'] ?? ''),
-    'birth_date' => (string)($u['birth_date'] ?? ''),
-    'gender' => (string)($u['gender'] ?? ''),
-    'profile_photo_path' => (string)($u['profile_photo_path'] ?? ''),
-  ];
+    $_SESSION['user'] = [
+      'id' => (int)$u['id'],
+      'name' => (string)$u['name'],
+      'email' => (string)$u['email'],
+      'role' => (string)$u['role'],
+      'permissions' => $u['permissions'] ?? null,
+      'phone' => (string)($u['phone'] ?? ''),
+      'birth_date' => (string)($u['birth_date'] ?? ''),
+      'gender' => (string)($u['gender'] ?? ''),
+      'profile_photo_path' => (string)($u['profile_photo_path'] ?? ''),
+    ];
 
-  db()->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([(int)$u['id']]);
-  return true;
+    db()->prepare('UPDATE users SET last_login_at = NOW() WHERE id = ?')->execute([(int)$u['id']]);
+
+    return true;
+  } catch (Throwable $e) {
+    return false;
+  }
 }
 
 function logout(): void {
   start_session();
   $_SESSION = [];
+
+  if (ini_get('session.use_cookies')) {
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'] ?? '', (bool)$params['secure'], (bool)$params['httponly']);
+  }
+
   session_destroy();
 }
-
-// ✅ REMOVIDO: user_can() e require_permission() duplicados (já existem em permissions.php)
-?>

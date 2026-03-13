@@ -4,7 +4,7 @@
     "total": 141,
     "pageInfo": {
         "hasNextPage": false,
-        "endCursor": "WyIyMDI2LTAxLTMwIDEzOjUxOjEzLjc5MTAwOTAwMCBVVEMiLCIxLjAiLDEyOTA5MDg3OTRd"
+        "endCursor": "WyIyMDI2LTAxLTMwIDEzOjUxOjEzLjc5MTAwOTAwMCBVVEMiLCIxLjUiLDEyOTA5MDg3OTRd"
     },
     "items": [
         {
@@ -633,7 +633,7 @@
         {
             "card_id": "1171905830",
             "container": "PO04.2025 1 YIWU PROJETO N",
-            "fase": "NO PORTO",
+            "fase": "ENTREGA",
             "previsao_embarque_etd": "09\/11\/2025",
             "previsao_entrega_eta": "11\/01\/2026 09:29"
         },
@@ -661,9 +661,9 @@
         {
             "card_id": "1174003386",
             "container": "PO01.2025 BALÕES NJ",
-            "fase": "EM TRÂNSITO",
+            "fase": "NO PORTO",
             "previsao_embarque_etd": "07\/02\/2026",
-            "previsao_entrega_eta": "11\/03\/2026 00:00"
+            "previsao_entrega_eta": "12\/03\/2026 00:00"
         },
         {
             "card_id": "1174573936",
@@ -850,9 +850,9 @@
         {
             "card_id": "1228849516",
             "container": "B01.2026 LATAS (COPA)",
-            "fase": "EM PRODUÇÃO",
-            "previsao_embarque_etd": null,
-            "previsao_entrega_eta": null
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "12\/03\/2026",
+            "previsao_entrega_eta": "19\/04\/2026 05:00"
         },
         {
             "card_id": "1228850624",
@@ -864,9 +864,9 @@
         {
             "card_id": "1234263099",
             "container": "PO06.2025 FUMAÇA DUO",
-            "fase": "EMBARQUE",
-            "previsao_embarque_etd": null,
-            "previsao_entrega_eta": null
+            "fase": "EM TRÂNSITO",
+            "previsao_embarque_etd": "10\/03\/2026",
+            "previsao_entrega_eta": "16\/04\/2026 05:00"
         },
         {
             "card_id": "1234270313",
@@ -913,7 +913,7 @@
         {
             "card_id": "1236734523",
             "container": "PO04.2025 2 YIWU PROJETO N",
-            "fase": "NO PORTO",
+            "fase": "ENTREGA",
             "previsao_embarque_etd": "09\/11\/2025",
             "previsao_entrega_eta": "11\/01\/2026 12:00"
         },
@@ -990,10 +990,10 @@
         {
             "card_id": "1290908794",
             "container": "PO01.2026 GÁS HÉLIO",
-            "fase": "EM PRODUÇÃO",
+            "fase": "COTAÇÃO FRETE INTERNACIONAL",
             "previsao_embarque_etd": null,
             "previsao_entrega_eta": null
         }
     ],
-    "cached_at": "2026-03-06T15:16:07-03:00"
+    "cached_at": "2026-03-13T14:53:56-03:00"
 }

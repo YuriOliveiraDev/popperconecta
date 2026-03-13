@@ -9,13 +9,14 @@ require_login();
 $mode = (string)($_GET['mode'] ?? 'all'); // all | month
 $sector = trim((string)($_GET['sector'] ?? ''));
 $q = trim((string)($_GET['q'] ?? ''));
-$rankType = (string)($_GET['rankType'] ?? 'colab'); // colab | gest
 
 if (!in_array($mode, ['all', 'month'], true)) $mode = 'all';
-if (!in_array($rankType, ['colab', 'gest'], true)) $rankType = 'colab';
 
 $where = [];
 $params = [];
+
+// usuários ativos
+$where[] = "u.is_active = 1";
 
 if ($sector !== '') {
   $where[] = "u.setor = ?";
@@ -25,12 +26,6 @@ if ($sector !== '') {
 if ($q !== '') {
   $where[] = "u.name LIKE ?";
   $params[] = '%' . $q . '%';
-}
-
-if ($rankType === 'colab') {
-  $where[] = "u.hierarquia IN ('Assistente', 'Analista', 'Supervisor')";
-} elseif ($rankType === 'gest') {
-  $where[] = "u.hierarquia IN ('Gestor', 'Gerente', 'Diretor')";
 }
 
 if ($mode === 'month') {
@@ -45,7 +40,7 @@ $sql = "
     u.name,
     u.setor,
     u.profile_photo_path AS avatar,
-    COALESCE(SUM(l.amount), 0) AS coins
+    COALESCE(SUM(l.amount),0) AS coins
   FROM users u
   LEFT JOIN popper_coin_ledger l ON l.user_id = u.id
   $whereSql
@@ -58,7 +53,6 @@ $stmt = db()->prepare($sql);
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Ranking com empate (1º, 2º, 3º...) por coins
 $ranked = [];
 $pos = 0;
 $lastCoins = null;
@@ -84,11 +78,11 @@ foreach ($rows as $r) {
 }
 
 header('Content-Type: application/json; charset=utf-8');
+
 echo json_encode([
   'ok' => true,
   'mode' => $mode,
   'sector' => $sector,
   'q' => $q,
-  'rankType' => $rankType,
   'items' => $ranked
 ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

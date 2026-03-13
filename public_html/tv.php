@@ -127,7 +127,6 @@ try {
                     Faturado: <span id="tv-hoje-fat">--</span>
                     · Imediato p/hoje: <span id="tv-hoje-im">--</span>
                     <br>
-                    Agendado: <span id="tv-hoje-ag">--</span>
                   </div>
                 </div>
 
@@ -149,7 +148,6 @@ try {
                     <br>
                     Meta (média mensal) do dia: <span id="tv-meta-teo">--</span>
                     <br>
-                    <span id="tv-gap">--</span>
                   </div>
                 </div>
 

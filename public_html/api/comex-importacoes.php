@@ -58,7 +58,7 @@ function pipefy_graphql(string $query, array $variables): array {
     CURLOPT_POSTFIELDS => $payload,
     CURLOPT_HTTPHEADER => [
       'Content-Type: application/json',
-      'Authorization: Bearer ' . PIPEFY_TOKEN,
+      'Authorization: Bearer ' . PIPEFY_TOKEN_COMEX,
     ],
     CURLOPT_TIMEOUT => 30,
   ]);
@@ -127,7 +127,7 @@ $lastPageInfo = ['hasNextPage'=>false,'endCursor'=>null];
 
 while (count($items) < $max) {
   $data = pipefy_graphql($query, [
-    'pipeId' => (string)PIPE_ID,
+    'pipeId' => (string)PIPE_ID_COMEX,
     'first'  => $batch,
     'after'  => $after,
   ]);
@@ -158,7 +158,7 @@ while (count($items) < $max) {
 
 $out = [
   'ok' => true,
-  'pipe_id' => PIPE_ID,
+  'pipe_id' => PIPE_ID_COMEX,
   'total' => count($items),
   'pageInfo' => $lastPageInfo,
   'items' => $items,

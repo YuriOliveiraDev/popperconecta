@@ -640,7 +640,7 @@
                     borderColor: '#5c2c8c',
                     backgroundColor: 'rgba(92,44,140,.12)',
                     fill: true,
-                    tension: 0.35,
+                    tension: valores.includes(0) ? 0 : 0.35,
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: '#5c2c8c',

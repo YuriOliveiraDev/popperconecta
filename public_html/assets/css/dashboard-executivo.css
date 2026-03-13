@@ -633,3 +633,39 @@ site-footer__inner {
   background: rgba(92,44,140,.12);
   color: rgba(92,44,140,.95);
 }
+
+/* =========================
+   FIX SCROLL DA PÁGINA
+   ========================= */
+
+html,
+body,
+html.dashboard-exec,
+body.dashboard-exec {
+  min-height: 100% !important;
+  height: auto !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+
+main.container.dashboard-exec {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+.dashboard-grid--exec {
+  height: auto !important;
+  min-height: auto !important;
+  overflow: visible !important;
+}
+
+/* evita travamento por wrappers */
+.dashboard-exec .card,
+.dashboard-exec .chart-card,
+.dashboard-exec .data-table-card,
+.dashboard-exec .top-card,
+.dashboard-exec .tops-row,
+.dashboard-exec .exec-chart {
+  max-height: none !important;
+}

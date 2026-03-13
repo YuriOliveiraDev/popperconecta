@@ -7,25 +7,22 @@ declare(strict_types=1);
 
 // Admin
 const ADMIN_PERMISSION_CATALOG = [
-  'admin.users'       => ['label' => 'Usuários',     'url' => '/admin/users.php',        'icon' => '👤'],
-  'admin.comunicados' => ['label' => 'Comunicados',  'url' => '/admin/comunicados.php',  'icon' => '📢'],
-  'admin.rh'          => ['label' => 'RH',           'url' => '/admin/rh.php',           'icon' => '🧑‍💼'],
-  'admin.metrics'     => ['label' => 'Metrics',      'url' => '/admin/metrics.php',      'icon' => '📊'],
+  'admin.users'        => ['label' => 'Usuários',     'url' => '/admin/users.php',        'icon' => '👤'],
+  'admin.comunicados'  => ['label' => 'Comunicados',  'url' => '/admin/comunicados.php',  'icon' => '📢'],
+  'admin.rh'           => ['label' => 'RH',           'url' => '/admin/rh.php',           'icon' => '🧑‍💼'],
+  'admin.metrics'      => ['label' => 'Metrics',      'url' => '/admin/metrics.php',      'icon' => '📊'],
 ];
 
-// Dashboards (PERMISSÃO POR PÁGINA)
+// Dashboards
 const DASHBOARD_CATALOG = [
-  // Comercial
-  'dash.comercial.faturamento' => ['label' => 'Faturamento',    'url' => '/dashboard.php',              'group' => 'Comercial'],
-  'dash.comercial.executivo'   => ['label' => 'Executivo',      'url' => '/dashboard-executivo.php',    'group' => 'Comercial'],
-  'dash.comercial.insight'     => ['label' => 'Insight',        'url' => '/insight_comercial.php',      'group' => 'Comercial'],
-  'dash.comercial.clientes'    => ['label' => 'Clientes',       'url' => '/clientes.php',               'group' => 'Comercial'],
+  'dash.comercial.faturamento' => ['label' => 'Faturamento',    'url' => '/faturamento.php',           'group' => 'Comercial'],
+  'dash.comercial.executivo'   => ['label' => 'Executivo',      'url' => '/dashboard-executivo.php',   'group' => 'Comercial'],
+  'dash.comercial.insight'     => ['label' => 'Insight',        'url' => '/insight_comercial.php',     'group' => 'Comercial'],
+  'dash.comercial.clientes'    => ['label' => 'Clientes',       'url' => '/clientes.php',              'group' => 'Comercial'],
 
-  // Financeiro
-  'dash.financeiro.contasp'    => ['label' => 'Contas a Pagar', 'url' => '/admin/dashboardContasP.php', 'group' => 'Financeiro'],
+  'dash.financeiro.contasp'    => ['label' => 'Contas a Pagar', 'url' => '/admin/dashboardContasP.php','group' => 'Financeiro'],
 
-  // Comex
-  'dash.comex.importacoes'     => ['label' => 'Importações',    'url' => '/importacoes.php',            'group' => 'Comex'],
+  'dash.comex.importacoes'     => ['label' => 'Importações',    'url' => '/importacoes.php',           'group' => 'Comex'],
 ];
 
 /* ===========================
@@ -41,31 +38,73 @@ function user_perms(?array $u = null): array
     $u = current_user();
   }
 
+  if (!is_array($u)) {
+    return [];
+  }
+
   $raw = $u['permissions'] ?? null;
+
   if ($raw === null || $raw === '') {
     return [];
   }
 
-  $decoded = json_decode((string) $raw, true);
-  if (!is_array($decoded)) {
+  $items = [];
+
+  // Caso 1: já veio como array PHP
+  if (is_array($raw)) {
+    $items = $raw;
+  }
+  // Caso 2: veio string JSON ou string simples
+  elseif (is_string($raw)) {
+    $raw = trim($raw);
+
+    if ($raw === '') {
+      return [];
+    }
+
+    $decoded = json_decode($raw, true);
+
+    if (json_last_error() === JSON_ERROR_NONE) {
+      $items = $decoded;
+    } else {
+      // fallback: string única
+      $items = [$raw];
+    }
+  } else {
     return [];
   }
 
   $out = [];
-  foreach ($decoded as $p) {
-    if (is_string($p) && $p !== '') {
-      $out[] = $p;
+
+  // Array simples: ['admin.users', 'admin.metrics']
+  if (array_values($items) === $items) {
+    foreach ($items as $p) {
+      if (is_string($p) && trim($p) !== '') {
+        $out[] = trim($p);
+      }
+    }
+  } else {
+    // Array associativo: ['admin.metrics' => true]
+    foreach ($items as $perm => $enabled) {
+      if (
+        is_string($perm) &&
+        trim($perm) !== '' &&
+        (
+          $enabled === true ||
+          $enabled === 1 ||
+          $enabled === '1' ||
+          $enabled === 'true' ||
+          $enabled === 'on'
+        )
+      ) {
+        $out[] = trim($perm);
+      }
     }
   }
 
   return array_values(array_unique($out));
 }
 
-/**
- * Regras:
- * - admin.* : role admin tem bypass
- * - dash.*  : exige permissão explícita
- */
 function user_can(string $perm, ?array $u = null): bool
 {
   if ($u === null) {
@@ -75,12 +114,11 @@ function user_can(string $perm, ?array $u = null): bool
     $u = current_user();
   }
 
-  $role = (string) ($u['role'] ?? '');
-  $perms = user_perms($u);
-
-  if ($role === 'admin' && str_starts_with($perm, 'admin.')) {
-    return true;
+  if (!is_array($u)) {
+    return false;
   }
+
+  $perms = user_perms($u);
 
   return in_array($perm, $perms, true);
 }

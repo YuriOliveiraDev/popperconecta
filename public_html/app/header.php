@@ -50,9 +50,15 @@ if (is_array($u) && isset($u['profile_photo_path']) && is_string($u['profile_pho
   $avatarUrl = trim($u['profile_photo_path']);
 }
 
-// Admin items por permissão
+$userRole = (is_array($u) && isset($u['role']) && is_string($u['role'])) ? $u['role'] : '';
+$userSetor = (is_array($u) && isset($u['setor']) && is_string($u['setor'])) ? $u['setor'] : '';
+$userHierarquia = (is_array($u) && isset($u['hierarquia']) && is_string($u['hierarquia'])) ? $u['hierarquia'] : '';
+
+// Admin items: mostrar somente para role admin
 $adminItems = [];
-if (is_array($u)) {
+$isAdmin = is_array($u) && (($u['role'] ?? '') === 'admin');
+
+if ($isAdmin) {
   foreach (ADMIN_PERMISSION_CATALOG as $perm => $meta) {
     if (user_can($perm, $u)) {
       $adminItems[] = [
@@ -112,6 +118,75 @@ else
       <script src="<?= htmlspecialchars((string) $src, ENT_QUOTES, 'UTF-8') ?>"></script>
     <?php endforeach; ?>
   <?php endif; ?>
+
+<style>
+    user-edit-hero__subtitle { color: black !important; }
+
+    /* ===== SISTEMA DE NOTIFICAÇÕES OTIMIZADO ===== */
+    #notifMenu.notif__menu {
+      width: 290px !important;
+      max-height: 320px !important; 
+      display: flex !important;
+      flex-direction: column !important;
+      background-color: #111827 !important; /* Cor sólida para não ficar transparente */
+      color: #fff !important;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, .4) !important;
+      border: 1px solid rgba(255, 255, 255, .1) !important;
+      border-radius: 10px !important;
+      overflow: hidden !important;
+      backdrop-filter: none !important;
+      position: absolute; right: 0; top: 45px; z-index: 9999;
+    }
+
+    /* Header fixo no topo do card */
+    .notif__header {
+      flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, .1);
+      background: #111827;
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    .notif__title { font-size: 14px; font-weight: bold; }
+    .notif__markall { background: none; border: none; color: #3b82f6; cursor: pointer; font-size: 12px; padding: 0; }
+
+    /* Lista rolável */
+    .notif__list {
+      overflow-y: auto !important;
+      flex-grow: 1;
+      background: inherit;
+    }
+
+    .notif__item {
+      padding: 12px;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      transition: background 0.2s;
+    }
+
+    .notif__item:hover { background: rgba(255, 255, 255, .05); }
+    .notif__item.is-unread { border-left: 3px solid #3b82f6; background: rgba(59, 130, 246, .05); }
+
+    .notif__item-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .notif__item-msg { font-size: 12px; opacity: 0.8; margin-bottom: 4px; line-height: 1.4; }
+    .notif__item-date { font-size: 11px; opacity: 0.5; }
+
+    .notif__list::-webkit-scrollbar { width: 5px; }
+    .notif__list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .2); border-radius: 10px; }
+
+    .notif__badge {
+      background: #ef4444; color: #fff; font-size: 10px; padding: 2px 6px;
+      border-radius: 10px; position: absolute; top: -5px; right: -5px;
+    }
+    
+    .notif__btn { background: none; border: none; color: inherit; cursor: pointer; position: relative; padding: 5px; }
+  </style>
+
 </head>
 
 <body>
@@ -141,6 +216,8 @@ else
         </div>
       <?php endif; ?>
 
+
+      
       <?php
       // ====== DASHBOARD MENU (com permissões) ======
       $canComercial =
@@ -179,7 +256,7 @@ else
                 <div class="topbar__dropdown-submenu" role="menu" aria-label="Comercial">
 
                   <?php if (user_can('dash.comercial.faturamento', $u)): ?>
-                    <a class="topbar__dropdown-item" href="/dashboard.php">
+                    <a class="topbar__dropdown-item" href="/faturamento.php">
                       <span class="topbar__dropdown-icon"></span>
                       <span class="topbar__dropdown-label">Faturamento</span>
                     </a>
@@ -262,9 +339,9 @@ else
         <div class="topbar__dropdown-menu" id="coinsMenu" role="menu">
           <a class="topbar__dropdown-item" href="/coins.php"><span class="topbar__dropdown-label">Meus
               Poppercoins</span></a>
-          <a class="topbar__dropdown-item" href="/coins_resgatar.php"><span
-              class="topbar__dropdown-label">Resgatar</span></a>
+          <a class="topbar__dropdown-item" href="/coins_resgatar.php"><span class="topbar__dropdown-label">Loja</span></a>
           <a class="topbar__dropdown-item" href="/ranking.php"><span class="topbar__dropdown-label">Ranking</span></a>
+          <a class="topbar__dropdown-item" href="/coins_campanhas.php"><span class="topbar__dropdown-label">Campanhas</span></a>
         </div>
       </div>
     </div>
@@ -286,51 +363,63 @@ else
           <?php endif; ?>
         </button>
 
-        <div class="notif__menu" id="notifMenu" role="menu" aria-label="Notificações">
-          <div class="notif__header">
-            <div class="notif__title">Notificações</div>
-            <button type="button" class="notif__markall" id="notifMarkAll">Marcar todas</button>
+<div class="notif__menu" id="notifMenu" role="menu" aria-label="Notificações">
+  <div class="notif__header">
+    <div class="notif__title">Notificações</div>
+    <button type="button" class="notif__markall" id="notifMarkAll">Marcar todas</button>
+  </div>
+
+  <div class="notif__list">
+    <?php if (!$notifItems): ?>
+      <div class="notif__empty">Sem notificações.</div>
+    <?php else: ?>
+      <?php foreach ($notifItems as $n): ?>
+        <?php
+        $unread = ((int) ($n['is_read'] ?? 0) === 0);
+
+        $href = trim((string) ($n['link'] ?? ''));
+        if ($href === '' || $href === '#') {
+          $href = '#';
+          $isClickable = false;
+        } else {
+          $isClickable = true;
+          if (!preg_match('/^https?:\/\//i', $href)) {
+            $href = preg_replace('#^(\./|\.\./)+#', '', $href);
+            if (strpos($href, '/admin/') === 0) {
+              // ok
+            } elseif (strpos($href, '/') === 0) {
+              $href = '/admin' . $href;
+            } else {
+              $href = '/admin/' . $href;
+            }
+          }
+        }
+        ?>
+
+        <a class="notif__item<?= $unread ? ' is-unread' : '' ?><?= $isClickable ? '' : ' is-disabled' ?>"
+          href="<?= htmlspecialchars($href, ENT_QUOTES, 'UTF-8') ?>"
+          <?= $isClickable ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;"' ?>
+          data-id="<?= (int) ($n['id'] ?? 0) ?>">
+
+          <div class="notif__item-title">
+            <?= htmlspecialchars((string) ($n['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
           </div>
 
-          <?php if (!$notifItems): ?>
-            <div class="notif__empty">Sem notificações.</div>
-          <?php else: ?>
-            <?php foreach ($notifItems as $n): ?>
-              <?php
-              $unread = ((int) ($n['is_read'] ?? 0) === 0);
-
-              $href = trim((string) ($n['link'] ?? ''));
-              if ($href === '' || $href === '#') {
-                $href = '#';
-                $isClickable = false;
-              } else {
-                $isClickable = true;
-                if (!preg_match('/^https?:\/\//i', $href)) {
-                  $href = preg_replace('#^(\./|\.\./)+#', '', $href);
-                  if (strpos($href, '/admin/') === 0) {
-                    // ok
-                  } elseif (strpos($href, '/') === 0) {
-                    $href = '/admin' . $href;
-                  } else {
-                    $href = '/admin/' . $href;
-                  }
-                }
-              }
-              ?>
-              <a class="notif__item<?= $unread ? ' is-unread' : '' ?><?= $isClickable ? '' : ' is-disabled' ?>"
-                href="<?= htmlspecialchars($href, ENT_QUOTES, 'UTF-8') ?>" <?= $isClickable ? '' : 'aria-disabled="true" tabindex="-1" onclick="return false;"' ?> data-id="<?= (int) ($n['id'] ?? 0) ?>">
-                <div class="notif__item-title"><?= htmlspecialchars((string) ($n['title'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                </div>
-                <?php if (!empty($n['message'])): ?>
-                  <div class="notif__item-msg"><?= htmlspecialchars((string) $n['message'], ENT_QUOTES, 'UTF-8') ?></div>
-                <?php endif; ?>
-                <div class="notif__item-date">
-                  <?= htmlspecialchars((string) ($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
-                </div>
-              </a>
-            <?php endforeach; ?>
+          <?php if (!empty($n['message'])): ?>
+            <div class="notif__item-msg">
+              <?= htmlspecialchars((string) $n['message'], ENT_QUOTES, 'UTF-8') ?>
+            </div>
           <?php endif; ?>
-        </div>
+
+          <div class="notif__item-date">
+            <?= htmlspecialchars((string) ($n['created_at'] ?? ''), ENT_QUOTES, 'UTF-8') ?>
+          </div>
+        </a>
+
+      <?php endforeach; ?>
+    <?php endif; ?>
+  </div>
+</div>
       </div>
 
       <div class="topbar__greeting" aria-label="Saudação">
@@ -361,6 +450,5 @@ else
           <a class="profile__item profile__item--danger" href="/logout.php" role="menuitem">Sair</a>
         </div>
       </div>
-
     </div>
   </header>

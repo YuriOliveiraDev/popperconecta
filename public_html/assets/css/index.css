@@ -1327,3 +1327,172 @@ body.page main{
   height: 100% !important;
   display: block !important;
 }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body.page main {
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity .18s ease, transform .18s ease;
+    }
+
+    body.page.is-ready main {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .slide--dashboard {
+      padding-top: 10px;
+    }
+
+    /* ✅ Atualização centralizada abaixo dos cards */
+    .dash-tv-updated {
+      display: block;
+      width: 100%;
+      text-align: center;
+
+      margin-top: 18px;
+
+      font-size: 15px;
+      color: #6b7280;
+      opacity: .9;
+
+      grid-column: 1 / -1;
+      /* força ocupar toda linha do grid */
+    }
+
+    /* ✅ Faz o slide do dashboard ficar em COLUNA (cards em cima + texto embaixo) */
+    #mainCarousel .slide--dashboard {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* opcional: dá espaço entre grid e linha "Atualizado em" */
+    #mainCarousel .slide--dashboard .dash-tv-grid {
+      flex: 1 1 auto;
+    }
+
+    /* texto centralizado embaixo */
+    #mainCarousel .slide--dashboard .dash-tv-updated {
+      width: 100%;
+      text-align: center;
+      margin-top: 14px;
+      font-size: 14px;
+      color: #6b7280;
+      opacity: .9;
+    }
+
+    .slide--dashboard {
+      height: 100%;
+      padding: 30px 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dash-tv-grid {
+      width: 100%;
+      max-width: 1800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 30px;
+    }
+
+    .dash-tv-updated {
+      width: 100%;
+      text-align: center;
+      margin-top: 16px;
+    }
+    /* =========================================================
+   FORCE CENTER — slide dashboard no meio
+   ========================================================= */
+
+html,
+body {
+  height: 100%;
+}
+
+body.page {
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* altura útil da tela descontando header */
+:root {
+  --header-offset: 74px;
+}
+
+body.page main {
+  height: calc(100vh - var(--header-offset)) !important;
+  min-height: calc(100vh - var(--header-offset)) !important;
+  padding-top: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+/* carousel ocupa tudo */
+#mainCarousel,
+#mainCarousel .carousel__viewport,
+#mainCarousel .carousel__track {
+  height: 100% !important;
+}
+
+/* cada slide ocupa toda a área */
+#mainCarousel .slide {
+  height: 100% !important;
+  min-height: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* DASHBOARD realmente centralizado */
+#mainCarousel .slide--dashboard {
+  height: 100% !important;
+  min-height: 100% !important;
+  padding: 24px 40px !important;
+
+  display: flex !important;
+  flex-direction: column !important;
+
+  align-items: center !important;
+  justify-content: center !important;
+
+  box-sizing: border-box !important;
+}
+
+/* grid dos cards */
+#mainCarousel .slide--dashboard .dash-tv-grid {
+  width: 100% !important;
+  max-width: 1800px !important;
+  margin: 0 auto !important;
+
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 24px !important;
+
+  flex: 0 0 auto !important;
+}
+
+/* linha de atualização abaixo */
+#mainCarousel .slide--dashboard .dash-tv-updated {
+  width: 100% !important;
+  text-align: center !important;
+  margin-top: 14px !important;
+  flex: 0 0 auto !important;
+}
+
+/* garante que nada empurre pra cima */
+#mainCarousel .slide--dashboard::before,
+#mainCarousel .slide--dashboard::after {
+  display: none !important;
+}

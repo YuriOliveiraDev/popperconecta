@@ -7,7 +7,8 @@ require_once __DIR__ . '/../app/db.php';
 require_once __DIR__ . '/../app/permissions.php';
 require_once __DIR__ . '/../app/config-totvs.php';
 
-require_admin();
+require_login();
+require_dash_perm('dash.financeiro.contasp');
 
 $me = current_user();
 $u = $me;              // garante compatibilidade com header.php

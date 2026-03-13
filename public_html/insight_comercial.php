@@ -3,9 +3,10 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/app/auth.php';
-require_login();
-
+require_once __DIR__ . '/app/permissions.php';
 require_once __DIR__ . '/app/config-totvs.php';
+require_login();
+require_dash_perm('dash.comercial.insight');
 
 const CACHE_DIR = __DIR__ . '/cache';
 const CACHE_TTL = 600;
@@ -295,7 +296,7 @@ try {
       AND is_active = 1
       AND ref_date BETWEEN ? AND ?
   ');
-  $stmtAdj->execute([DASH_SLUG_AJUSTES, $monthStart, $monthEnd]);
+  $stmtAdj->execute([ $monthStart, $monthEnd]);
 
   while ($r = $stmtAdj->fetch(PDO::FETCH_ASSOC)) {
     $ajusteMes += (float) ($r['valor'] ?? 0);
@@ -552,7 +553,7 @@ require_once __DIR__ . '/app/header.php';
 
         <div class="exec-filter__top">
           <div class="card__header">
-            <h2 class="card__title">Comercial • Rankings & Ticket Médio</h2>
+            <h2 class="card__title">Comercial Insight</h2>
             <p class="card__subtitle">
               <?= $hasCustomRange ? 'Período personalizado' : 'Período do mês' ?>:
               <?= safe($monthStart) ?> até <?= safe($monthEnd) ?>

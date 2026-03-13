@@ -1,0 +1,802 @@
+.coins{
+  --pc-bg:#ffffff;
+  --pc-text:#0f172a;
+  --pc-muted:#64748b;
+  --pc-line:rgba(15,23,42,.08);
+  --pc-line-strong:rgba(15,23,42,.12);
+  --pc-shadow:0 10px 30px rgba(15,23,42,.06);
+  --pc-radius:18px;
+  --pc-purple:#5c2c8c;
+  --pc-purple-soft:rgba(92,44,140,.10);
+
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  box-sizing:border-box;
+}
+
+.coins *,
+.coins *::before,
+.coins *::after{
+  box-sizing:border-box;
+}
+
+.coins .pc-header{
+  text-align:center;
+  margin-bottom:24px;
+}
+
+.coins .pc-title{
+  margin:0;
+  font-size:2.2rem;
+  font-weight:900;
+  letter-spacing:-.03em;
+  color:var(--pc-text);
+}
+
+.coins .pc-subtitle{
+  margin:8px 0 0;
+  font-size:1.02rem;
+  color:var(--pc-muted);
+}
+
+.coins .pc-container{
+  display:grid;
+  gap:24px;
+  width:100%;
+  max-width:1400px;
+  margin:0 auto;
+  min-width:0;
+}
+
+.coins .pc-summary-grid{
+  display:grid;
+  grid-template-columns:minmax(280px,380px) minmax(0,1fr);
+  gap:24px;
+  align-items:stretch;
+  min-width:0;
+}
+
+.coins .pc-mini-stats{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:16px;
+  min-width:0;
+}
+
+.coins .pc-mini-stat{
+  background:#fff;
+  border:1px solid var(--pc-line);
+  border-radius:16px;
+  box-shadow:var(--pc-shadow);
+  padding:18px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  min-height:110px;
+  min-width:0;
+}
+
+.coins .pc-mini-stat__label{
+  font-size:12px;
+  font-weight:800;
+  color:var(--pc-muted);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.coins .pc-mini-stat__value{
+  margin-top:10px;
+  font-size:28px;
+  font-weight:900;
+  color:var(--pc-text);
+  line-height:1;
+  word-break:break-word;
+}
+
+.coins .pc-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:24px;
+  min-width:0;
+}
+
+.coins .pc-grid--top{
+  align-items:start;
+}
+
+.coins .pc-card{
+  background:var(--pc-bg);
+  border:1px solid var(--pc-line);
+  border-radius:16px;
+  box-shadow:0 4px 20px rgba(15,23,42,.06);
+  padding:24px;
+  min-width:0;
+  overflow:hidden;
+}
+
+.coins .pc-card--balance{
+  min-height:210px;
+  border-radius:18px;
+  background:linear-gradient(135deg, rgba(92,44,140,.10), rgba(172,204,54,.10));
+  border:1px solid rgba(92,44,140,.18);
+  box-shadow:0 18px 40px rgba(15,23,42,.06);
+}
+
+.coins .pc-balance-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+  min-width:0;
+}
+
+.coins .pc-balance-title{
+  margin:0;
+  font-size:14px;
+  font-weight:900;
+  color:rgba(15,23,42,.78);
+}
+
+.coins .pc-balance-pill{
+  display:inline-flex;
+  align-items:center;
+  height:28px;
+  padding:0 12px;
+  border-radius:999px;
+  background:rgba(92,44,140,.14);
+  border:1px solid rgba(92,44,140,.22);
+  color:rgba(92,44,140,1);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+.coins .pc-balance-value{
+  display:flex;
+  align-items:baseline;
+  gap:10px;
+  margin:8px 0 18px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+
+.coins .pc-balance-num{
+  font-size:48px;
+  font-weight:950;
+  letter-spacing:-1.2px;
+  line-height:1;
+  color:rgba(15,23,42,.92);
+  word-break:break-word;
+}
+
+.coins .pc-balance-unit{
+  font-size:14px;
+  font-weight:900;
+  color:rgba(15,23,42,.58);
+}
+
+.coins .pc-balance-foot{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding-top:14px;
+  border-top:1px solid rgba(15,23,42,.10);
+  min-width:0;
+}
+
+.coins .pc-balance-label{
+  font-size:12px;
+  font-weight:900;
+  color:rgba(15,23,42,.55);
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  flex-shrink:0;
+}
+
+.coins .pc-balance-user{
+  font-size:13px;
+  font-weight:900;
+  color:rgba(15,23,42,.86);
+  text-align:right;
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+
+.coins .pc-card-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+  min-width:0;
+}
+
+.coins .pc-card-title{
+  margin:0;
+  font-size:14px;
+  font-weight:950;
+  letter-spacing:.2px;
+  color:rgba(15,23,42,.86);
+}
+
+.coins .pc-card-badge{
+  display:inline-flex;
+  align-items:center;
+  height:28px;
+  padding:0 12px;
+  border-radius:999px;
+  background:rgba(15,23,42,.04);
+  border:1px solid rgba(15,23,42,.10);
+  color:rgba(15,23,42,.72);
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+.coins .pc-tools{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+  min-width:0;
+}
+
+.coins .pc-search,
+.coins .pc-select{
+  height:40px;
+  border:1px solid rgba(15,23,42,.12);
+  border-radius:10px;
+  background:#fff;
+  color:var(--pc-text);
+  font-size:14px;
+  outline:none;
+  max-width:100%;
+}
+
+.coins .pc-search{
+  flex:1 1 260px;
+  min-width:0;
+  width:100%;
+  padding:0 12px;
+}
+
+.coins .pc-select{
+  flex:0 1 220px;
+  min-width:0;
+  width:auto;
+  padding:0 12px;
+}
+
+.coins .pc-search:focus,
+.coins .pc-select:focus{
+  border-color:rgba(92,44,140,.45);
+  box-shadow:0 0 0 3px rgba(92,44,140,.12);
+}
+
+.coins .table-wrap{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:auto;
+  border-radius:12px;
+  min-width:0;
+}
+
+.coins .table{
+  width:100%;
+  min-width:680px;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.coins .table th,
+.coins .table td{
+  padding:14px 16px;
+  text-align:left;
+  border-bottom:1px solid rgba(15,23,42,.06);
+  vertical-align:middle;
+}
+
+.coins .table thead th{
+  font-weight:800;
+  text-transform:uppercase;
+  font-size:11px;
+  color:var(--pc-muted);
+  background:rgba(15,23,42,.02);
+}
+
+.coins .table tbody tr:hover{
+  background:rgba(92,44,140,.04);
+}
+
+.coins .table .right{
+  text-align:right;
+}
+
+.coins .pc-table-scroll{
+  width:100%;
+  max-width:100%;
+  overflow:auto;
+  border-radius:12px;
+  min-width:0;
+}
+
+.coins .pc-table-scroll--requests{
+  max-height:320px;
+}
+
+.coins .pc-table-scroll--requests thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+}
+
+.coins .pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 12px;
+  border-radius:999px;
+  font-weight:800;
+  font-size:12px;
+  border:1px solid rgba(15,23,42,.1);
+  white-space:nowrap;
+}
+
+.coins .pill--pending{
+  background:rgba(245,158,11,0.12);
+  color:#92400e;
+}
+
+.coins .pill--approved{
+  background:rgba(22,163,74,0.12);
+  color:#166534;
+}
+
+.coins .pill--rejected{
+  background:rgba(220,38,38,0.12);
+  color:#991b1b;
+}
+
+@media (max-width: 1100px){
+  .coins .pc-summary-grid,
+  .coins .pc-grid{
+    grid-template-columns:1fr;
+  }
+
+  .coins .pc-mini-stats{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+  }
+}
+
+@media (max-width: 768px){
+  .coins .pc-title{
+    font-size:1.8rem;
+  }
+
+  .coins .pc-card{
+    padding:18px;
+  }
+
+  .coins .pc-card--balance{
+    min-height:190px;
+  }
+
+  .coins .pc-balance-head,
+  .coins .pc-balance-foot,
+  .coins .pc-card-head{
+    flex-wrap:wrap;
+  }
+
+  .coins .pc-balance-num{
+    font-size:40px;
+  }
+
+  .coins .pc-mini-stats{
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  .coins .pc-tools{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .coins .pc-search,
+  .coins .pc-select{
+    width:100%;
+    min-width:0;
+    flex:1 1 auto;
+  }
+
+  .coins .table{
+    min-width:620px;
+  }
+
+  .coins .table th,
+  .coins .table td{
+    padding:12px 10px;
+    font-size:12px;
+  }
+}
+
+@media (max-width: 520px){
+  .coins .pc-mini-stats{
+    grid-template-columns:1fr;
+  }
+
+  .coins .pc-title{
+    font-size:1.55rem;
+  }
+
+  .coins .pc-balance-num{
+    font-size:34px;
+  }
+
+  .coins .table{
+    min-width:560px;
+  }
+}
+
+/* =========================
+   OTIMIZAÇÃO TABELAS COINS
+========================= */
+
+.coins .pc-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+}
+
+.coins .pc-card{
+  min-width:0;
+  overflow:hidden;
+}
+
+.coins .table-wrap,
+.coins .pc-table-scroll{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow:visible; /* tira scroll horizontal */
+}
+
+/* tabelas principais */
+.coins .table{
+  width:100%;
+  min-width:0 !important;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+/* cabeçalho e células */
+.coins .table th,
+.coins .table td{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(15,23,42,.06);
+  vertical-align:middle;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* permite quebra de texto nas colunas longas */
+.coins .pc-card--requests .table td:nth-child(2),
+.coins .pc-card--requests .table th:nth-child(2),
+.coins .pc-card .table td:nth-child(3),
+.coins .pc-card .table th:nth-child(3){
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+/* demais colunas ficam compactas */
+.coins .table th:not(:nth-child(2)):not(:nth-child(3)),
+.coins .table td:not(:nth-child(2)):not(:nth-child(3)){
+  white-space:nowrap;
+}
+
+/* largura das colunas - Seus pedidos */
+.coins .pc-card--requests .table th:nth-child(1),
+.coins .pc-card--requests .table td:nth-child(1){
+  width:140px;
+}
+
+.coins .pc-card--requests .table th:nth-child(2),
+.coins .pc-card--requests .table td:nth-child(2){
+  width:auto;
+}
+
+.coins .pc-card--requests .table th:nth-child(3),
+.coins .pc-card--requests .table td:nth-child(3){
+  width:90px;
+}
+
+.coins .pc-card--requests .table th:nth-child(4),
+.coins .pc-card--requests .table td:nth-child(4){
+  width:120px;
+}
+
+/* largura das colunas - Extrato */
+.coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(1),
+.coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(1){
+  width:140px;
+}
+
+.coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(2),
+.coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(2){
+  width:90px;
+}
+
+.coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(3),
+.coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(3){
+  width:auto;
+}
+
+.coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(4),
+.coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(4){
+  width:90px;
+}
+
+/* badge status mais compacto */
+.coins .pill{
+  padding:5px 10px;
+  font-size:11px;
+  line-height:1.1;
+  white-space:nowrap;
+  max-width:100%;
+}
+
+/* campos de busca melhores */
+.coins .pc-tools{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+.coins .pc-search,
+.coins .pc-select{
+  height:40px;
+  min-width:0;
+  max-width:100%;
+}
+
+.coins .pc-search{
+  flex:1 1 220px;
+}
+
+.coins .pc-select{
+  flex:0 1 190px;
+}
+
+/* desktop médio */
+@media (max-width: 1100px){
+  .coins .pc-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+/* tablet */
+@media (max-width: 768px){
+  .coins .table th,
+  .coins .table td{
+    padding:10px 10px;
+    font-size:12px;
+  }
+
+  .coins .pc-card--requests .table th:nth-child(1),
+  .coins .pc-card--requests .table td:nth-child(1),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(1),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(1){
+    width:110px;
+  }
+
+  .coins .pc-card--requests .table th:nth-child(3),
+  .coins .pc-card--requests .table td:nth-child(3),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(2),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(2),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table th:nth-child(4),
+  .coins .pc-grid--top > .pc-card:nth-child(2) .table td:nth-child(4){
+    width:78px;
+  }
+
+  .coins .pc-card--requests .table th:nth-child(4),
+  .coins .pc-card--requests .table td:nth-child(4){
+    width:100px;
+  }
+}
+
+/* =========================
+   TABELAS COINS
+========================= */
+
+.coins .pc-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:24px;
+  align-items:start;
+}
+
+.coins .pc-card{
+  min-width:0;
+  overflow:hidden;
+}
+
+.coins .table-wrap,
+.coins .pc-table-scroll{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  border-radius:12px;
+}
+
+/* pedidos sem scroll horizontal forçado */
+.coins .pc-card--requests .table-wrap{
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+
+/* extrato e histórico com scroll vertical */
+.coins .pc-card--ledger .table-wrap,
+.coins .pc-card--approvals .table-wrap{
+  overflow-x:hidden;
+  overflow-y:auto;
+  max-height:420px; /* ~ 10 itens */
+}
+
+/* cabeçalho fixo no extrato e histórico */
+.coins .pc-card--ledger .table thead th,
+.coins .pc-card--approvals .table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#f8fafc;
+}
+
+/* tabelas */
+.coins .table{
+  width:100%;
+  min-width:0 !important;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+.coins .table th,
+.coins .table td{
+  padding:12px 14px;
+  border-bottom:1px solid rgba(15,23,42,.06);
+  vertical-align:middle;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.coins .table thead th{
+  font-weight:800;
+  text-transform:uppercase;
+  font-size:11px;
+  color:var(--pc-muted);
+  background:rgba(15,23,42,.02);
+}
+
+.coins .table tbody tr:hover{
+  background:rgba(92,44,140,.04);
+}
+
+.coins .table .right{
+  text-align:right;
+}
+
+/* quebra de texto nas colunas longas */
+.coins .pc-card--requests .table td:nth-child(2),
+.coins .pc-card--requests .table th:nth-child(2),
+.coins .pc-card--ledger .table td:nth-child(3),
+.coins .pc-card--ledger .table th:nth-child(3),
+.coins .pc-card--approvals .table td:nth-child(2),
+.coins .pc-card--approvals .table th:nth-child(2),
+.coins .pc-card--approvals .table td:nth-child(6),
+.coins .pc-card--approvals .table th:nth-child(6){
+  white-space:normal;
+  word-break:break-word;
+  overflow-wrap:anywhere;
+}
+
+/* colunas curtas */
+.coins .table th:not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(6)),
+.coins .table td:not(:nth-child(2)):not(:nth-child(3)):not(:nth-child(6)){
+  white-space:nowrap;
+}
+
+/* Seus pedidos */
+.coins .pc-card--requests .table th:nth-child(1),
+.coins .pc-card--requests .table td:nth-child(1){ width:130px; }
+
+.coins .pc-card--requests .table th:nth-child(2),
+.coins .pc-card--requests .table td:nth-child(2){ width:auto; }
+
+.coins .pc-card--requests .table th:nth-child(3),
+.coins .pc-card--requests .table td:nth-child(3){ width:90px; }
+
+.coins .pc-card--requests .table th:nth-child(4),
+.coins .pc-card--requests .table td:nth-child(4){ width:120px; }
+
+/* Extrato */
+.coins .pc-card--ledger .table th:nth-child(1),
+.coins .pc-card--ledger .table td:nth-child(1){ width:130px; }
+
+.coins .pc-card--ledger .table th:nth-child(2),
+.coins .pc-card--ledger .table td:nth-child(2){ width:90px; }
+
+.coins .pc-card--ledger .table th:nth-child(3),
+.coins .pc-card--ledger .table td:nth-child(3){ width:auto; }
+
+.coins .pc-card--ledger .table th:nth-child(4),
+.coins .pc-card--ledger .table td:nth-child(4){ width:90px; }
+
+/* Histórico */
+.coins .pc-card--approvals .table th:nth-child(1),
+.coins .pc-card--approvals .table td:nth-child(1){ width:130px; }
+
+.coins .pc-card--approvals .table th:nth-child(2),
+.coins .pc-card--approvals .table td:nth-child(2){ width:150px; }
+
+.coins .pc-card--approvals .table th:nth-child(3),
+.coins .pc-card--approvals .table td:nth-child(3){ width:90px; }
+
+.coins .pc-card--approvals .table th:nth-child(4),
+.coins .pc-card--approvals .table td:nth-child(4){ width:100px; }
+
+.coins .pc-card--approvals .table th:nth-child(5),
+.coins .pc-card--approvals .table td:nth-child(5){ width:120px; }
+
+.coins .pc-card--approvals .table th:nth-child(6),
+.coins .pc-card--approvals .table td:nth-child(6){ width:auto; }
+
+@media (max-width: 1100px){
+  .coins .pc-grid{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width: 768px){
+  .coins .table th,
+  .coins .table td{
+    padding:10px 10px;
+    font-size:12px;
+  }
+
+  .coins .pc-card--ledger .table-wrap,
+  .coins .pc-card--approvals .table-wrap{
+    max-height:380px;
+  }
+}
+
+@media (max-width: 560px){
+  .coins .table{
+    table-layout:auto;
+  }
+
+  .coins .table th,
+  .coins .table td{
+    padding:9px 8px;
+    font-size:11px;
+  }
+
+  .coins .pc-card--ledger .table-wrap,
+  .coins .pc-card--approvals .table-wrap{
+    max-height:340px;
+  }
+}
+.coins .row-empty td{
+  height:42px;
+  background:#fafafa;
+}
