@@ -370,31 +370,34 @@ function loadCharts(v) {
 }
 
 /* ======================================================
-   FATURAMENTO DIÁRIO (com cache local)
+   FATURAMENTO DIÁRIO (CORRIGIDO)
 ====================================================== */
 let chartDiario;
 
 function normalizeDailyValue(v) {
   const n = Number(v);
 
-  // inválido
+  // inválido vira 0
   if (!Number.isFinite(n)) return 0;
 
-  // evita lixo decimal / notação científica
-  if (Math.abs(n) < 100) return 0;
-
-  // arredonda para 2 casas só por segurança
+  // arredonda só para limpar ruído decimal
   return Math.round(n * 100) / 100;
 }
 
+function dailyLabelFromYm(ym) {
+  const [Y, M] = String(ym).split('-').map(Number);
+  const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const mm = Number.isFinite(M) ? meses[M - 1] : '--';
+  return `${mm}/${String(Y).slice(-2)}`;
+}
+
 function applyDailyChart(payload) {
-  if (!payload || !payload.diario_mes) return;
+  const diario = (payload && typeof payload.diario_mes === 'object' && payload.diario_mes)
+    ? payload.diario_mes
+    : {};
 
-  const labels = Object.keys(payload.diario_mes)
-    .sort((a, b) => Number(a) - Number(b));
-
-  const valores = labels.map((dia) => normalizeDailyValue(payload.diario_mes[dia]));
-  const allZero = valores.every(v => v === 0);
+  const labels = Object.keys(diario).sort((a, b) => Number(a) - Number(b));
+  const valores = labels.map((dia) => normalizeDailyValue(diario[dia]));
 
   if (chartDiario) {
     try { chartDiario.destroy(); } catch (e) {}
@@ -413,14 +416,12 @@ function applyDailyChart(payload) {
         borderColor: "#5c2c8c",
         backgroundColor: "rgba(92,44,140,.12)",
         fill: true,
-
-        // quando tudo for zero, deixa totalmente reto
-        tension: allZero ? 0 : 0.35,
-
-        pointRadius: 4,
-        pointHoverRadius: 6,
+        tension: 0.25,
+        pointRadius: 5,
+        pointHoverRadius: 8,
+        pointHitRadius: 12,
+        pointBorderWidth: 2,
         spanGaps: true,
-
         datalabels: {
           anchor: "end",
           align: "top",
@@ -428,8 +429,6 @@ function applyDailyChart(payload) {
           color: "#1f2937",
           formatter: (v) => {
             const n = normalizeDailyValue(v);
-
-            if (n === 0) return "0";
             if (n >= 1_000_000) return (n / 1_000_000).toFixed(1).replace('.', ',') + "M";
             if (n >= 1_000) return (n / 1_000).toFixed(0) + "k";
             return String(Math.round(n));
@@ -462,6 +461,9 @@ function applyDailyChart(payload) {
         }
       },
       scales: {
+        x: {
+          ticks: { maxRotation: 0 }
+        },
         y: {
           beginAtZero: true,
           min: 0,
@@ -473,15 +475,14 @@ function applyDailyChart(payload) {
     }
   });
 
-  const mes = now.toLocaleString("pt-BR", { month: "short" });
-  const ano = now.getFullYear();
   const titulo = document.getElementById("ttlChart");
-  if (titulo) titulo.textContent = "Faturamento Diário (" + mes + "/" + ano + ")";
+  if (titulo) titulo.textContent = "Faturamento Diário (" + dailyLabelFromYm(CURRENT_YM) + ")";
 }
 
 async function loadDailyChart(opts = { force: false }) {
   const key = KEY_DAILY(CURRENT_YM);
 
+  // usa cache local só se não for force
   if (!opts.force) {
     const cached = cacheGet(key);
     if (cached) {
@@ -491,17 +492,22 @@ async function loadDailyChart(opts = { force: false }) {
   }
 
   try {
-    const r = await fetch("/api/dashboard-executivo-save.php?ym=" + CURRENT_YM, { cache: "default" });
+    const url = new URL("/api/dashboard-executivo-save.php", window.location.origin);
+    url.searchParams.set("ym", CURRENT_YM);
+    url.searchParams.set("v", String(Date.now())); // evita cache antigo do browser
+
+    const r = await fetch(url.toString(), { cache: "no-store" });
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
     const data = await r.json();
-    if (!data || !data.diario_mes) return;
+    if (!data || data.success === false) throw new Error("Payload inválido");
 
     cacheSet(key, data);
     applyDailyChart(data);
   } catch (e) {
-    console.warn("Erro gráfico diário", e);
+    console.warn("Erro gráfico diário:", e);
   }
 }
-
 /* ======================================================
    TOPS (com cache local)
 ====================================================== */
@@ -640,37 +646,6 @@ async function loadTopsCarousel(opts = { force: false }) {
 }
 
 /* ======================================================
-   AUTO SCROLL TOP LISTS
-====================================================== */
-function autoScrollTopList(containerId, maxItems = 20) {
-  const el = document.getElementById(containerId);
-  if (!el) return;
-
-  let direction = 1;
-  let pos = 0;
-
-  const item = el.querySelector(".top-item");
-  if (!item) return;
-
-  const itemHeight = item.offsetHeight;
-  const maxScroll = itemHeight * maxItems;
-
-  function step() {
-    pos += direction * 0.35;
-    if (pos >= maxScroll) direction = -1;
-    if (pos <= 0) direction = 1;
-    el.scrollTop = pos;
-    requestAnimationFrame(step);
-  }
-  requestAnimationFrame(step);
-}
-
-function startTopAutoScroll() {
-  autoScrollTopList("listTopProdutos", 20);
-  autoScrollTopList("listTopClientes", 20);
-}
-
-/* ======================================================
    BOOT + REFRESH (10 min, alinhado ao TTL)
 ====================================================== */
 // 1) pinta imediatamente do cache (se existir)
@@ -678,10 +653,9 @@ loadDashboard({ force: false });
 loadTopsCarousel({ force: false });
 
 // diário: espera o carousel montar, mas usa cache se tiver
-setTimeout(() => loadDailyChart({ force: false }), 800);
+// diário
+setTimeout(() => loadDailyChart({ force: false }), 200);
 
-// autoscroll
-setTimeout(startTopAutoScroll, 2000);
 
 // 2) agenda próxima atualização exatamente quando o cache vencer
 function scheduleRefresh() {

@@ -1,6 +1,5 @@
 :root {
   --bg: #f6f7fb;
-  --bg-dark: #0b1220;
   --card: #ffffff;
   --card-soft: #f8fafc;
   --ink: #0f172a;
@@ -29,6 +28,7 @@ html,
 body {
   height: 100%;
   margin: 0;
+  overflow: hidden;
   font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
@@ -36,6 +36,17 @@ body {
 
 body {
   padding-bottom: var(--footer-h);
+}
+
+body.page main {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+
+body.page.is-ready main {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* =========================================================
@@ -47,196 +58,11 @@ body {
   flex-direction: column;
 }
 
-.page>main {
+.page > main {
   flex: 1;
   min-height: calc(100vh - var(--header-offset) - var(--footer-h));
   padding-top: var(--header-offset);
   overflow: hidden;
-}
-
-.container {
-  width: min(100% - 32px, 1600px);
-  margin: 0 auto;
-  padding: 0;
-}
-
-/* =========================================================
-   TOPBAR
-========================================================= */
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--primary);
-  border-bottom: none;
-  box-shadow: none;
-}
-
-.topbar,
-.topbar * {
-  color: #f5f5f7 !important;
-}
-
-.topbar__left,
-.topbar__right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand {
-  color: inherit;
-  text-decoration: none;
-  font-weight: 800;
-}
-
-.muted {
-  color: rgba(255, 255, 255, .85);
-  font-size: 13px;
-}
-
-/* =========================================================
-   DROPDOWN
-========================================================= */
-.topbar__dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.topbar__dropdown-trigger {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  text-decoration: none;
-  transition: background .18s ease;
-}
-
-.topbar__dropdown-trigger:hover {
-  background: rgba(255, 255, 255, .10);
-}
-
-.topbar__dropdown-trigger::after {
-  content: "";
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  margin-left: 6px;
-  background: no-repeat center/10px 10px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='white' d='M5.25 7.5 10 12.25 14.75 7.5l1.25 1.25L10 14.75 4 8.75z'/%3E%3C/svg%3E");
-  transform: translateY(1px);
-  transition: transform .2s ease;
-}
-
-.topbar__dropdown-trigger.is-open::after {
-  transform: translateY(1px) rotate(180deg);
-}
-
-.topbar__dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  min-width: 220px;
-  background: #fff;
-  border: 1px solid var(--line-strong);
-  border-radius: 12px;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, .14);
-  padding: 8px 0;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-8px);
-  transition: .2s ease;
-  z-index: 200;
-}
-
-.topbar__dropdown-menu.is-open {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.topbar__dropdown-menu,
-.topbar__dropdown-menu * {
-  color: var(--ink) !important;
-}
-
-.topbar__dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
-  text-decoration: none;
-}
-
-.topbar__dropdown-item:hover {
-  background: rgba(92, 44, 140, .08);
-  color: var(--primary) !important;
-}
-
-.topbar__dropdown-divider {
-  height: 1px;
-  margin: 8px 0;
-  background: rgba(15, 23, 42, .08);
-}
-
-.topbar__dropdown-header {
-  padding: 8px 16px 4px;
-  font-size: 11px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  color: rgba(15, 23, 42, .45) !important;
-}
-
-/* =========================================================
-   BOTÕES
-========================================================= */
-.btn,
-button.btn,
-a.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--primary);
-  background: var(--primary);
-  color: #fff;
-  font-size: 14px;
-  font-weight: 700;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background .18s ease, transform .18s ease, box-shadow .18s ease;
-}
-
-.btn:hover,
-button.btn:hover,
-a.btn:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, .10);
-}
-
-.btn:active,
-button.btn:active,
-a.btn:active {
-  transform: translateY(0);
-  box-shadow: none;
-}
-
-.btn--small {
-  min-height: 34px;
-  padding: 6px 12px;
-  font-size: 13px;
 }
 
 /* =========================================================
@@ -249,163 +75,16 @@ a.btn:active {
 .dash-tv-card {
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border-radius: 10px;
   box-shadow: var(--shadow);
 }
 
-.card {
-  padding: 18px;
-}
-
-.card__title,
 .chart-title,
 .table-title {
   margin: 0 0 12px;
   font-size: 18px;
   font-weight: 700;
   color: var(--ink);
-}
-
-.card__subtitle {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--muted);
-}
-
-/* =========================================================
-   TABELAS
-========================================================= */
-.table-wrap {
-  overflow: auto;
-  border-radius: 12px;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-}
-
-.table th,
-.table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid rgba(15, 23, 42, .10);
-  white-space: nowrap;
-}
-
-.table thead th {
-  background: rgba(15, 23, 42, .02);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: .5px;
-  font-weight: 800;
-  color: rgba(15, 23, 42, .55);
-}
-
-.table tbody tr:hover {
-  background: rgba(92, 44, 140, .04);
-}
-
-.table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.table .right {
-  text-align: right;
-}
-
-/* =========================================================
-   ALERTAS
-========================================================= */
-.alert {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid;
-  margin: 14px 0;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.alert--ok {
-  background: rgba(92, 44, 140, .10);
-  border-color: rgba(92, 44, 140, .35);
-  color: var(--ink);
-}
-
-.alert--error {
-  background: rgba(239, 68, 68, .10);
-  border-color: rgba(239, 68, 68, .35);
-  color: var(--ink);
-}
-
-.alert--warning {
-  background: rgba(245, 158, 11, .10);
-  border-color: rgba(245, 158, 11, .35);
-  color: var(--ink);
-}
-
-.alert--info {
-  background: rgba(59, 130, 246, .10);
-  border-color: rgba(59, 130, 246, .35);
-  color: var(--ink);
-}
-
-/* =========================================================
-   FOOTER
-========================================================= */
-.site-footer {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: var(--footer-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #5c2c84;
-  border-top: 1px solid rgba(255, 255, 255, .18);
-  color: #f5f5f7;
-  font-size: 12px;
-  z-index: 9999;
-}
-
-.site-footer__inner {
-  width: 100%;
-  max-width: 1400px;
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-.site-footer__inner a {
-  color: #fff;
-  font-weight: 800;
-  text-decoration: none;
-  position: relative;
-}
-
-.site-footer__inner a::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 100%;
-  height: 2px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #60a5fa, #a78bfa);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform .2s ease;
-}
-
-.site-footer__inner a:hover::after {
-  transform: scaleX(1);
 }
 
 /* =========================================================
@@ -415,7 +94,6 @@ a.btn:active {
   position: relative;
   width: 100%;
   height: 100%;
-  margin: 0;
   background: var(--bg);
   overflow: hidden;
 }
@@ -427,6 +105,7 @@ a.btn:active {
 
 .carousel__track {
   display: flex;
+  width: 100%;
   height: 100%;
   will-change: transform;
   transform: translate3d(0, 0, 0);
@@ -449,7 +128,7 @@ a.btn:active {
 }
 
 /* =========================================================
-   IMAGEM
+   IMAGEM / TEXTO
 ========================================================= */
 .slide--image .slide__inner {
   display: flex;
@@ -466,12 +145,8 @@ a.btn:active {
   display: block;
   object-fit: contain;
   object-position: center;
-  max-height: none !important;
 }
 
-/* =========================================================
-   TEXTO
-========================================================= */
 .slide--text {
   display: flex;
   align-items: center;
@@ -488,7 +163,7 @@ a.btn:active {
 }
 
 /* =========================================================
-   FULLSCREEN BTN / SETAS / DOTS
+   FULLSCREEN / SETAS / DOTS
 ========================================================= */
 .carousel__arrow {
   position: absolute;
@@ -587,48 +262,46 @@ a.btn:active {
 }
 
 /* =========================================================
-   SLIDE DASHBOARD TV
-   CENTRALIZADO
+   DASHBOARD
 ========================================================= */
-.slide__doc--dashboard {
+#mainCarousel .slide.slide--dashboard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 40px;
+  overflow: hidden;
+}
+
+#mainCarousel .slide--dashboard .dash-tv-wrap {
   width: 100%;
-  max-width: 1700px;
+  max-width: 1550px;
+  height: 100%;
   margin: 0 auto;
+  padding: 10px 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
 }
 
-.dash-tv-grid {
+#mainCarousel .slide--dashboard .dash-tv-grid {
   width: 100%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 24px;
-  align-items: stretch;
+  margin-bottom: 18px;
 }
 
-.dash-tv-card {
-  background: var(--card-soft);
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
+#mainCarousel .slide--dashboard .dash-tv-card {
+  min-height: 220px;
   padding: 28px 30px;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* CENTRALIZA CONTEÚDO INTERNO */
-  min-height: 220px;
-}
-
-.dash-tv-highlight {
-  background: linear-gradient(135deg, #5c2c8c, #7a4db8);
-  color: #fff;
-}
-
-.dash-tv-highlight .kpi-label,
-.dash-tv-highlight .kpi-sub,
-.dash-tv-highlight .kpi-detail,
-.dash-tv-highlight .kpi-value {
-  color: #fff !important;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(148, 163, 184, .18);
+  box-shadow:
+    0 12px 30px rgba(15, 23, 42, .08),
+    0 0 0 1px rgba(255,255,255,.55) inset;
 }
 
 .kpi-label {
@@ -666,100 +339,300 @@ a.btn:active {
   color: var(--err);
 }
 
+#mainCarousel .slide--dashboard .exec-chart {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  padding: 18px;
+}
+
+#mainCarousel .slide--dashboard .exec-chart .chart-title {
+  margin-bottom: 16px;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+#mainCarousel .slide--dashboard .dash-tv-updated {
+  width: 100%;
+  text-align: center;
+  margin-top: 16px;
+  font-size: 14px;
+  color: #6b7280;
+  opacity: .9;
+}
+
 /* =========================================================
-   BARRAS DE META
+   BARRAS DE META — efeito líquido
 ========================================================= */
 .meta-progress {
+  --bar-glow: rgba(34, 197, 94, .22);
+  --bar-border: rgba(148, 163, 184, .24);
+
   position: relative;
   width: 100%;
-  height: 16px;
-  margin-top: 10px;
-  background: #e5e7eb;
+  height: 30px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+  background: linear-gradient(180deg, #eef2f7 0%, #dde5ee 100%);
+  border: 1px solid var(--bar-border);
   border-radius: 999px;
   overflow: hidden;
+  box-shadow:
+    inset 0 3px 6px rgba(15, 23, 42, .10),
+    0 4px 14px rgba(15, 23, 42, .06);
+}
+
+.meta-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.40), rgba(255,255,255,0) 45%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 .meta-progress-bar {
+  --fill-1: #22c55e;
+  --fill-2: #16a34a;
+  --fill-3: #15803d;
+
   position: relative;
   height: 100%;
   width: 0%;
+  min-width: 0;
   border-radius: 999px;
-  background: linear-gradient(90deg, #22c55e, #16a34a);
-  transition: width .6s ease;
+  overflow: visible;
+  background: linear-gradient(90deg, var(--fill-1) 0%, var(--fill-2) 55%, var(--fill-3) 100%);
+  transition:
+    width 1.15s cubic-bezier(.22, 1, .36, 1),
+    box-shadow .35s ease,
+    filter .35s ease,
+    background .35s ease;
+  box-shadow:
+    inset 0 -2px 0 rgba(255,255,255,.18),
+    0 0 18px var(--bar-glow);
+  z-index: 2;
+}
+
+.meta-progress-bar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.22) 0%,
+      rgba(255,255,255,.08) 25%,
+      rgba(255,255,255,.26) 50%,
+      rgba(255,255,255,.08) 75%,
+      rgba(255,255,255,.22) 100%
+    );
+  background-size: 180px 100%;
+  animation: liquidFlow 2.8s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.meta-progress-bar::after {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 70%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 12px 120%, rgba(255,255,255,.28) 0 12px, transparent 13px) repeat-x,
+    radial-gradient(circle at 36px 130%, rgba(255,255,255,.16) 0 10px, transparent 11px) repeat-x;
+  background-size: 48px 100%, 56px 100%;
+  background-position: 0 100%, 18px 100%;
+  opacity: .75;
+  animation: liquidWave 2.4s linear infinite;
+  pointer-events: none;
 }
 
 .meta-dia-bar {
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  --fill-1: #60a5fa;
+  --fill-2: #2563eb;
+  --fill-3: #1d4ed8;
+  --bar-glow: rgba(37, 99, 235, .24);
 }
 
 .meta-progress-pct {
   position: absolute;
-  right: 6px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 900;
+  letter-spacing: .25px;
   color: #fff;
   white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .35);
   pointer-events: none;
+  z-index: 5;
+}
+
+.meta-progress.is-low-fill .meta-progress-pct {
+  right: -52px;
+  color: #334155;
+  text-shadow: none;
+}
+
+.meta-progress-bar.is-animating {
+  filter: saturate(1.08);
+}
+
+.meta-progress-bar.is-danger {
+  --fill-1: #fb7185;
+  --fill-2: #e11d48;
+  --fill-3: #be123c;
+  --bar-glow: rgba(225, 29, 72, .22);
+}
+
+.meta-progress-bar.is-warning {
+  --fill-1: #fbbf24;
+  --fill-2: #f59e0b;
+  --fill-3: #d97706;
+  --bar-glow: rgba(245, 158, 11, .22);
+}
+
+.meta-progress-bar.is-good {
+  --fill-1: #22c55e;
+  --fill-2: #16a34a;
+  --fill-3: #15803d;
+  --bar-glow: rgba(34, 197, 94, .22);
+}
+
+.meta-progress-bar.is-great {
+  --fill-1: #34d399;
+  --fill-2: #10b981;
+  --fill-3: #059669;
+  --bar-glow: rgba(16, 185, 129, .24);
+}
+
+@keyframes liquidFlow {
+  from { background-position: 0 0; }
+  to   { background-position: 180px 0; }
+}
+
+@keyframes liquidWave {
+  from { transform: translateX(0); }
+  to   { transform: translateX(48px); }
 }
 
 /* =========================================================
-   GRÁFICOS
+   CHARTS
 ========================================================= */
-.slide--charts {
+#mainCarousel .slide--charts {
   height: 100%;
-  padding: 28px 36px;
+  min-height: 100%;
+  padding: 14px;
   display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.charts-grid {
+#mainCarousel .slide--charts .charts-grid--full {
   width: 100%;
-  max-width: 1700px;
   height: 100%;
+  min-height: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: 14px;
   align-items: stretch;
+  align-content: stretch;
 }
 
-.chart-wide {
-  grid-column: 1 / span 3;
-}
-
-.chart-card {
+#mainCarousel .slide--charts .chart-card--full {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border-radius: 10px;
+  box-sizing: border-box;
   background: var(--card-soft);
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  padding: 22px;
 }
 
-.chart-card>h3 {
-  margin: 0 0 12px;
+#mainCarousel .slide--charts .chart-card--full .chart-title {
+  margin: 0 0 8px;
   font-size: 20px;
-  font-weight: 700;
-  color: #1f2937;
-  line-height: 1.2;
+  line-height: 1.1;
+  font-weight: 800;
+  text-align: center;
   flex: 0 0 auto;
 }
 
-.chart-box--small {
-  height: 260px;
+#mainCarousel .slide--charts .chart-box--full {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#mainCarousel .slide--charts .chart-box--full canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* =========================================================
+   CHART BOX BASE
+========================================================= */
+.chart-box {
+  position: relative;
+  width: 100%;
 }
 
 .chart-box--daily {
-  height: clamp(200px, 38vh, 520px);
+  height: 320px;
 }
 
-
+.chart-box canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
 
 /* =========================================================
-   TOP LIST
+   TOPS
 ========================================================= */
+.slide--tops {
+  padding: 18px 24px;
+  display: flex;
+  align-items: stretch;
+}
+
+.slide--tops .tops-slide {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.slide--tops .tops-row--carousel {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+}
+
+.slide--tops .top-card,
+.slide--tops .data-table-card {
+  min-height: 0;
+  height: 100%;
+  padding: 18px 18px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
 .top-head {
   display: flex;
   align-items: flex-start;
@@ -769,38 +642,35 @@ a.btn:active {
 }
 
 .top-sub {
-  font-size: 12px;
-  opacity: .7;
-  margin-top: -6px;
+  font-size: 14px;
+  opacity: .75;
+  margin-top: 2px;
 }
 
 .top-badge {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 800;
-  padding: 6px 10px;
+  padding: 8px 14px;
   border-radius: 999px;
   background: rgba(59, 130, 246, .10);
   border: 1px solid rgba(59, 130, 246, .20);
 }
 
 .top-list {
-  max-height: 420px;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
   overflow-y: auto;
-  padding-right: 8px;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  padding-right: 6px !important;
-  scroll-behavior: smooth;
+  overflow-x: hidden;
+  padding-right: 6px;
+  scroll-behavior: auto;
 }
 
 .top-item {
   display: grid;
-  grid-template-columns: 34px 1fr auto;
-  gap: 12px;
-  padding: 12px 6px;
+  grid-template-columns: 42px 1fr auto;
+  gap: 14px;
+  padding: 14px 6px;
   border-top: 1px solid rgba(15, 23, 42, .06);
 }
 
@@ -809,14 +679,14 @@ a.btn:active {
 }
 
 .top-rank {
-  width: 26px;
-  height: 26px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 900;
   background: rgba(245, 158, 11, .18);
 }
 
@@ -825,22 +695,23 @@ a.btn:active {
 }
 
 .top-name {
-  font-size: 13px;
-  font-weight: 800;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .top-subline {
-  font-size: 12px;
+  font-size: 13px;
   opacity: .75;
-  margin-top: 3px;
+  margin-top: 4px;
 }
 
 .top-bar {
-  height: 6px;
-  margin-top: 8px;
+  height: 8px;
+  margin-top: 10px;
   border-radius: 999px;
   background: rgba(15, 23, 42, .10);
   overflow: hidden;
@@ -855,7 +726,7 @@ a.btn:active {
 }
 
 .top-val {
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 900;
   color: #1d4ed8;
   white-space: nowrap;
@@ -876,12 +747,12 @@ html:fullscreen footer {
 
 html:fullscreen body,
 html:fullscreen .page,
-html:fullscreen .page>main {
+html:fullscreen .page > main {
   padding: 0 !important;
   margin: 0 !important;
 }
 
-html:fullscreen .page>main {
+html:fullscreen .page > main {
   min-height: 100vh !important;
 }
 
@@ -904,37 +775,109 @@ html:fullscreen .carousel__fullscreen:hover {
 /* =========================================================
    RESPONSIVO
 ========================================================= */
-@media (max-width: 1200px) {
+@media (max-width: 1366px), (max-height: 768px) {
+  #mainCarousel .slide.slide--dashboard {
+    padding: 18px 24px;
+  }
 
-  .dash-tv-grid,
-  .charts-grid {
+  #mainCarousel .slide--dashboard .dash-tv-grid {
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+
+  #mainCarousel .slide--dashboard .dash-tv-card {
+    min-height: 185px;
+    padding: 22px 24px;
+  }
+
+  #mainCarousel .slide--dashboard .kpi-value {
+    font-size: 36px;
+  }
+
+  .meta-progress {
+    height: 24px;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+
+  .meta-progress-pct {
+    font-size: 11px;
+    right: 10px;
+  }
+
+  .meta-progress.is-low-fill .meta-progress-pct {
+    right: -46px;
+  }
+
+  .chart-box--daily {
+    height: 340px;
+  }
+
+  #mainCarousel .slide--charts {
+    padding: 10px;
+  }
+
+  #mainCarousel .slide--charts .charts-grid--full {
+    gap: 10px;
+  }
+
+  #mainCarousel .slide--charts .chart-card--full {
+    padding: 10px;
+  }
+
+  #mainCarousel .slide--charts .chart-card--full .chart-title {
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+
+  .slide--tops {
+    padding: 14px 18px;
+  }
+
+  .top-name {
+    font-size: 16px;
+  }
+
+  .top-val {
+    font-size: 16px;
+  }
+
+  .top-rank {
+    width: 30px;
+    height: 30px;
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 1200px) {
+  #mainCarousel .slide--dashboard .dash-tv-grid,
+  #mainCarousel .slide--charts .charts-grid--full {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .chart-wide {
-    grid-column: 1 / -1;
+  .slide--tops .tops-row--carousel {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: stretch;
+  #mainCarousel .slide.slide--dashboard {
+    padding: 14px;
+    align-items: flex-start;
   }
 
-  .topbar__left,
-  .topbar__right {
-    justify-content: center;
-    flex-wrap: wrap;
+  #mainCarousel .slide--dashboard .dash-tv-wrap {
+    padding-top: 12px;
+    justify-content: flex-start;
   }
 
-  .dash-tv-grid,
-  .charts-grid {
+  #mainCarousel .slide--dashboard .dash-tv-grid,
+  #mainCarousel .slide--charts .charts-grid--full {
     grid-template-columns: 1fr;
     gap: 16px;
   }
 
-  .dash-tv-card {
+  #mainCarousel .slide--dashboard .dash-tv-card {
     min-height: auto;
   }
 
@@ -946,1086 +889,114 @@ html:fullscreen .carousel__fullscreen:hover {
     width: 38px;
     height: 38px;
   }
-}
 
+  .slide--tops .tops-row--carousel {
+    grid-template-columns: 1fr;
+  }
+}
 /* =========================================================
-   FIX — centralizar cards no slide dashboard da TV
-   ========================================================= */
+   BARRAS DE META — versão maior
+========================================================= */
 
-/* o slide inteiro vira um flex container centralizado */
-#mainCarousel .slide.slide--dashboard {
-  height: 100% !important;
-  min-height: 100% !important;
-  display: flex !important;
-  align-items: center !important;
-  /* centraliza vertical */
-  justify-content: center !important;
-  /* centraliza horizontal */
-  padding: 24px 40px !important;
-  overflow: hidden !important;
-}
+.meta-progress {
+  --bar-glow: rgba(34, 197, 94, .25);
+  --bar-border: rgba(148, 163, 184, .28);
 
-/* documento interno ocupa a área e centraliza o grid */
-#mainCarousel .slide--dashboard .slide__doc--dashboard {
-  width: 100% !important;
-  max-width: 1700px !important;
-  height: 100% !important;
-  min-height: 0 !important;
+  position: relative;
+  width: 100%;
 
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-  /* centraliza cards no meio */
-}
+  /* BARRA MAIS ALTA */
+  height: 42px !important;
 
-/* grid dos cards */
-#mainCarousel .slide--dashboard .dash-tv-grid {
-  width: 100% !important;
-  margin: 0 auto !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 24px !important;
-
-  align-content: center !important;
-  /* centraliza o bloco do grid */
-  justify-content: center !important;
-}
-
-/* cards com altura mais estável */
-#mainCarousel .slide--dashboard .dash-tv-card {
-  min-height: 220px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  justify-content: center !important;
-}
-
-/* texto inferior do slide */
-#mainCarousel .slide--dashboard .dash-slide-footer {
   margin-top: 18px !important;
-  text-align: center !important;
-  color: rgba(15, 23, 42, .55) !important;
-  font-size: 12px !important;
-}
-
-/* notebook / tv box menor */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide.slide--dashboard {
-    padding: 18px 24px !important;
-  }
-
-  #mainCarousel .slide--dashboard .dash-tv-grid {
-    gap: 16px !important;
-  }
-
-  #mainCarousel .slide--dashboard .dash-tv-card {
-    min-height: 185px !important;
-    padding: 22px 24px !important;
-  }
-
-  #mainCarousel .slide--dashboard .kpi-value {
-    font-size: 36px !important;
-  }
-}
-
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-}
-
-body.page main {
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity .18s ease, transform .18s ease;
-}
-
-body.page.is-ready main {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-html,
-body {
-  height: 100%;
-  overflow: hidden;
-}
-
-body.page main {
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity .18s ease, transform .18s ease;
-}
-
-body.page.is-ready main {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* CENTRALIZA SÓ O CONTEÚDO DO DASHBOARD */
-#mainCarousel .slide--dashboard .dash-tv-wrap {
-  width: 100%;
-  max-width: 1550px;
-  height: 100%;
-  margin: 0 auto;
-  padding: 24px 40px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#mainCarousel .slide--dashboard .dash-tv-grid {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-}
-
-#mainCarousel .slide--dashboard .dash-tv-card {
-  min-height: 220px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-#mainCarousel .slide--dashboard .dash-tv-updated {
-  width: 100%;
-  text-align: center;
-  margin-top: 16px;
-  font-size: 14px;
-  color: #6b7280;
-  opacity: .9;
-}
-
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide--dashboard .dash-tv-wrap {
-    padding: 18px 24px;
-  }
-
-  #mainCarousel .slide--dashboard .dash-tv-grid {
-    gap: 16px;
-  }
-
-  #mainCarousel .slide--dashboard .dash-tv-card {
-    min-height: 185px;
-    padding: 22px 24px;
-  }
-}
-
-/* =========================================================
-   PATCH FINAL — TV
-   - aumenta cards dos gráficos
-   - reduz arredondamento
-   - diário full largura
-   - tops lado a lado com letras maiores
-========================================================= */
-
-/* ---------- cards mais “retos” ---------- */
-.chart-card,
-.data-table-card,
-.top-card,
-.dash-tv-card {
-  border-radius: 10px !important;
-  /* antes estava muito arredondado */
-}
-
-/* ---------- slide de gráficos maior ---------- */
-.slide--charts {
-  padding: 18px 24px !important;
-  align-items: stretch !important;
-}
-
-.charts-grid {
-  max-width: 100% !important;
-  width: 100% !important;
-  height: 100% !important;
-  gap: 18px !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  grid-auto-rows: minmax(320px, auto) !important;
-  align-items: stretch !important;
-}
-
-/* cards dos 3 gráficos de cima maiores */
-.slide--charts .chart-card {
-  padding: 18px 18px 16px !important;
-  min-height: 320px !important;
-  height: 100% !important;
-  border-radius: 10px !important;
-}
-
-/* títulos dos gráficos maiores */
-.slide--charts .chart-card>h3,
-.slide--charts .chart-title {
-  font-size: 28px !important;
-  line-height: 1.15 !important;
-  margin-bottom: 14px !important;
-  font-weight: 800 !important;
-}
-
-/* aumenta área útil dos gráficos */
-.slide--charts .chart-box--small {
-  height: 360px !important;
-}
-
-.slide--charts .chart-box--daily {
-  height: 440px !important;
-}
-
-/* diário full largura */
-.slide--charts .chart-card.chart-wide {
-  grid-column: 1 / -1 !important;
-  min-height: 520px !important;
-  margin-top: 50px;
-}
-
-/* garante largura total mesmo com classe antiga */
-.slide--charts .exec-chart {
-  grid-column: 1 / -1 !important;
-  width: 100% !important;
-}
-
-/* ---------- TOPS lado a lado e maiores ---------- */
-.slide--tops {
-  padding: 18px 24px !important;
-  display: flex !important;
-  align-items: stretch !important;
-}
-
-.slide--tops .tops-slide {
-  width: 100% !important;
-  height: 100% !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 0 !important;
-}
-
-.slide--tops .tops-slide__head {
-  margin-bottom: 10px !important;
-}
-
-.slide--tops .tops-slide__title {
-  font-size: 30px !important;
-  font-weight: 900 !important;
-  line-height: 1.1 !important;
-}
-
-.slide--tops .tops-slide__sub {
-  font-size: 18px !important;
-  font-weight: 700 !important;
-}
-
-/* força 2 colunas */
-.slide--tops .tops-row--carousel {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-  gap: 18px !important;
-  align-items: stretch !important;
-}
-
-/* cards de tops */
-.slide--tops .top-card,
-.slide--tops .data-table-card {
-  grid-column: auto !important;
-  width: auto !important;
-  min-width: 0 !important;
-  height: 100% !important;
-  padding: 18px 18px 14px !important;
-  border-radius: 10px !important;
-}
-
-/* cabeçalho dos tops maior */
-.slide--tops .table-title {
-  font-size: 28px !important;
-  font-weight: 900 !important;
-  margin-bottom: 4px !important;
-}
-
-.slide--tops .top-sub {
-  font-size: 16px !important;
-  margin-top: 0 !important;
-}
-
-.slide--tops .top-badge {
-  font-size: 16px !important;
-  padding: 8px 14px !important;
-  border-radius: 999px !important;
-}
-
-/* lista ocupa toda altura */
-.slide--tops .top-list {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  overflow: auto !important;
-  padding-right: 6px !important;
-}
-
-/* item maior */
-.slide--tops .top-item {
-  grid-template-columns: 42px 1fr auto !important;
-  gap: 14px !important;
-  padding: 14px 6px !important;
-}
-
-.slide--tops .top-rank {
-  width: 34px !important;
-  height: 34px !important;
-  font-size: 15px !important;
-  font-weight: 900 !important;
-}
-
-.slide--tops .top-name {
-  font-size: 22px !important;
-  line-height: 1.15 !important;
-  font-weight: 900 !important;
-}
-
-.slide--tops .top-subline {
-  font-size: 15px !important;
-  margin-top: 4px !important;
-}
-
-.slide--tops .top-val {
-  font-size: 22px !important;
-  font-weight: 900 !important;
-}
-
-.slide--tops .top-bar {
-  height: 8px !important;
-  margin-top: 10px !important;
-}
-
-/* ---------- ajuste para 1366x768 / tv box ---------- */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  .slide--charts {
-    padding: 14px 18px !important;
-  }
-
-  .charts-grid {
-    gap: 14px !important;
-    grid-auto-rows: minmax(270px, auto) !important;
-  }
-
-  .slide--charts .chart-card {
-    min-height: 270px !important;
-    padding: 14px 14px 12px !important;
-  }
-
-  .slide--charts .chart-card>h3,
-  .slide--charts .chart-title {
-    font-size: 22px !important;
-    margin-bottom: 10px !important;
-  }
-
-  .slide--charts .chart-box--small {
-    height: 290px !important;
-  }
-
-  .slide--charts .chart-box--daily {
-    height: 340px !important;
-  }
-
-  .slide--charts .chart-card.chart-wide {
-    min-height: 400px !important;
-  }
-
-  .slide--tops {
-    padding: 14px 18px !important;
-  }
-
-  .slide--tops .tops-slide__title {
-    font-size: 24px !important;
-  }
-
-  .slide--tops .tops-slide__sub {
-    font-size: 15px !important;
-  }
-
-  .slide--tops .table-title {
-    font-size: 22px !important;
-  }
-
-  .slide--tops .top-sub {
-    font-size: 13px !important;
-  }
-
-  .slide--tops .top-name {
-    font-size: 17px !important;
-  }
-
-  .slide--tops .top-subline {
-    font-size: 12px !important;
-  }
-
-  .slide--tops .top-val {
-    font-size: 17px !important;
-  }
-
-  .slide--tops .top-rank {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 13px !important;
-  }
-}
-
-/* =========================================================
-   FIX GRÁFICOS — Chart.js voltar a renderizar
-========================================================= */
-
-.slide--charts {
-  padding: 18px 24px !important;
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-}
-
-.charts-grid {
-  width: 100% !important;
-  max-width: 1700px !important;
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 18px !important;
-
-  /* IMPORTANTE: remove altura forçada */
-  height: auto !important;
-  min-height: 0 !important;
-  align-items: start !important;
-}
-
-.chart-card {
-  background: var(--card-soft) !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 10px !important;
-  padding: 18px !important;
-
-  display: block !important;
-  /* tira flex do card */
-  min-height: auto !important;
-  height: auto !important;
-}
-
-.chart-card>h3,
-.chart-card .chart-title {
-  margin: 0 0 12px !important;
-  font-size: 24px !important;
-  line-height: 1.15 !important;
-  font-weight: 800 !important;
-}
-
-/* wrapper normal, sem flex */
-.chart-box {
-  position: relative !important;
-  width: 100% !important;
-  min-height: 0 !important;
-  flex: unset !important;
-}
-
-/* alturas fixas reais */
-.chart-box--small {
-  height: 320px !important;
-}
-
-.chart-box--daily {
-  margin-top: 30px;
-  height: 320px !important;
-}
-
-/* MUITO IMPORTANTE:
-   volta canvas para fluxo normal do Chart.js */
-.chart-box canvas {
-  position: relative !important;
-  inset: auto !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-}
-
-/* diário full largura */
-.chart-wide,
-.exec-chart {
-  grid-column: 1 / -1 !important;
-}
-
-/* notebook / TV box */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  .slide--charts {
-    padding: 14px 18px !important;
-  }
-
-  .chart-card>h3,
-  .chart-card .chart-title {
-    font-size: 20px !important;
-  }
-
-  .chart-box--small {
-    height: 280px !important;
-  }
-
-  .chart-box--daily {
-    height: 340px !important;
-  }
-}
-
-/* =========================================================
-   FULL HEIGHT — slide de gráficos ocupa a tela toda
-========================================================= */
-
-/* slide inteiro */
-#mainCarousel .slide--charts {
-  height: 100% !important;
-  min-height: 100% !important;
-  padding: 14px 18px 10px !important;
-  display: flex !important;
-  align-items: stretch !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-}
-
-/* grid ocupa toda a altura útil */
-#mainCarousel .slide--charts .charts-grid {
-  width: 100% !important;
-  max-width: 100% !important;
-  height: 100% !important;
-  min-height: 100% !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  grid-template-rows: 1fr 1.15fr !important;
-  /* linha de cima + diário */
-  gap: 14px !important;
-
-  align-items: stretch !important;
-}
-
-/* cards ocupam toda a célula */
-#mainCarousel .slide--charts .chart-card {
-  height: 100% !important;
-  min-height: 0 !important;
-  padding: 14px !important;
-  border-radius: 10px !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-/* título mais compacto pra sobrar área pro gráfico */
-#mainCarousel .slide--charts .chart-card>h3,
-#mainCarousel .slide--charts .chart-title {
-  margin: 0 0 8px !important;
-  font-size: 20px !important;
-  line-height: 1.1 !important;
-  flex: 0 0 auto !important;
-}
-
-/* área do gráfico ocupa o resto do card */
-#mainCarousel .slide--charts .chart-box {
-  position: relative !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  width: 100% !important;
-  height: auto !important;
-}
-
-/* os 3 gráficos de cima ficam altos */
-#mainCarousel .slide--charts .chart-box--small {
-  height: 100% !important;
-  min-height: 260px !important;
-}
-
-/* diário ocupa linha inteira embaixo */
-#mainCarousel .slide--charts .exec-chart,
-#mainCarousel .slide--charts .chart-wide,
-#mainCarousel .slide--charts .chart-card.grid-col-span-3 {
-  grid-column: 1 / -1 !important;
-  height: 100% !important;
-  min-height: 0 !important;
-  margin-top: 0 !important;
-}
-
-/* diário usa toda a altura da 2ª linha */
-#mainCarousel .slide--charts .chart-box--daily {
-  height: 100% !important;
-  min-height: 280px !important;
-  margin-top: 0 !important;
-}
-
-/* canvas ocupa tudo */
-#mainCarousel .slide--charts .chart-box canvas {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-}
-
-/* TV box / notebook */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide--charts {
-    padding: 10px 14px 8px !important;
-  }
-
-  #mainCarousel .slide--charts .charts-grid {
-    gap: 10px !important;
-    grid-template-rows: 1fr 1.08fr !important;
-  }
-
-  #mainCarousel .slide--charts .chart-card {
-    padding: 12px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-card>h3,
-  #mainCarousel .slide--charts .chart-title {
-    font-size: 18px !important;
-    margin-bottom: 6px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-box--small {
-    min-height: 220px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-box--daily {
-    min-height: 240px !important;
-  }
-}
-
-/* =========================
-   CHARTS SLIDE FULL
-========================= */
-.slide--charts {
-  padding: 20px;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.charts-grid--full {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  width: 100%;
-  height: calc(100vh - 40px);
-  align-items: stretch;
-}
-
-.chart-card--full {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  height: 100%;
-  border-radius: 24px;
-  padding: 18px;
-  box-sizing: border-box;
-}
-
-.chart-card--full .chart-title {
-  font-size: 1.35rem;
-  margin: 0 0 12px;
-  text-align: center;
-}
-
-.chart-box--full {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  height: 100%;
-}
-
-.chart-box--full canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
-.chart-box--full,
-.chart-box--small,
-.chart-box {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-}
-
-.chart-box--full canvas,
-.chart-box--small canvas,
-.chart-box canvas {
-  display: block;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* =========================================================
-   CHARTS SLIDE — FULL HEIGHT REAL
-========================================================= */
-
-#mainCarousel,
-#mainCarousel .carousel__viewport,
-#mainCarousel .carousel__track,
-#mainCarousel .slide {
-  height: 100% !important;
-  min-height: 100% !important;
-}
-
-#mainCarousel .slide--charts {
-  height: 100% !important;
-  min-height: 100% !important;
-  padding: 16px !important;
-  display: flex !important;
-  align-items: stretch !important;
-  justify-content: stretch !important;
-  overflow: hidden !important;
-  box-sizing: border-box !important;
-}
-
-#mainCarousel .slide--charts .charts-grid--full {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 16px !important;
-  align-items: stretch !important;
-}
-
-#mainCarousel .slide--charts .chart-card--full {
-  height: 100% !important;
-  min-height: 0 !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 16px !important;
-  border-radius: 12px !important;
-  box-sizing: border-box !important;
-}
-
-#mainCarousel .slide--charts .chart-card--full .chart-title {
-  flex: 0 0 auto !important;
-  margin: 0 0 10px !important;
-  font-size: 22px !important;
-  line-height: 1.15 !important;
-  font-weight: 800 !important;
-  text-align: center !important;
-}
-
-#mainCarousel .slide--charts .chart-box--full {
-  position: relative !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-#mainCarousel .slide--charts .chart-box--full canvas {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-}
-
-/* ajuste para telas menores / tv box */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide--charts {
-    padding: 12px !important;
-  }
-
-  #mainCarousel .slide--charts .charts-grid--full {
-    gap: 12px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-card--full {
-    padding: 12px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-card--full .chart-title {
-    font-size: 18px !important;
-    margin-bottom: 8px !important;
-  }
-}
-
-/* =========================================================
-   CHARTS SLIDE — FULL HEIGHT DE VERDADE
-========================================================= */
-
-#mainCarousel .slide--charts {
-  height: 100% !important;
-  min-height: 100% !important;
-  padding: 14px !important;
-  display: flex !important;
-  overflow: hidden !important;
-}
-
-#mainCarousel .slide--charts .charts-grid,
-#mainCarousel .slide--charts .charts-grid--full {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 0 !important;
-
-  display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  grid-template-rows: minmax(0, 1fr) !important;
-  /* ESSENCIAL */
-  gap: 14px !important;
-
-  align-items: stretch !important;
-  align-content: stretch !important;
-  /* ESSENCIAL */
-}
-
-#mainCarousel .slide--charts .chart-card,
-#mainCarousel .slide--charts .chart-card--full {
-  height: 100% !important;
-  min-height: 0 !important;
-
-  display: flex !important;
-  flex-direction: column !important;
-  padding: 14px !important;
-  border-radius: 10px !important;
-  box-sizing: border-box !important;
-}
-
-#mainCarousel .slide--charts .chart-title {
-  margin: 0 0 8px !important;
-  font-size: 20px !important;
-  line-height: 1.1 !important;
-  font-weight: 800 !important;
-  text-align: center !important;
-  flex: 0 0 auto !important;
-}
-
-#mainCarousel .slide--charts .chart-box,
-#mainCarousel .slide--charts .chart-box--small,
-#mainCarousel .slide--charts .chart-box--full {
-  position: relative !important;
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-#mainCarousel .slide--charts .chart-box canvas,
-#mainCarousel .slide--charts .chart-box--small canvas,
-#mainCarousel .slide--charts .chart-box--full canvas {
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  display: block !important;
-}
-
-/* TV box / notebook */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide--charts {
-    padding: 10px !important;
-  }
-
-  #mainCarousel .slide--charts .charts-grid,
-  #mainCarousel .slide--charts .charts-grid--full {
-    gap: 10px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-card,
-  #mainCarousel .slide--charts .chart-card--full {
-    padding: 10px !important;
-  }
-
-  #mainCarousel .slide--charts .chart-title {
-    font-size: 17px !important;
-    margin-bottom: 6px !important;
-  }
-}
-
-/* TOPS — scroll real */
-.slide--tops .tops-slide {
-  height: 100% !important;
-  min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.slide--tops .tops-row--carousel {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  display: grid !important;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-  gap: 18px !important;
-}
-
-.slide--tops .top-card,
-.slide--tops .data-table-card {
-  height: 100% !important;
-  min-height: 0 !important;
-  display: flex !important;
-  flex-direction: column !important;
-}
-
-.slide--tops .top-list {
-  flex: 1 1 auto !important;
-  min-height: 0 !important;
-  height: 100% !important;
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  max-height: none !important;
-  padding-right: 6px !important;
-  scroll-behavior: auto !important;
-}
-
-.meta-progress {
-  position: relative;
-  width: 100%;
-  height: 16px;
-  margin-top: 10px;
-  background: #e5e7eb;
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.meta-progress-bar {
-  position: relative;
-  height: 100%;
-  width: 0%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, #22c55e, #16a34a);
-  transition: width .6s ease;
-}
-
-.meta-dia-bar {
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-}
-
-.meta-progress-pct {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  font-weight: 800;
-  color: #fff;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .25);
-  pointer-events: none;
-}
-
-/* =========================================================
-   AJUSTE FINAL — gráfico diário + barras de meta
-========================================================= */
-
-/* espaço entre grid de cards e gráfico diário */
-#mainCarousel .slide--dashboard .dash-tv-grid {
   margin-bottom: 18px !important;
-}
 
-/* card do gráfico diário com respiro visual */
-#mainCarousel .slide--dashboard .exec-chart {
-  margin-top: 8px !important;
-  padding-top: 18px !important;
-}
+  background:
+    linear-gradient(180deg, #eef2f7 0%, #dde5ee 100%);
 
-/* barra base mais robusta */
-.meta-progress {
-  position: relative;
-  width: 100%;
-  height: 24px !important;
-  margin-top: 14px !important;
-  margin-bottom: 12px !important;
-  background: linear-gradient(180deg, #edf1f7 0%, #dfe6ef 100%) !important;
-  border: 1px solid rgba(148, 163, 184, .28) !important;
+  border: 1px solid var(--bar-border);
   border-radius: 999px !important;
+
   overflow: hidden;
+
   box-shadow:
-    inset 0 2px 4px rgba(15, 23, 42, .10),
-    0 2px 8px rgba(15, 23, 42, .05);
+    inset 0 4px 8px rgba(15, 23, 42, .10),
+    0 6px 18px rgba(15, 23, 42, .08);
 }
 
-/* preenchimento da barra */
+/* brilho da barra */
+.meta-progress::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,.45),
+      rgba(255,255,255,0) 45%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* barra preenchida */
 .meta-progress-bar {
   position: relative;
   height: 100%;
   width: 0%;
-  min-width: 0;
+
   border-radius: 999px !important;
-  background: linear-gradient(90deg, #22c55e 0%, #16a34a 55%, #15803d 100%) !important;
-  transition: width .7s cubic-bezier(.22, 1, .36, 1);
+
+  background:
+    linear-gradient(
+      90deg,
+      #22c55e 0%,
+      #16a34a 55%,
+      #15803d 100%
+    );
+
+  transition:
+    width 1.2s cubic-bezier(.22,1,.36,1),
+    box-shadow .35s ease;
+
   box-shadow:
-    inset 0 -1px 0 rgba(255, 255, 255, .18),
-    0 0 14px rgba(34, 197, 94, .25);
-}
+    inset 0 -2px 0 rgba(255,255,255,.2),
+    0 0 22px var(--bar-glow);
 
-/* meta dinâmica do dia */
-.meta-dia-bar {
-  background: linear-gradient(90deg, #60a5fa 0%, #2563eb 55%, #1d4ed8 100%) !important;
-  box-shadow:
-    inset 0 -1px 0 rgba(255, 255, 255, .18),
-    0 0 14px rgba(37, 99, 235, .22);
-}
-
-/* percentual dentro da barra */
-.meta-progress-pct {
-  position: absolute;
-  right: 10px !important;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px !important;
-  font-weight: 900 !important;
-  letter-spacing: .2px;
-  color: #fff;
-  white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, .30);
-  pointer-events: none;
-}
-
-/* quando a barra estiver muito pequena, o texto continua legível */
-#meta-bar,
-#meta-dia-bar {
-  overflow: visible;
-}
-
-#meta-bar .meta-progress-pct,
-#meta-dia-bar .meta-progress-pct {
   z-index: 2;
 }
 
-/* destaque visual nos cards que possuem barra */
-#mainCarousel .slide--dashboard .dash-tv-card:has(.meta-progress) {
-  box-shadow:
-    0 10px 28px rgba(15, 23, 42, .08),
-    0 0 0 1px rgba(92, 44, 140, .04);
+/* TEXTO DO PERCENTUAL */
+.meta-progress-pct {
+  position: absolute;
+
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  /* FONTE MAIOR */
+  font-size: 18px !important;
+  font-weight: 900 !important;
+
+  letter-spacing: .4px;
+
+  color: #fff;
+
+  white-space: nowrap;
+
+  text-shadow:
+    0 2px 4px rgba(0,0,0,.35);
+
+  pointer-events: none;
+
+  z-index: 5;
 }
 
-/* gráfico diário um pouco mais separado do título */
-#mainCarousel .slide--dashboard .exec-chart .chart-title {
-  margin-bottom: 16px !important;
-}
+/* quando barra for pequena */
+.meta-progress.is-low-fill .meta-progress-pct {
+  right: -70px !important;
 
-/* ajuste para telas menores */
-@media (max-width: 1366px),
-(max-height: 768px) {
-  #mainCarousel .slide--dashboard .dash-tv-grid {
-    margin-bottom: 14px !important;
-  }
+  color: #334155 !important;
+  text-shadow: none !important;
 
-  .meta-progress {
-    height: 20px !important;
-    margin-top: 12px !important;
-    margin-bottom: 10px !important;
-  }
-
-  .meta-progress-pct {
-    font-size: 11px !important;
-    right: 8px !important;
-  }
-
-  #mainCarousel .slide--dashboard .exec-chart {
-    margin-top: 6px !important;
-  }
+  font-size: 18px !important;
 }

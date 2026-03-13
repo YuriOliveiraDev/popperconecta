@@ -315,7 +315,6 @@ try {
   <script src="/assets/js/dropdowns.js"></script>
   <script src="/assets/js/index-carousel.js"></script>
   <script src="/assets/js/index.js"></script>
-  <script src="/assets/js/tv.js"></script>
 </body>
 
 </html>

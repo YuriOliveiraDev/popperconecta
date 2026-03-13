@@ -147,7 +147,6 @@ try {
                     Restante no mês: <span id="tv-restante">--</span>
                     <br>
                     Meta (média mensal) do dia: <span id="tv-meta-teo">--</span>
-                    <br>
                   </div>
                 </div>
 
@@ -215,7 +214,7 @@ try {
                   <div class="top-head">
                     <div>
                       <h3 class="table-title">Top Clientes</h3>
-                      <div class="top-sub">(scroll automático)</div>
+                      <div class="top-sub">Ranking do mês</div>
                     </div>
                     <div class="top-badge" id="badgeTopClientes">Top 50</div>
                   </div>

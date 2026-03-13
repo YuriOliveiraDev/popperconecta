@@ -4,7 +4,6 @@
     const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
     const pct0 = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 });
 
-    const TOP_N = 50;
     const CURRENT_YM = (() => {
         const now = new Date();
         return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
@@ -36,12 +35,6 @@
         if (el) el.textContent = text;
     }
 
-    function hojePrincipal(v) {
-        const fatHoje = num(v.hoje_faturado);
-        const imHoje = num(v.hoje_im ?? v.hoje_agendado);
-        return num(v.hoje_total) || (fatHoje + imHoje);
-    }
-
     function refMesAnoFromUpdatedAt(updatedAt) {
         try {
             if (typeof updatedAt === 'string' && updatedAt.includes('/')) {
@@ -51,7 +44,8 @@
                 const dd = d[0], mm = d[1], yyyy = d[2];
                 if (dd && mm && yyyy) return { month: mm - 1, year: yyyy };
             }
-        } catch (_) { }
+        } catch (_) {}
+
         const d = new Date();
         return { month: d.getMonth(), year: d.getFullYear() };
     }
@@ -114,16 +108,14 @@
             .map(([name, val]) => [String(name), asNumber(val)])
             .filter(([name]) => name.trim() !== '')
             .sort((a, b) => b[1] - a[1])
-            .slice(0, 50); // ✅ força top 50 no front
+            .slice(0, 50);
 
         const total = entries.reduce((acc, [, v]) => acc + v, 0);
         const max = entries.length ? entries[0][1] : 0;
 
         const badge = document.getElementById(badgeId);
         if (badge) {
-            badge.textContent = entries.length
-                ? `Top ${entries.length}`
-                : '—';
+            badge.textContent = entries.length ? `Top ${entries.length}` : '—';
         }
 
         wrap.innerHTML = '';
@@ -143,18 +135,19 @@
             row.className = 'top-item';
 
             row.innerHTML = `
-      <div class="top-rank">${rank}</div>
-      <div class="top-main">
-        <div class="top-name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
-        <div class="top-subline">${pct.toFixed(1)}%</div>
-        <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
-      </div>
-      <div class="top-val">${moneyBR(val)}</div>
-    `;
+                <div class="top-rank">${rank}</div>
+                <div class="top-main">
+                    <div class="top-name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+                    <div class="top-subline">${pct.toFixed(1)}%</div>
+                    <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
+                </div>
+                <div class="top-val">${moneyBR(val)}</div>
+            `;
 
             wrap.appendChild(row);
         }
     }
+
     function stopTopAutoScroll() {
         if (_topScrollRAFProdutos) {
             cancelAnimationFrame(_topScrollRAFProdutos);
@@ -178,6 +171,7 @@
 
         function step() {
             const realMax = Math.max(0, el.scrollHeight - el.clientHeight);
+
             if (realMax <= 0) {
                 const rafId = requestAnimationFrame(step);
                 if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
@@ -200,20 +194,11 @@
             el.scrollTop = pos;
 
             const rafId = requestAnimationFrame(step);
-            if (containerId === 'listTopProdutos') {
-                _topScrollRAFProdutos = rafId;
-            } else if (containerId === 'listTopClientes') {
-                _topScrollRAFClientes = rafId;
-            }
+            if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
+            if (containerId === 'listTopClientes') _topScrollRAFClientes = rafId;
         }
 
         return requestAnimationFrame(step);
-    }
-
-    function startTopAutoScroll() {
-        stopTopAutoScroll();
-        _topScrollRAFProdutos = autoScrollTopList('listTopProdutos', 0.45);
-        _topScrollRAFClientes = autoScrollTopList('listTopClientes', 0.50);
     }
 
     function startTopAutoScroll() {
@@ -508,6 +493,39 @@
         }
     }
 
+    function applyBarVisual(barEl, pctValue) {
+        if (!barEl) return;
+
+        const pct = Math.max(0, Math.min(Number(pctValue) || 0, 100));
+        const wrap = barEl.parentElement;
+
+        barEl.classList.remove('is-danger', 'is-warning', 'is-good', 'is-great', 'is-animating');
+
+        if (pct < 50) {
+            barEl.classList.add('is-danger');
+        } else if (pct < 80) {
+            barEl.classList.add('is-warning');
+        } else if (pct < 100) {
+            barEl.classList.add('is-good');
+        } else {
+            barEl.classList.add('is-great');
+        }
+
+        if (wrap) {
+            wrap.classList.toggle('is-low-fill', pct < 22);
+        }
+
+        barEl.classList.add('is-animating');
+
+        requestAnimationFrame(() => {
+            barEl.style.width = pct + '%';
+        });
+
+        setTimeout(() => {
+            barEl.classList.remove('is-animating');
+        }, 1400);
+    }
+
     function renderFromValues(payload) {
         const v = payload.values || {};
         const updatedAt = payload.updated_at || '—';
@@ -561,19 +579,11 @@
         setText('tv-hoje', brl.format(totalHoje));
         setText('tv-hoje-fat', brl.format(fatHoje));
         setText('tv-hoje-im', brl.format(imHoje));
-        setText('tv-hoje-ag', brl.format(agHoje));
 
         setText('tv-meta-dia', brl.format(metaDiaDinamica));
         setText('tv-dias-rest', String(diasRest));
         setText('tv-restante', brl.format(faltaMes));
         setText('tv-meta-teo', brl.format(metaDiaTeorica));
-
-        const gapHoje = totalHoje - metaDiaTeorica;
-        const gapEl = document.getElementById('tv-gap');
-        if (gapEl) {
-            gapEl.textContent = gapHoje >= 0 ? 'Acima da meta do dia' : 'Abaixo da meta do dia';
-            gapEl.className = gapHoje >= 0 ? 'kpi-green' : 'kpi-red';
-        }
 
         setText('tv-updated', updatedAt);
         setText('tv-updated-footer', updatedAt);
@@ -582,16 +592,19 @@
         const metaPct = document.getElementById('meta-pct');
         if (metaBar) {
             const pct = Math.max(0, Math.min(atingMesPct * 100, 100));
-            metaBar.style.width = pct + '%';
-            if (metaPct) metaPct.textContent = Math.round(atingMesPct * 100) + '%';
+            if (metaPct) metaPct.textContent = Math.round(pct) + '%';
+            applyBarVisual(metaBar, pct);
         }
 
         const metaDiaBar = document.getElementById('meta-dia-bar');
         const metaDiaPct = document.getElementById('meta-dia-pct');
         if (metaDiaBar) {
-            const pct = metaDiaDinamica > 0 ? Math.max(0, Math.min((totalHoje / metaDiaDinamica) * 100, 100)) : 0;
-            metaDiaBar.style.width = pct + '%';
+            const pct = metaDiaDinamica > 0
+                ? Math.max(0, Math.min((totalHoje / metaDiaDinamica) * 100, 100))
+                : 0;
+
             if (metaDiaPct) metaDiaPct.textContent = Math.round(pct) + '%';
+            applyBarVisual(metaDiaBar, pct);
         }
 
         ensureCharts(updatedAt);
@@ -803,10 +816,10 @@
         }
     }
 
-    refresh(false).catch(() => { });
+    refresh(false).catch(() => {});
 
     setInterval(() => {
-        refresh(true).catch(() => { });
+        refresh(true).catch(() => {});
     }, 10 * 60 * 1000);
 
     window.addEventListener('load', () => {
