@@ -2,13 +2,13 @@
  * /assets/js/dashboard-executivo.js
  * - Chips Jan–Dez/2026 via data-ym="2026-02"
  * - Default: window.EXEC_DEFAULT_YM
- * - Carrega /api/dashboard-executivo-save.php?ym=YYYY-MM
+ * - Carrega /api/dashboard/dashboard-executivo-save.php?ym=YYYY-MM
  * - Renderiza 3 cards: Hoje / Mês / Ano (Total + Faturado + Agendado)
  * - Renderiza gráfico diário + Tops
  * - ✅ Loader global PopperLoading (anti-piscar)
  */
 
-const CACHE_URL = '/api/dashboard-executivo-save.php';
+const CACHE_URL = '/api/dashboard/dashboard-executivo-save.php';
 let chart;
 
 const TOP_N = 10;
@@ -228,6 +228,52 @@ function renderChart(diario_mes) {
 
   if (chart) chart.destroy();
 
+  const valueLabelPlugin = {
+    id: 'valueLabelPlugin',
+    afterDatasetsDraw(chartInstance) {
+      const { ctx } = chartInstance;
+      const dataset = chartInstance.data.datasets[0];
+      const meta = chartInstance.getDatasetMeta(0);
+
+      ctx.save();
+      ctx.font = '600 11px Segoe UI, Arial, sans-serif';
+      ctx.fillStyle = '#0f172a';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+
+      meta.data.forEach((point, index) => {
+        const value = dataset.data[index];
+        if (!Number.isFinite(value)) return;
+
+        const label = moneyBR(value);
+
+        // posição acima do ponto
+        const x = point.x;
+        const y = point.y - 10;
+
+        // fundo branco atrás do texto para melhorar leitura
+        const metrics = ctx.measureText(label);
+        const textWidth = metrics.width;
+        const paddingX = 6;
+        const paddingY = 4;
+        const boxX = x - (textWidth / 2) - paddingX;
+        const boxY = y - 14;
+        const boxW = textWidth + (paddingX * 2);
+        const boxH = 18;
+
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxW, boxH, 6);
+        ctx.fillStyle = 'rgba(255,255,255,0.92)';
+        ctx.fill();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(label, x, y);
+      });
+
+      ctx.restore();
+    }
+  };
+
   chart = new Chart(canvas, {
     type: 'line',
     data: {
@@ -239,15 +285,39 @@ function renderChart(diario_mes) {
         pointRadius: 5,
         pointHoverRadius: 8,
         pointHitRadius: 12,
-        pointBorderWidth: 2
+        pointBorderWidth: 2,
+        borderWidth: 3,
+        fill: false
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { ticks: { maxRotation: 0 } } }
-    }
+      layout: {
+        padding: {
+          top: 28 // espaço para os valores acima dos pontos
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => ` ${moneyBR(ctx.raw)}`
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { maxRotation: 0 }
+        },
+        y: {
+          ticks: {
+            callback: (value) => moneyBR(value)
+          }
+        }
+      }
+    },
+    plugins: [valueLabelPlugin]
   });
 }
 

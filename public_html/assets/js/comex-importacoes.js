@@ -2,7 +2,7 @@
 (() => {
   'use strict';
 
-  const API_URL = window.COMEX_API_URL || '/api/comex-importacoes.php';
+  const API_URL = window.COMEX_API_URL || '/api/dashboard/comex-importacoes.php';
 
   function safeOn(el, ev, fn, opts) {
     if (!el) return;

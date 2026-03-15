@@ -1,37 +1,48 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/app/auth.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 
 start_session();
 
 $info = [
   'method' => $_SERVER['REQUEST_METHOD'] ?? '',
-  'https'  => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'on' : 'off',
-  'sid'    => session_id(),
+  'https' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'on' : 'off',
+  'sid' => session_id(),
   'has_user_session' => isset($_SESSION['user']) ? 'yes' : 'no',
 ];
 
 $error = '';
+$emailValue = '';
+$rememberValue = false;
+
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
+
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
-  $email = trim($_POST['email'] ?? '');
-  $pass  = (string)($_POST['pass'] ?? '');
+  $email = trim((string) ($_POST['email'] ?? ''));
+  $pass = (string) ($_POST['pass'] ?? '');
+  $remember = !empty($_POST['remember']);
+
+  $emailValue = $email;
+  $rememberValue = $remember;
 
   $info['post_email'] = $email !== '' ? $email : '(vazio)';
-  $info['post_pass_len'] = (string)strlen($pass);
+  $info['post_pass_len'] = (string) strlen($pass);
+  $info['post_remember'] = $remember ? '1' : '0';
 
   try {
-    $ok = login($email, $pass);
+    $ok = login($email, $pass, $remember);
     $info['login_return'] = $ok ? 'true' : 'false';
     $info['sid_after_login'] = session_id();
     $info['has_user_session_after'] = isset($_SESSION['user']) ? 'yes' : 'no';
+    $info['remember_cookie_after'] = isset($_COOKIE['remember_me']) ? 'yes' : 'no';
 
     if ($ok) {
       header('Location: /index.php');
       exit;
     }
+
     $error = 'E-mail ou senha inválidos.';
   } catch (Throwable $e) {
     $error = 'Erro no login(): ' . $e->getMessage();
@@ -40,13 +51,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
   <title>Login — <?= htmlspecialchars(APP_NAME) ?></title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
 
   <link rel="icon" type="image/png" href="/assets/img/favicon.ico" />
 
@@ -63,10 +76,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
 
   <!-- loader -->
-  <link rel="stylesheet" href="/assets/css/loader.css?v=<?= @filemtime(__DIR__ . '/assets/css/loader.css') ?: time() ?>" />
+  <link rel="stylesheet"
+    href="/assets/css/loader.css?v=<?= @filemtime(__DIR__ . '/assets/css/loader.css') ?: time() ?>" />
 
   <!-- layout split -->
-  <link rel="stylesheet" href="/assets/css/auth-split.css?v=<?= @filemtime(__DIR__ . '/assets/css/auth-split.css') ?: time() ?>" />
+  <link rel="stylesheet"
+    href="/assets/css/auth-split.css?v=<?= @filemtime(__DIR__ . '/assets/css/auth-split.css') ?: time() ?>" />
 </head>
 
 <body class="page auth-split">
@@ -117,8 +132,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
               <span class="auth-field__label">E-mail</span>
               <div class="auth-field__control">
                 <i class="fa fa-envelope auth-field__icon" aria-hidden="true"></i>
-                <input class="auth-input" type="email" name="email"
+                <input class="auth-input" type="email" name="email" value="<?= htmlspecialchars($emailValue) ?>"
                   placeholder="seuemail@popper.com.br" required autocomplete="username">
+                  
               </div>
             </label>
 
@@ -126,14 +142,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
               <span class="auth-field__label">Senha</span>
               <div class="auth-field__control">
                 <i class="fa fa-lock auth-field__icon" aria-hidden="true"></i>
-                <input class="auth-input" type="password" name="pass"
-                  placeholder="••••••••" required autocomplete="current-password">
+                <input class="auth-input" type="password" name="pass" placeholder="••••••••" required
+                  autocomplete="current-password">
               </div>
             </label>
 
             <div class="auth-row">
               <label class="auth-check">
-                <input type="checkbox" name="remember" value="1">
+                <input type="checkbox" name="remember" value="1" <?= $rememberValue ? 'checked' : '' ?>>
                 <span>Lembrar de mim</span>
               </label>
 
@@ -176,34 +192,35 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
   <!-- ✅ Mostra loader e só depois envia o POST -->
   <script>
-  (function(){
-    const form = document.querySelector('.auth-form');
-    if (!form) return;
+    (function () {
+      const form = document.querySelector('.auth-form');
+      if (!form) return;
 
-    const btn = form.querySelector('.auth-btn');
-    let submitted = false;
+      const btn = form.querySelector('.auth-btn');
+      let submitted = false;
 
-    form.addEventListener('submit', function(e){
-      if (submitted) return;
-      e.preventDefault();
-      submitted = true;
+      form.addEventListener('submit', function (e) {
+        if (submitted) return;
+        e.preventDefault();
+        submitted = true;
 
-      document.body.classList.add('is-leaving');
+        document.body.classList.add('is-leaving');
 
-      if (btn){
-        btn.classList.add('is-loading');
-        btn.disabled = true;
-      }
+        if (btn) {
+          btn.classList.add('is-loading');
+          btn.disabled = true;
+        }
 
-      // Mostra loader (agora existe, porque loader.js já carregou)
-      if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
-        window.PopperLoading.show('Entrando…', 'Validando acesso');
-      }
+        // Mostra loader (agora existe, porque loader.js já carregou)
+        if (window.PopperLoading && typeof window.PopperLoading.show === 'function') {
+          window.PopperLoading.show('Entrando…', 'Validando acesso');
+        }
 
-      // espera 1s e envia de verdade
-      setTimeout(() => form.submit(), 1000);
-    });
-  })();
+        // espera 1s e envia de verdade
+        setTimeout(() => form.submit(), 1000);
+      });
+    })();
   </script>
 </body>
+
 </html>

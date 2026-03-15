@@ -1134,3 +1134,29 @@ header .topbar *{
   .modal__backdrop, .modal__panel{ transition: none !important; }
   .modal__panel{ transform: none !important; }
 }
+
+/* ===== FIX botão Editar na tabela ===== */
+.admin-users .col-actions .link.link--pill{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 800;
+  font-size: 13px;
+
+  color: #5c2c84 !important;
+  background: rgba(92,44,140,.10) !important;
+  border: 1px solid rgba(92,44,140,.25) !important;
+}
+
+.admin-users .col-actions .link.link--pill:hover{
+  color: #4a216d !important;
+  background: rgba(92,44,140,.16) !important;
+  box-shadow: 0 8px 18px rgba(15,23,42,.08);
+}
+
+.admin-users .col-actions .link.link--pill:active{
+  transform: translateY(1px);
+}

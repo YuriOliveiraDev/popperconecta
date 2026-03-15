@@ -1,10 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../app/auth.php';
-require_once __DIR__ . '/../app/db.php';
-require_once __DIR__ . '/../app/config-totvs.php';
-require_once __DIR__ . '/../app/permissions.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_once APP_ROOT . '/app/config/config-totvs.php';
 
 require_admin_perm('admin.metrics');
 
@@ -281,16 +279,14 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Métricas de <?= h($dashboardName) ?> — <?= h((string)APP_NAME) ?></title>
 
-  <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/../assets/css/base.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/../assets/css/users.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/metrics.css?v=<?= filemtime(__DIR__ . '/../assets/css/metrics.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(__DIR__ . '/../assets/css/loader.css') ?>" />
-</head>
+<link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(APP_ROOT . '/assets/css/base.css') ?>" />
+<link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(APP_ROOT . '/assets/css/users.css') ?>" />
+<link rel="stylesheet" href="/assets/css/metrics.css?v=<?= filemtime(APP_ROOT . '/assets/css/metrics.css') ?>" />
+<link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(APP_ROOT . '/assets/css/header.css') ?>" />
+<link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(APP_ROOT . '/assets/css/loader.css') ?>" /></head>
 
 <body class="page metrics">
-  <?php require_once __DIR__ . '/../app/header.php'; ?>
+  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container metrics metrics--fullwidth metrics--two-col">
     <h2 class="page-title">Configuração de Métricas de <?= h($dashboardName) ?></h2>
@@ -462,15 +458,14 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
     </div>
   </main>
 
-  <?php require_once __DIR__ . '/../app/footer.php'; ?>
+  <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
   <script>
     window.METRICS_DASH = <?= json_encode($dashboard_slug, JSON_UNESCAPED_UNICODE) ?>;
   </script>
 
   <!-- Loader ANTES -->
-  <script src="/assets/js/loader.js?v=<?= filemtime(__DIR__ . '/../assets/js/loader.js') ?>"></script>
-
+<script src="/assets/js/loader.js?v=<?= filemtime(APP_ROOT . '/assets/js/loader.js') ?>" defer></script>
   <?php if ($dashboard_slug === 'executivo'): ?>
     <script>
       (function () {
@@ -507,7 +502,7 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
           const mySeq = ++PREVIEW_SEQ;
 
           try {
-            const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${force ? '&force=1' : ''}`;
+            const url = `/api/dashboard/dashboard-data.php?dash=${encodeURIComponent(dash)}${force ? '&force=1' : ''}`;
             const timeoutMs = 15000;
             const t = setTimeout(() => { try { PREVIEW_CTRL.abort(); } catch(_) {} }, timeoutMs);
 
@@ -596,8 +591,7 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
     </script>
   <?php endif; ?>
 
-  <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/../assets/js/header.js') ?>"></script>
-  <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/../assets/js/dropdowns.js') ?>"></script>
-  <script src="/assets/js/metrics.js?v=<?= filemtime(__DIR__ . '/../assets/js/metrics.js') ?>"></script>
-</body>
+<script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>" defer></script>
+<script src="/assets/js/dropdowns.js?v=<?= filemtime(APP_ROOT . '/assets/js/dropdowns.js') ?>" defer></script>
+<script src="/assets/js/metrics.js?v=<?= filemtime(APP_ROOT . '/assets/js/metrics.js') ?>" defer></script></body>
 </html>

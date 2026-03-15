@@ -80,7 +80,7 @@ body {
 
 .grid-3 {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 16px;
     margin-bottom: 16px;
 }
@@ -357,33 +357,49 @@ td.ccd span {
     font-weight: 800;
 }
 
-.modal-close {
-    background: rgba(255,255,255,0.2);
-    border: none;
-   
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    font-size: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
+.modal-close{
+  width: 40px !important;
+  height: 40px !important;
+  border: 1px solid rgba(15,23,42,.18) !important;
+  border-radius: 12px !important;
+  background: #0f172a !important;
+  color: #ffffff !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  cursor: pointer !important;
+  box-shadow: 0 6px 16px rgba(15,23,42,.22) !important;
+  transition: background .18s ease, transform .12s ease, box-shadow .18s ease !important;
 }
 
-modal-forn-title {
- color: #fff !important;
+.modal-close:hover{
+  background: #1e293b !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 22px rgba(15,23,42,.28) !important;
+  transform: scale(1.05) !important;
+}
+
+.modal-close:active{
+  background: #020617 !important;
+  transform: scale(.96) !important;
+}
+
+.modal-close svg,
+.modal-close span{
+  color: #ffffff !important;
+  fill: currentColor !important;
+}
+#modal-forn-title {
+  color: #fff !important;
 }
 
 .modal-close:hover {
     background: rgba(255,255,255,0.3);
-}
-
-.modal-body {
-    padding: 0;
-    max-height: calc(80vh - 76px);
-    overflow-y: auto;
 }
 
 .modal-table {
@@ -515,4 +531,583 @@ modal-forn-title {
 /* (Opcional) mais espaço nas células e permite quebrar texto do fornecedor */
 #modal-overlay .modal-table td:first-child{
   white-space:normal !important;
+}
+/* =========================
+   MODAIS - CONTAS A PAGAR
+   ========================= */
+
+.modal-overlay{
+  position: fixed !important;
+  inset: 0 !important;
+  background: rgba(15, 23, 42, .55) !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  z-index: 9999 !important;
+}
+
+.modal-overlay.show{
+  display: flex !important;
+}
+
+.modal-container{
+  width: min(1100px, 96vw) !important;
+  max-width: 1100px !important;
+  max-height: 90vh !important;
+  background: #fff !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, .28) !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.modal-container--fornecedor{
+  width: min(1480px, 98vw) !important;
+  max-width: 1480px !important;
+}
+
+.modal-header{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  padding: 18px 22px !important;
+  border-bottom: 1px solid rgba(15, 23, 42, .08) !important;
+  background: #fff !important;
+}
+
+.modal-title{
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.modal-close{
+  width: 42px !important;
+  height: 42px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-size: 26px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+.modal-close:hover{
+  background: #e2e8f0 !important;
+}
+
+.modal-body--fornecedor{
+  padding: 14px 18px !important;
+  overflow-x: hidden !important;
+}
+
+.modal-footer{
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 16px 22px !important;
+  border-top: 1px solid rgba(15, 23, 42, .08) !important;
+  background: #f8fafc !important;
+}
+
+.modal-total-label{
+  font-size: 14px !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+}
+
+.modal-total-value{
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.modal-table{
+  width: 100% !important;
+  border-collapse: collapse !important;
+  table-layout: auto !important;
+}
+
+.modal-table th,
+.modal-table td{
+  padding: 12px 14px !important;
+  border-bottom: 1px solid rgba(15, 23, 42, .08) !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.modal-table th{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 2 !important;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-weight: 800 !important;
+}
+
+.modal-table td.valor,
+.modal-table td.percent{
+  text-align: right !important;
+  font-weight: 700 !important;
+}
+
+.modal-empty{
+  text-align: center !important;
+  color: #64748b !important;
+  padding: 20px !important;
+}
+
+.modal-table--fornecedor th:nth-child(1),
+.modal-table--fornecedor td:nth-child(1){
+  width: 70px !important;
+}
+
+.modal-table--fornecedor th:nth-child(2),
+.modal-table--fornecedor td:nth-child(2),
+.modal-table--fornecedor th:nth-child(3),
+.modal-table--fornecedor td:nth-child(3){
+  width: 95px !important;
+}
+
+.modal-table--fornecedor th:nth-child(4),
+.modal-table--fornecedor td:nth-child(4){
+  width: 220px !important;
+}
+
+.modal-table--fornecedor th:nth-child(5),
+.modal-table--fornecedor td:nth-child(5){
+  width: 110px !important;
+}
+
+.modal-table--fornecedor th:nth-child(6),
+.modal-table--fornecedor td:nth-child(6){
+  width: 70px !important;
+}
+
+.modal-table--fornecedor th:nth-child(7),
+.modal-table--fornecedor td:nth-child(7){
+  width: 80px !important;
+}
+
+.modal-table--fornecedor th:nth-child(8),
+.modal-table--fornecedor td:nth-child(8){
+  width: auto !important;
+  min-width: 320px !important;
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.modal-table--fornecedor th:nth-child(9),
+.modal-table--fornecedor td:nth-child(9){
+  width: 130px !important;
+  text-align: right !important;
+}
+
+.td-centro{
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.td-historico{
+  white-space: normal !important;
+  word-break: break-word !important;
+  max-width: 420px !important;
+}
+
+@media (max-width: 1280px){
+  .modal-container--fornecedor{
+    width: 96vw !important;
+    max-width: 96vw !important;
+  }
+
+  .modal-body--fornecedor{
+    overflow-x: auto !important;
+  }
+
+  .modal-table--fornecedor{
+    min-width: 1100px !important;
+  }
+}
+
+/* =========================
+   BOTÃO FECHAR MODAL
+========================= */
+
+.modal-close{
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+
+  border: 1px solid rgba(15,23,42,.08) !important;
+  background: #f1f5f9 !important;
+
+  color: #0f172a !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  cursor: pointer !important;
+
+  transition: 
+    background .18s ease,
+    transform .12s ease,
+    box-shadow .18s ease !important;
+}
+
+/* hover */
+.modal-close:hover{
+  background: #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12) !important;
+  transform: scale(1.05) !important;
+}
+
+/* click */
+.modal-close:active{
+  transform: scale(.96) !important;
+}
+
+/* opcional: estilo mais premium */
+.modal-header{
+  padding-right: 12px !important;
+}
+/* =========================
+   CORREÇÃO HEADER MODAL
+   conteúdo não passa por trás
+========================= */
+
+.modal-container{
+  display: flex !important;
+  flex-direction: column !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+  background: #fff !important;
+}
+
+.modal-header{
+  position: relative !important;
+  z-index: 30 !important;
+  flex: 0 0 auto !important;
+
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+
+  min-height: 72px !important;
+  padding: 20px 22px !important;
+
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+}
+
+.modal-title{
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* tabela */
+.modal-table{
+  width: 100% !important;
+  border-collapse: collapse !important;
+  margin: 0 !important;
+}
+
+/* cabeçalho da tabela */
+.modal-table thead th{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 5 !important;
+  background: #f8fafc !important;
+}
+
+/* garante que primeira linha não encoste/entre no header do modal */
+.modal-table thead tr:first-child th{
+  border-top: 0 !important;
+}
+
+.modal-table tbody tr:first-child td{
+  border-top: 0 !important;
+}
+
+/* footer fixo abaixo do body */
+.modal-footer{
+  position: relative !important;
+  z-index: 20 !important;
+  flex: 0 0 auto !important;
+  background: #f8fafc !important;
+  border-top: 1px solid rgba(15,23,42,.08) !important;
+}
+
+.modal-body .modal-table thead th{
+  position: sticky !important;
+}
+
+/* ========================================
+   FIX DEFINITIVO - MODAL NÃO VAZA NO HEADER
+======================================== */
+
+/* overlay */
+.modal-overlay{
+  position: fixed !important;
+  inset: 0 !important;
+  display: none !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  background: rgba(15,23,42,.55) !important;
+  z-index: 9999 !important;
+}
+
+.modal-overlay.show{
+  display: flex !important;
+}
+
+/* caixa principal */
+.modal-container{
+  width: min(1100px, 96vw) !important;
+  max-width: 1100px !important;
+  max-height: 90vh !important;
+  background: #fff !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 24px 80px rgba(15,23,42,.28) !important;
+}
+
+/* fornecedor mais largo */
+.modal-container--fornecedor{
+  width: min(1480px, 98vw) !important;
+  max-width: 1480px !important;
+}
+
+/* header do modal */
+.modal-header{
+  position: relative !important;
+  z-index: 50 !important;
+  flex: 0 0 auto !important;
+  min-height: 76px !important;
+  padding: 18px 22px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 16px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+}
+
+.modal-title{
+  margin: 0 !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+/* botão fechar */
+.modal-close{
+  width: 40px !important;
+  height: 40px !important;
+  border: 1px solid rgba(15,23,42,.08) !important;
+  border-radius: 12px !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: background .18s ease, transform .12s ease, box-shadow .18s ease !important;
+}
+
+.modal-close:hover{
+  background: #e2e8f0 !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,.12) !important;
+  transform: scale(1.05) !important;
+}
+
+.modal-close:active{
+  transform: scale(.96) !important;
+}
+
+/* fornecedor também sem padding */
+.modal-body--fornecedor{
+  padding: 0 !important;   /* <<< ESSENCIAL */
+  overflow: auto !important;
+}
+
+/* tabela */
+.modal-table{
+  width: 100% !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  table-layout: auto !important;
+  margin: 0 !important;
+}
+
+/* remove regra global antiga dentro do modal */
+.modal-body table,
+.modal-body thead,
+.modal-body tbody,
+.modal-body tr,
+.modal-body th,
+.modal-body td{
+  margin: 0 !important;
+}
+
+/* cabeçalho da tabela */
+.modal-table thead th{
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 10 !important;
+  background: #f8fafc !important;
+  color: #334155 !important;
+  font-weight: 800 !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+}
+
+/* células */
+.modal-table th,
+.modal-table td{
+  padding: 12px 14px !important;
+  font-size: 14px !important;
+  vertical-align: middle !important;
+  border-bottom: 1px solid rgba(15,23,42,.08) !important;
+  white-space: nowrap !important;
+}
+
+.modal-table td.valor,
+.modal-table td.percent{
+  text-align: right !important;
+  font-weight: 700 !important;
+}
+
+.modal-table tbody tr:hover{
+  background: #ede9fe !important;
+}
+
+/* histórico e centro podem quebrar */
+.td-centro{
+  white-space: normal !important;
+  word-break: break-word !important;
+}
+
+.td-historico{
+  white-space: normal !important;
+  word-break: break-word !important;
+  max-width: 420px !important;
+}
+
+/* footer */
+.modal-footer{
+  position: relative !important;
+  z-index: 20 !important;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  padding: 16px 22px !important;
+  background: #f8fafc !important;
+  border-top: 1px solid rgba(15,23,42,.08) !important;
+}
+
+.modal-total-label{
+  font-size: 14px !important;
+  color: #64748b !important;
+  font-weight: 700 !important;
+}
+
+.modal-total-value{
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+.modal-header .modal-close{
+  background: #0f172a !important;
+  color: #ffffff !important;
+  border-color: rgba(15,23,42,.18) !important;
+}
+
+.modal-header .modal-close:hover{
+  background: #1e293b !important;
+  color: #ffffff !important;
+}
+
+/* =========================================
+MODAL CENTRO DE CUSTO
+========================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-overlay.active{
+  display:flex;
+}
+
+.modal-container{
+  width: 900px;
+  max-width: 95vw;
+  max-height: 85vh;
+  background:#fff;
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+/* HEADER */
+.modal-header{
+  padding:14px 18px;
+  border-bottom:1px solid #e5e7eb;
+}
+
+/* BODY COM SCROLL */
+.modal-body{
+  padding:0;
+  overflow-y:auto;
+  max-height:60vh;
+}
+
+/* TABELA */
+.modal-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.modal-table thead th{
+  position:sticky;
+  top:0;
+  background:#fff;
+  z-index:2;
+  border-bottom:1px solid #e5e7eb;
+}
+
+/* FOOTER */
+.modal-footer{
+  padding:12px 18px;
+  border-top:1px solid #e5e7eb;
+  background:#fafafa;
+}
+
+.modal-container{
+  width:1100px;
+  max-height:90vh;
 }

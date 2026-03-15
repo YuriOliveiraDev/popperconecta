@@ -1,0 +1,9 @@
+RewriteEngine On
+
+# Se existir arquivo ou pasta real, não reescreve
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Se existir o mesmo nome com .php, redireciona internamente
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]

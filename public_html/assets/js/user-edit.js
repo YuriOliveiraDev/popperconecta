@@ -1,30 +1,66 @@
-<script>
-(function(){
-  const input = document.getElementById('profile_photo');
-  const nameEl = document.getElementById('profilePhotoName');
-  const img = document.getElementById('profilePhotoImg');
-  const placeholder = document.getElementById('profilePhotoPlaceholder');
-  const removeCb = document.getElementById('remove_photo');
+(function () {
+  function bindPhotoPreview(config) {
+    const input = document.getElementById(config.inputId);
+    const nameEl = document.getElementById(config.nameId);
+    const img = document.getElementById(config.imgId);
+    const placeholder = document.getElementById(config.placeholderId);
+    const removeCb = config.removeSelector ? document.querySelector(config.removeSelector) : null;
 
-  if (!input || !nameEl || !img) return;
+    if (!input || !nameEl || !img) return;
 
-  input.addEventListener('change', function(){
-    const f = input.files && input.files[0] ? input.files[0] : null;
+    function showPlaceholder() {
+      img.style.display = 'none';
+      img.removeAttribute('src');
+      if (placeholder) placeholder.style.display = '';
+    }
 
-    nameEl.textContent = f ? f.name : 'Nenhum arquivo selecionado';
+    function showImage(src) {
+      img.src = src;
+      img.style.display = '';
+      if (placeholder) placeholder.style.display = 'none';
+    }
 
-    if (!f) return;
+    input.addEventListener('change', function () {
+      const file = input.files && input.files[0] ? input.files[0] : null;
 
-    // se marcou "remover foto", desmarca automaticamente ao escolher novo arquivo
-    if (removeCb) removeCb.checked = false;
+      nameEl.textContent = file ? file.name : 'Nenhum arquivo selecionado';
 
-    const url = URL.createObjectURL(f);
-    img.src = url;
-    img.style.display = 'block';
-    if (placeholder) placeholder.style.display = 'none';
+      if (!file) return;
 
-    // libera memória quando trocar de arquivo novamente
-    img.onload = () => URL.revokeObjectURL(url);
+      if (removeCb) removeCb.checked = false;
+
+      const url = URL.createObjectURL(file);
+      showImage(url);
+
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+      };
+    });
+
+    if (removeCb) {
+      removeCb.addEventListener('change', function () {
+        if (!removeCb.checked) return;
+
+        input.value = '';
+        nameEl.textContent = 'Nenhum arquivo selecionado';
+        showPlaceholder();
+      });
+    }
+  }
+
+  bindPhotoPreview({
+    inputId: 'profile_photo',
+    nameId: 'profilePhotoName',
+    imgId: 'profilePhotoImg',
+    placeholderId: 'profilePhotoPlaceholder',
+    removeSelector: '#remove_photo'
+  });
+
+  bindPhotoPreview({
+    inputId: 'userProfilePhoto',
+    nameId: 'userProfilePhotoName',
+    imgId: 'userPhotoPreviewImg',
+    placeholderId: 'userPhotoEmoji',
+    removeSelector: 'input[name="remove_photo"]'
   });
 })();
-</script>

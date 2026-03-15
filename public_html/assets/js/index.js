@@ -98,7 +98,7 @@ function msToNextRefresh(key) {
 /* ======================================================
    CARREGA KPIs (com cache local)
 ====================================================== */
-const API = "/api/dashboard-data.php?dash=executivo";
+const API = "/api/dashboard/dashboard-data.php?dash=executivo";
 
 function applyDashboard(data) {
   if (!data || !data.values) return;
@@ -226,7 +226,7 @@ function loadCharts(v) {
   const valueLabelPlugin = {
     id: "valueLabelPlugin",
     afterDatasetsDraw(chart) {
-      const { ctx } = chart;
+      const { ctx, chartArea } = chart;
       const dataset = chart.data.datasets?.[0];
       if (!dataset) return;
 
@@ -238,35 +238,53 @@ function loadCharts(v) {
       ctx.textBaseline = "bottom";
       ctx.fillStyle = "#1f2937";
       ctx.font = "700 12px Poppins, Arial, sans-serif";
-
       meta.data.forEach((bar, i) => {
         const raw = Number(dataset.data?.[i] ?? 0);
         if (!Number.isFinite(raw) || raw <= 0) return;
 
         const x = bar.x;
-        const y = bar.y - 8;
+        const y = Math.max(bar.y - 8, chartArea.top + 14);
+        const valueLabel = brlShort(raw);
 
-        let line1 = brlShort(raw);
-        let line2 = "";
+        let pct = "";
+        let showPct = false;
 
-        if (chart.canvas.id === "chartMes") {
+        // MÊS: realizado = barra 0
+        if (chart.canvas.id === "chartMes" && i === 0) {
           const metaMes = Number(v.meta_mes || 0);
           if (metaMes > 0) {
-            line2 = Math.round((raw / metaMes) * 100) + "%";
+            pct = Math.round((raw / metaMes) * 100) + "%";
+            showPct = true;
           }
         }
 
-        if (chart.canvas.id === "chartAno") {
+        // ANO: realizado = barra 0
+        if (chart.canvas.id === "chartAno" && i === 0) {
           const metaAno = Number(v.meta_ano || 0);
           if (metaAno > 0) {
-            line2 = Math.round((raw / metaAno) * 100) + "%";
+            pct = Math.round((raw / metaAno) * 100) + "%";
+            showPct = true;
           }
         }
 
-        ctx.fillText(line1, x, y);
-        if (line2) {
-          ctx.fillText(line2, x, y - 16);
+        // RITMO: realizado hoje = barra 1
+        if (chart.canvas.id === "chartRitmo" && i === 1) {
+          const metaDia = Number(v.meta_dia_util || 0);
+          if (metaDia > 0) {
+            pct = Math.round((raw / metaDia) * 100) + "%";
+            showPct = true;
+          }
         }
+
+        if (showPct && pct) {
+          ctx.fillStyle = "#64748b";
+          ctx.font = "700 11px Poppins, Arial, sans-serif";
+          ctx.fillText(pct, x, y - 16);
+        }
+
+        ctx.fillStyle = "#1f2937";
+        ctx.font = "700 12px Poppins, Arial, sans-serif";
+        ctx.fillText(valueLabel, x, y);
       });
 
       ctx.restore();
@@ -274,23 +292,61 @@ function loadCharts(v) {
   };
 
   const commonBarOptions = {
+    devicePixelRatio: window.devicePixelRatio || 1,
     resizeDelay: 80,
     responsive: true,
     maintainAspectRatio: false,
-    animation: { duration: 350 },
+    animation: { duration: 450 },
+    layout: {
+      padding: {
+        top: 42,
+        right: 10,
+        left: 10,
+        bottom: 2
+      }
+    },
     plugins: {
       legend: { display: false },
       datalabels: false,
       tooltip: {
+        backgroundColor: "#111827",
+        titleColor: "#fff",
+        bodyColor: "#fff",
+        padding: 12,
+        cornerRadius: 12,
+        displayColors: false,
         callbacks: {
           label: (ctx) => brl(ctx.raw)
         }
       }
     },
     scales: {
+      x: {
+        grid: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          color: "#4b5563",
+          font: {
+            size: 12,
+            weight: "600"
+          }
+        }
+      },
       y: {
         beginAtZero: true,
+        grace: "20%",
+        grid: {
+          color: "rgba(15,23,42,.08)",
+          drawBorder: false
+        },
         ticks: {
+          color: "#6b7280",
+          font: {
+            size: 11,
+            weight: "600"
+          },
           callback: (value) => tickShort(value)
         }
       }
@@ -298,10 +354,11 @@ function loadCharts(v) {
   };
 
   const barDatasetBase = {
-    borderSkipped: "bottom",
-    borderRadius: { topLeft: 14, topRight: 14, bottomLeft: 0, bottomRight: 0 }
+    borderSkipped: false,
+    borderRadius: 16,
+    barPercentage: 0.7,
+    categoryPercentage: 0.72
   };
-
   const elMes = document.getElementById("chartMes");
   const elAno = document.getElementById("chartAno");
   const elRitmo = document.getElementById("chartRitmo");
@@ -318,7 +375,7 @@ function loadCharts(v) {
   const hojePrincipal = num(v.hoje_total || 0);
 
   if (chartMes) {
-    try { chartMes.destroy(); } catch (e) {}
+    try { chartMes.destroy(); } catch (e) { }
   }
   chartMes = new Chart(elMes, {
     type: "bar",
@@ -335,7 +392,7 @@ function loadCharts(v) {
   });
 
   if (chartAno) {
-    try { chartAno.destroy(); } catch (e) {}
+    try { chartAno.destroy(); } catch (e) { }
   }
   chartAno = new Chart(elAno, {
     type: "bar",
@@ -352,7 +409,7 @@ function loadCharts(v) {
   });
 
   if (chartRitmo) {
-    try { chartRitmo.destroy(); } catch (e) {}
+    try { chartRitmo.destroy(); } catch (e) { }
   }
   chartRitmo = new Chart(elRitmo, {
     type: "bar",
@@ -400,7 +457,7 @@ function applyDailyChart(payload) {
   const valores = labels.map((dia) => normalizeDailyValue(diario[dia]));
 
   if (chartDiario) {
-    try { chartDiario.destroy(); } catch (e) {}
+    try { chartDiario.destroy(); } catch (e) { }
   }
 
   const ctx = document.getElementById("chartDiario");
@@ -414,18 +471,21 @@ function applyDailyChart(payload) {
         label: "Faturamento",
         data: valores,
         borderColor: "#5c2c8c",
-        backgroundColor: "rgba(92,44,140,.12)",
+        backgroundColor: "rgba(92,44,140,.10)",
         fill: true,
-        tension: 0.25,
-        pointRadius: 5,
-        pointHoverRadius: 8,
-        pointHitRadius: 12,
+        tension: 0.18,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointHitRadius: 10,
         pointBorderWidth: 2,
+        pointBackgroundColor: "#ffffff",
+        pointBorderColor: "#5c2c8c",
         spanGaps: true,
         datalabels: {
           anchor: "end",
           align: "top",
-          offset: 10,
+          offset: 8,
           color: "#1f2937",
           formatter: (v) => {
             const n = normalizeDailyValue(v);
@@ -433,9 +493,9 @@ function applyDailyChart(payload) {
             if (n >= 1_000) return (n / 1_000).toFixed(0) + "k";
             return String(Math.round(n));
           },
-          font: { size: 15, weight: "700" },
+          font: { size: 14, weight: "700" },
           textStrokeColor: "#ffffff",
-          textStrokeWidth: 3,
+          textStrokeWidth: 4,
           clamp: true,
           clip: false
         }
@@ -492,7 +552,7 @@ async function loadDailyChart(opts = { force: false }) {
   }
 
   try {
-    const url = new URL("/api/dashboard-executivo-save.php", window.location.origin);
+    const url = new URL("/api/dashboard/dashboard-executivo-save.php", window.location.origin);
     url.searchParams.set("ym", CURRENT_YM);
     url.searchParams.set("v", String(Date.now())); // evita cache antigo do browser
 
@@ -628,10 +688,10 @@ async function loadTopsCarousel(opts = { force: false }) {
   try {
     const ym = CURRENT_YM;
 
-    const rProd = await fetch("/api/dashboard-executivo-save.php?ym=" + ym, { cache: "default" });
+    const rProd = await fetch("/api/dashboard/dashboard-executivo-save.php?ym=" + ym, { cache: "default" });
     const prodPayload = await rProd.json();
 
-    const rCli = await fetch("/api/clientes_insights.php?ym=" + ym, { cache: "default" });
+    const rCli = await fetch("/api/dashboard/clientes_insights.php?ym=" + ym, { cache: "default" });
     const cliPayload = await rCli.json();
 
     const pack = { prod: prodPayload, cli: cliPayload };

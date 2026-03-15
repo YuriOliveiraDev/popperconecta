@@ -4,7 +4,7 @@
     "total": 141,
     "pageInfo": {
         "hasNextPage": false,
-        "endCursor": "WyIyMDI2LTAxLTMwIDEzOjUxOjEzLjc5MTAwOTAwMCBVVEMiLCIxLjUiLDEyOTA5MDg3OTRd"
+        "endCursor": "WyIyMDI2LTAxLTMwIDEzOjUxOjEzLjc5MTAwOTAwMCBVVEMiLCIyLjAiLDEyOTA5MDg3OTRd"
     },
     "items": [
         {
@@ -990,10 +990,10 @@
         {
             "card_id": "1290908794",
             "container": "PO01.2026 GÁS HÉLIO",
-            "fase": "COTAÇÃO FRETE INTERNACIONAL",
+            "fase": "EMBARQUE",
             "previsao_embarque_etd": null,
             "previsao_entrega_eta": null
         }
     ],
-    "cached_at": "2026-03-13T14:53:56-03:00"
+    "cached_at": "2026-03-14T20:23:22-03:00"
 }

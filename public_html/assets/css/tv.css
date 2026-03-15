@@ -1000,3 +1000,369 @@ html:fullscreen .carousel__fullscreen:hover {
 
   font-size: 18px !important;
 }
+/* =========================
+   GEO / MAPA BRASIL
+   ========================= */
+
+.slide--geo{
+  padding: 18px 22px;
+  box-sizing: border-box;
+}
+
+.geo-slide{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.geo-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.geo-title{
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.geo-sub{
+  margin-top: 6px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.geo-grid{
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 18px;
+}
+
+.geo-card{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.08);
+  padding: 16px 18px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.geo-card--map{
+  justify-content: space-between;
+}
+
+.geo-card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.geo-card-head h4{
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.geo-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(92,44,140,.10);
+  color: #5c2c8c;
+  font-weight: 700;
+  font-size: .92rem;
+}
+
+.geo-list{
+  min-height: 0;
+  overflow: hidden;
+}
+
+.br-map-wrap{
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+}
+
+.br-map{
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+  max-height: 100%;
+}
+
+.uf-shape{
+  fill: rgba(226,232,240,.85);
+  stroke: rgba(255,255,255,.95);
+  stroke-width: 4;
+  transition: fill .25s ease, transform .2s ease, filter .2s ease;
+  cursor: default;
+}
+
+.uf-shape:hover{
+  transform: translateY(-2px);
+  filter: brightness(1.03);
+}
+
+.geo-legend{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  color: #64748b;
+  font-size: .92rem;
+}
+
+.geo-legend-bar{
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(233,226,245) 0%, rgb(92,44,140) 100%);
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
+}
+
+/* =========================
+   GEO / MAPA BRASIL
+   ========================= */
+
+.slide--geo{
+  padding: 18px 22px;
+  box-sizing: border-box;
+}
+
+.geo-slide{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.geo-header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.geo-title{
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.geo-sub{
+  margin-top: 6px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.geo-grid{
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 18px;
+}
+
+.geo-card{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.08);
+  padding: 16px 18px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.geo-card--map{
+  justify-content: space-between;
+}
+
+.geo-card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.geo-card-head h4{
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.geo-badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(92,44,140,.10);
+  color: #5c2c8c;
+  font-weight: 700;
+  font-size: .92rem;
+}
+
+.geo-list{
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sales-map{
+  width: 100%;
+  flex: 1;
+  min-height: 520px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #faf7ff 0%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.geo-legend{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: #64748b;
+  font-size: .92rem;
+}
+
+.geo-legend-bar{
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(233,226,245) 0%, rgb(92,44,140) 100%);
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
+}
+
+/* Leaflet */
+.sales-map .leaflet-container{
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.sales-map .leaflet-tooltip{
+  background: rgba(15,23,42,.96);
+  color: #fff;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  font-size: .95rem;
+}
+
+.sales-map .leaflet-tooltip:before{
+  display: none;
+}
+
+.geo-list{
+  min-height: 0;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.geo-list::-webkit-scrollbar{
+  width: 10px;
+}
+
+.geo-list::-webkit-scrollbar-track{
+  background: rgba(148,163,184,.12);
+  border-radius: 999px;
+}
+
+.geo-list::-webkit-scrollbar-thumb{
+  background: rgba(92,44,140,.35);
+  border-radius: 999px;
+}
+
+.geo-list::-webkit-scrollbar-thumb:hover{
+  background: rgba(92,44,140,.55);
+}
+
+.state-label-marker{
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.state-label{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 26px;
+  padding: 3px 5px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.95);
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(15,23,42,.14);
+  border: 1px solid rgba(255,255,255,.95);
+  line-height: 1.05;
+}
+
+.state-label__uf{
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.state-label__pct{
+  font-size: 9px;
+  font-weight: 700;
+  color: #5c2c8c;
+  margin-top: 1px;
+}
+/* =========================
+   LOGO FIXA TV
+========================= */
+
+.tv-logo{
+  position: fixed;
+  right: 22px;
+  bottom: 18px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: .9;
+}
+
+.tv-logo img{
+  height: 42px;
+  width: auto;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.25));
+}
+.tv-logo{
+  animation: tvLogoFade 1.2s ease forwards;
+}
+
+@keyframes tvLogoFade{
+  from{
+    opacity:0;
+    transform:translateY(10px);
+  }
+  to{
+    opacity:.85;
+    transform:translateY(0);
+  }
+}

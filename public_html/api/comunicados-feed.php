@@ -1,8 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../app/auth.php';
-require_once __DIR__ . '/../app/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 
 // se o carrossel roda sem login, remova. Se roda logado, mantenha:
 require_login();

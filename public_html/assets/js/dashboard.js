@@ -584,7 +584,7 @@
 
   async function refresh(forceTotvs = false, opts = {}) {
     const dash = (window.DASH_CURRENT || 'executivo');
-    const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
+    const url = `/api/dashboard/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
 
     const showLoader = opts.showLoader !== false;
     const title = forceTotvs ? 'Atualizando TOTVS…' : 'Carregando métricas…';

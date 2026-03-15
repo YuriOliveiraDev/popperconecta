@@ -38,7 +38,7 @@
 
   async function refresh() {
     const dash = (window.DASH_CURRENT || 'financeiro');
-    const res = await fetch(`/api/dashboard-data.php?dash=${encodeURIComponent(dash)}`, { cache: 'no-store' });
+    const res = await fetch(`/api/dashboard/dashboard-data.php?dash=${encodeURIComponent(dash)}`, { cache: 'no-store' });
     const payload = await res.json();
     render(payload);
   }

@@ -1,0 +1,248 @@
+.geo-vendas{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.geo-vendas__header{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.geo-vendas__title{
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.geo-vendas__subtitle{
+  margin-top: 6px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.geo-vendas__grid{
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  gap: 18px;
+}
+
+.geo-vendas__card{
+  background: rgba(255,255,255,.92);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 24px;
+  box-shadow: 0 14px 34px rgba(15,23,42,.08);
+  padding: 16px 18px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.geo-vendas__card--map{
+  justify-content: space-between;
+}
+
+.geo-vendas__card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.geo-vendas__card-head h4{
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.geo-vendas__badge{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 72px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(92,44,140,.10);
+  color: #5c2c8c;
+  font-weight: 700;
+  font-size: .92rem;
+}
+
+.geo-vendas__list{
+  min-height: 0;
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.geo-vendas__list::-webkit-scrollbar{
+  width: 10px;
+}
+
+.geo-vendas__list::-webkit-scrollbar-track{
+  background: rgba(148,163,184,.12);
+  border-radius: 999px;
+}
+
+.geo-vendas__list::-webkit-scrollbar-thumb{
+  background: rgba(92,44,140,.35);
+  border-radius: 999px;
+}
+
+.geo-vendas__list::-webkit-scrollbar-thumb:hover{
+  background: rgba(92,44,140,.55);
+}
+
+.geo-vendas__map{
+  width: 100%;
+  flex: 1;
+  min-height: 520px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #faf7ff 0%, #ffffff 100%);
+  overflow: hidden;
+}
+
+.geo-vendas__legend{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: #64748b;
+  font-size: .92rem;
+}
+
+.geo-vendas__legend-bar{
+  flex: 1;
+  height: 12px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgb(233,226,245) 0%, rgb(92,44,140) 100%);
+  box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
+}
+
+.geo-vendas-row{
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 8px;
+  border-bottom: 1px solid rgba(148,163,184,.12);
+}
+
+.geo-vendas-rank{
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: #5c2c8c;
+  background: rgba(92,44,140,.10);
+}
+
+.geo-vendas-main{
+  min-width: 0;
+}
+
+.geo-vendas-name{
+  font-weight: 700;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.geo-vendas-share{
+  font-size: .86rem;
+  color: #64748b;
+  margin-top: 2px;
+  margin-bottom: 5px;
+}
+
+.geo-vendas-bar{
+  width: 100%;
+  height: 8px;
+  background: rgba(148,163,184,.14);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.geo-vendas-bar i{
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(92,44,140,.45) 0%, rgba(92,44,140,.95) 100%);
+}
+
+.geo-vendas-value{
+  font-weight: 800;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.geo-vendas-empty{
+  opacity: .7;
+  padding: 8px 6px;
+}
+
+.geo-vendas__map .leaflet-container{
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+
+
+.geo-vendas__map .leaflet-tooltip:before{
+  display: none;
+}
+
+.geo-vendas-label-marker{
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.geo-vendas-label{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  min-height: 26px;
+  padding: 3px 5px;
+  border-radius: 10px;
+  background: rgba(255,255,255,.95);
+  color: #1e293b;
+  box-shadow: 0 2px 8px rgba(15,23,42,.14);
+  border: 1px solid rgba(255,255,255,.95);
+  line-height: 1.05;
+}
+
+.geo-vendas-label-uf{
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.geo-vendas-label-pct{
+  font-size: 9px;
+  font-weight: 700;
+  color: #5c2c8c;
+  margin-top: 1px;
+}
+.geo-vendas__map .leaflet-tooltip{
+  background:#c69bf1;
+  color: #fff !important;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+  font-size: .95rem;
+}

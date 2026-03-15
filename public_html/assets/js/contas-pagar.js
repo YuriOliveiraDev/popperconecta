@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const modalOverlay = document.getElementById('modal-overlay');
   const modalTitle = document.getElementById('modal-title');
   const modalTableBody = document.getElementById('modal-table-body');
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (data.fornecedores.length === 0) {
       modalTableBody.innerHTML = '<tr><td colspan="4" class="modal-empty">Nenhum fornecedor encontrado</td></tr>';
     } else {
-      data.fornecedores.forEach(function(f) {
+      data.fornecedores.forEach(function (f) {
         const row = document.createElement('tr');
         row.innerHTML = `
           <td>${f.nome}</td>
@@ -83,20 +83,18 @@ document.addEventListener('DOMContentLoaded', function() {
       titulos.forEach((t) => {
         const v = Number(t.valor || 0);
         total += v;
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${t.filial || ''}</td>
-          <td>${t.emissao || ''}</td>
-          <td>${t.vencimento || ''}</td>
-          <td>${t.centro || ''}</td>
-          <td>${t.prefixo || ''}</td>
-          <td>${t.numero || ''}</td>
-          <td>${t.parcela || ''}</td>
-          <td>${t.tipo || ''}</td>
-          <td title="${(t.historico || '').replaceAll('"','&quot;')}">${t.historico || ''}</td>
-          <td class="valor">${formatMoney(v)}</td>
-        `;
+  <td>${t.filial || ''}</td>
+  <td>${t.emissao || ''}</td>
+  <td>${t.vencimento || ''}</td>
+  <td class="td-centro" title="${t.centro || ''}">${t.centro || ''}</td>
+  <td>${t.numero || ''}</td>
+  <td>${t.parcela || ''}</td>
+  <td>${t.tipo || ''}</td>
+  <td class="td-historico" title="${(t.historico || '').replaceAll('"', '&quot;')}">${t.historico || ''}</td>
+  <td class="valor">${formatMoney(v)}</td>
+`;
         fornBody.appendChild(tr);
       });
     }
@@ -109,8 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // =========================
   // Clique: Centro de custo -> loader -> abre modal
   // =========================
-  document.querySelectorAll('.centro-custo-item').forEach(function(item) {
-    item.addEventListener('click', function() {
+  document.querySelectorAll('.centro-custo-item').forEach(function (item) {
+    item.addEventListener('click', function () {
       loaderShow('Carregando…', 'Abrindo centro de custo');
 
       try {
@@ -129,8 +127,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // =========================
   // Clique: Fornecedor -> loader -> abre modal
   // =========================
-  document.querySelectorAll('.fornecedor-item').forEach(function(item) {
-    item.addEventListener('click', function() {
+  document.querySelectorAll('.fornecedor-item').forEach(function (item) {
+    item.addEventListener('click', function () {
       loaderShow('Carregando…', 'Abrindo títulos do fornecedor');
 
       try {
@@ -150,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
   modalClose.addEventListener('click', closeModal);
 
   // Fechar ao clicar fora (Centro)
-  modalOverlay.addEventListener('click', function(e) {
+  modalOverlay.addEventListener('click', function (e) {
     if (e.target === modalOverlay) closeModal();
   });
 
@@ -158,12 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
   fornClose.addEventListener('click', closeFornecedorModal);
 
   // Fechar ao clicar fora (Fornecedor)
-  fornOverlay.addEventListener('click', function(e) {
+  fornOverlay.addEventListener('click', function (e) {
     if (e.target === fornOverlay) closeFornecedorModal();
   });
 
   // ESC fecha o modal que estiver aberto
-  document.addEventListener('keydown', function(e) {
+  document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
 
     if (fornOverlay.classList.contains('show')) closeFornecedorModal();

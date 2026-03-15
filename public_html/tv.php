@@ -1,9 +1,6 @@
 <?php
 declare(strict_types=1);
-date_default_timezone_set('America/Sao_Paulo');
-
-require_once __DIR__ . '/app/auth.php';
-require_once __DIR__ . '/app/db.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 
 require_login();
 
@@ -34,10 +31,12 @@ try {
 ?>
 <!doctype html>
 <html lang="pt-br">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Início — <?= h((string) APP_NAME) ?></title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="stylesheet" href="/assets/css/tv.css?v=<?= filemtime(__DIR__ . '/assets/css/tv.css') ?>">
 </head>
 
@@ -47,13 +46,15 @@ try {
 
       <button class="carousel__fullscreen" id="fullscreenBtn" aria-label="Tela cheia">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </button>
 
       <button class="carousel__arrow carousel__arrow--prev" id="prevBtn" aria-label="Anterior">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </button>
 
@@ -224,15 +225,60 @@ try {
               </div>
             </div>
           </article>
+          <!-- GEO / MAPA -->
+          <article class="slide slide--geo" data-id="geo">
+            <div class="geo-slide">
+              <div class="geo-header">
+                <div>
+                  <h3 class="geo-title">Top Regiões e Mapa de Vendas</h3>
+                  <div class="geo-sub">
+                    Distribuição por UF e região — <span id="geoUpdated">--</span>
+                  </div>
+                </div>
+              </div>
 
+              <div class="geo-grid">
+                <div class="geo-card">
+                  <div class="geo-card-head">
+                    <h4>Top Regiões</h4>
+                    <span class="geo-badge" id="geoBadgeRegioes">--</span>
+                  </div>
+                  <div class="geo-list" id="listTopRegioes"></div>
+                </div>
+
+                <div class="geo-card geo-card--map">
+                  <div class="geo-card-head">
+                    <h4>Mapa do Brasil por venda</h4>
+                    <span class="geo-badge">UFs</span>
+                  </div>
+
+                  <div id="salesMap" class="sales-map"></div>
+
+                  <div class="geo-legend">
+                    <span>Menor venda</span>
+                    <div class="geo-legend-bar"></div>
+                    <span>Maior venda</span>
+                  </div>
+                </div>
+
+                <div class="geo-card">
+                  <div class="geo-card-head">
+                    <h4>Top Estados</h4>
+                    <span class="geo-badge" id="geoBadgeUFs">Top 15</span>
+                  </div>
+                  <div class="geo-list" id="listTopEstados"></div>
+                </div>
+              </div>
+            </div>
+          </article>
           <!-- COMUNICADOS -->
           <?php foreach ($comunicados as $c): ?>
             <?php
-              $id = (int) ($c['id'] ?? 0);
-              $img = trim((string) ($c['imagem_path'] ?? ''));
-              $titulo = trim((string) ($c['titulo'] ?? ''));
-              $conteudo = trim((string) ($c['conteudo'] ?? ''));
-              $hasImage = ($img !== '');
+            $id = (int) ($c['id'] ?? 0);
+            $img = trim((string) ($c['imagem_path'] ?? ''));
+            $titulo = trim((string) ($c['titulo'] ?? ''));
+            $conteudo = trim((string) ($c['conteudo'] ?? ''));
+            $hasImage = ($img !== '');
             ?>
 
             <?php if ($hasImage): ?>
@@ -261,14 +307,18 @@ try {
 
       <button class="carousel__arrow carousel__arrow--next" id="nextBtn" aria-label="Próximo">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
         </svg>
       </button>
 
       <div class="carousel__dots" id="dots"></div>
     </section>
   </main>
-
+  <!-- LOGO FIXA -->
+  <div class="tv-logo">
+    <img src="/assets/img/logo.png" alt="Popper">
+  </div>
   <script>
     (function () {
       const goReady = () => document.body.classList.add('is-ready');
@@ -282,7 +332,9 @@ try {
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
   <script src="/assets/js/tv.js?v=<?= filemtime(__DIR__ . '/assets/js/tv.js') ?>"></script>
 </body>
+
 </html>

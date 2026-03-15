@@ -13,7 +13,8 @@
     let chartProgressYear = null;
     let chartPace = null;
     let chartDiario = null;
-
+    let salesMap = null;
+    let salesLayer = null;
     let _topScrollRAFProdutos = null;
     let _topScrollRAFClientes = null;
 
@@ -44,7 +45,7 @@
                 const dd = d[0], mm = d[1], yyyy = d[2];
                 if (dd && mm && yyyy) return { month: mm - 1, year: yyyy };
             }
-        } catch (_) {}
+        } catch (_) { }
 
         const d = new Date();
         return { month: d.getMonth(), year: d.getFullYear() };
@@ -745,12 +746,366 @@
         }
         return await res.json();
     }
+    function renderGeoList(containerId, badgeId, items, labelKey = 'regiao') {
+        const wrap = document.getElementById(containerId);
+        if (!wrap) return;
 
+        const list = Array.isArray(items) ? items : [];
+        const valid = list.filter(item => Number(item?.valor || 0) > 0);
+
+        const total = valid.reduce((acc, x) => acc + asNumber(x.valor), 0); const max = valid.length ? asNumber(valid[0].valor) : 0;
+
+        const badge = document.getElementById(badgeId);
+        if (badge) badge.textContent = valid.length ? `Top ${valid.length}` : '—';
+
+        wrap.innerHTML = '';
+
+        if (!valid.length) {
+            wrap.innerHTML = '<div style="opacity:.7;padding:8px 6px;">Sem dados</div>';
+            return;
+        }
+
+        valid.forEach((item, idx) => {
+            const nome = String(item[labelKey] ?? item.uf ?? '—');
+            const valor = asNumber(item.valor);
+            const pct = total > 0 ? (valor / total) * 100 : 0;
+            const width = max > 0 ? (valor / max) * 100 : 0;
+
+            const row = document.createElement('div');
+            row.className = 'top-item';
+
+            row.innerHTML = `
+            <div class="top-rank">${idx + 1}</div>
+            <div class="top-main">
+                <div class="top-name" title="${escapeHtml(nome)}">${escapeHtml(nome)}</div>
+                <div class="top-subline">${pct.toFixed(1)}%</div>
+                <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
+            </div>
+            <div class="top-val">${moneyBR(valor)}</div>
+        `;
+
+            wrap.appendChild(row);
+        });
+    }
+
+    function mixColorByRatio(ratio) {
+        const r = Math.max(0, Math.min(1, Number(ratio) || 0));
+
+        const from = { r: 233, g: 226, b: 245 }; // claro
+        const to = { r: 92, g: 44, b: 140 }; // roxo popper
+
+        const rr = Math.round(from.r + (to.r - from.r) * r);
+        const gg = Math.round(from.g + (to.g - from.g) * r);
+        const bb = Math.round(from.b + (to.b - from.b) * r);
+
+        return `rgb(${rr}, ${gg}, ${bb})`;
+    }
+
+    function renderBrazilMap(ufsMap) {
+        const data = (ufsMap && typeof ufsMap === 'object') ? ufsMap : {};
+        const values = Object.values(data).map(x => asNumber(x.valor)).filter(v => v > 0);
+        const max = values.length ? Math.max(...values) : 0;
+
+        document.querySelectorAll('.uf-shape').forEach(el => {
+            const uf = (el.id || '').replace('uf-', '').toUpperCase();
+            const info = data[uf] || null;
+            const valor = info ? asNumber(info.valor) : 0;
+            const pct = max > 0 ? (valor / max) : 0;
+
+            const fill = valor > 0 ? mixColorByRatio(pct) : 'rgba(226,232,240,.85)';
+            el.style.fill = fill;
+
+            const shareText = info && Number.isFinite(info.pct)
+                ? `${(info.pct * 100).toFixed(1)}% do mês`
+                : 'Sem vendas no período';
+
+            el.setAttribute(
+                'title',
+                valor > 0
+                    ? `${uf} · ${moneyBR(valor)} · ${shareText}`
+                    : `${uf} · Sem vendas no período`
+            );
+        });
+    }
+
+    async function loadGeo() {
+        try {
+            const payload = await fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`);
+            const geo = payload?.geografia || {};
+
+            setText('geoUpdated', payload?.updated_at || '--');
+
+            renderGeoList(
+                'listTopRegioes',
+                'geoBadgeRegioes',
+                Array.isArray(geo.regioes) ? geo.regioes : [],
+                'regiao'
+            );
+
+            renderGeoList(
+                'listTopEstados',
+                'geoBadgeUFs',
+                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking : [],
+                'uf'
+            );
+
+            renderBrazilMap(geo.ufs_map || {});
+        } catch (e) {
+            console.error('Erro ao carregar geografia:', e);
+            renderGeoList('listTopRegioes', 'geoBadgeRegioes', [], 'regiao');
+            renderGeoList('listTopEstados', 'geoBadgeUFs', [], 'uf');
+            renderBrazilMap({});
+        }
+    }
+
+    function renderGeoList(containerId, badgeId, items, labelKey = 'regiao') {
+        const wrap = document.getElementById(containerId);
+        if (!wrap) return;
+
+        const list = Array.isArray(items) ? items : [];
+        const total = list.reduce((acc, x) => acc + asNumber(x.valor), 0);
+        const max = list.length ? asNumber(list[0].valor) : 0;
+
+        const badge = document.getElementById(badgeId);
+        if (badge) badge.textContent = list.length ? `Top ${list.length}` : '—';
+
+        wrap.innerHTML = '';
+
+        if (!list.length) {
+            wrap.innerHTML = '<div style="opacity:.7;padding:8px 6px;">Sem dados</div>';
+            return;
+        }
+
+        list.forEach((item, idx) => {
+            const nome = String(item[labelKey] ?? item.uf ?? '—');
+            const valor = asNumber(item.valor);
+            const pct = total > 0 ? (valor / total) * 100 : 0;
+            const width = max > 0 ? (valor / max) * 100 : 0;
+
+            const row = document.createElement('div');
+            row.className = 'top-item';
+
+            row.innerHTML = `
+                <div class="top-rank">${idx + 1}</div>
+                <div class="top-main">
+                    <div class="top-name" title="${escapeHtml(nome)}">${escapeHtml(nome)}</div>
+                    <div class="top-subline">${pct.toFixed(1)}%</div>
+                    <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
+                </div>
+                <div class="top-val">${moneyBR(valor)}</div>
+            `;
+
+            wrap.appendChild(row);
+        });
+    }
+
+    function getMapFillColor(value, max) {
+        const ratio = max > 0 ? (value / max) : 0;
+
+        if (ratio >= 0.85) return '#5c2c8c';
+        if (ratio >= 0.65) return '#75509c';
+        if (ratio >= 0.45) return '#9478b3';
+        if (ratio >= 0.25) return '#b7a2cd';
+        if (ratio > 0) return '#ddd3ec';
+        return '#e5e7eb';
+    }
+
+    function normalizeUF(props, feature = null) {
+        const candidates = [
+            feature?.id,
+            props?.SIGLA,
+            props?.PK_sigla,
+            props?.sigla,
+            props?.uf,
+            props?.UF,
+            props?.SG_UF,
+            props?.SIGLA_UF,
+            props?.id,
+            props?.ID
+        ];
+
+        for (const v of candidates) {
+            const s = String(v || '').trim().toUpperCase();
+            if (/^[A-Z]{2}$/.test(s)) return s;
+        }
+
+        return '';
+    }
+    function renderStateLabels(geojson, ufsMap) {
+        if (!salesMap) return;
+
+        if (window._salesMapLabelsLayer) {
+            try { salesMap.removeLayer(window._salesMapLabelsLayer); } catch (_) { }
+            window._salesMapLabelsLayer = null;
+        }
+
+        const labels = [];
+
+        L.geoJSON(geojson, {
+            onEachFeature: function (feature, layer) {
+                const props = feature?.properties || {};
+                const uf = normalizeUF(props, feature);
+                if (!uf) return;
+
+                const info = ufsMap[uf] || {};
+                const valor = Number(info.valor || 0);
+                const pct = Number(info.pct || 0) * 100;
+
+                if (valor <= 0) return;
+
+                const center = layer.getBounds().getCenter();
+
+                labels.push(
+                    L.marker(center, {
+                        interactive: false,
+                        icon: L.divIcon({
+                            className: 'state-label-marker',
+                            html: `
+                            <div class="state-label">
+                                <span class="state-label__uf">${uf}</span>
+                                <span class="state-label__pct">${pct.toFixed(1)}%</span>
+                            </div>
+                        `,
+                            iconSize: [48, 30],
+                            iconAnchor: [24, 15]
+                        })
+                    })
+                );
+            }
+        });
+
+        window._salesMapLabelsLayer = L.layerGroup(labels).addTo(salesMap);
+    }
+    async function loadGeo() {
+        try {
+            const [geojson, payload] = await Promise.all([
+                fetch('/assets/maps/brasil-ufs.geojson', { cache: 'no-store' }).then(r => {
+                    if (!r.ok) throw new Error('GeoJSON não encontrado');
+                    return r.json();
+                }),
+                fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
+            ]);
+
+            const geo = payload?.geografia || {};
+            const ufsMap = geo.ufs_map || {};
+
+            setText('geoUpdated', payload?.updated_at || '--');
+
+            renderGeoList(
+                'listTopRegioes',
+                'geoBadgeRegioes',
+                Array.isArray(geo.regioes) ? geo.regioes : [],
+                'regiao'
+            );
+
+            renderGeoList(
+                'listTopEstados',
+                'geoBadgeUFs',
+                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking : [],
+                'uf'
+            );
+
+            const values = Object.values(ufsMap)
+                .map(x => Number(x?.valor || 0))
+                .filter(v => Number.isFinite(v) && v > 0);
+
+            const max = values.length ? Math.max(...values) : 0;
+
+            if (!salesMap) {
+                salesMap = L.map('salesMap', {
+                    zoomControl: false,
+                    attributionControl: false,
+                    dragging: false,
+                    scrollWheelZoom: false,
+                    doubleClickZoom: false,
+                    boxZoom: false,
+                    keyboard: false,
+                    tap: false
+                });
+            }
+
+            if (salesLayer) {
+                salesLayer.remove();
+                salesLayer = null;
+            }
+
+            salesLayer = L.geoJSON(geojson, {
+                style: function (feature) {
+                    const props = feature?.properties || {};
+                    const uf = normalizeUF(props, feature);
+                    const info = ufsMap[uf] || {};
+                    const valor = Number(info.valor || 0);
+
+                    return {
+                        fillColor: getMapFillColor(valor, max),
+                        weight: 1.4,
+                        color: '#ffffff',
+                        opacity: 1,
+                        fillOpacity: 0.96
+                    };
+                },
+                onEachFeature: function (feature, layer) {
+                    const props = feature?.properties || {};
+                    const uf = normalizeUF(props, feature);
+
+                    const info = ufsMap[uf] || {};
+                    const valor = Number(info.valor || 0);
+                    const pct = Number(info.pct || 0) * 100;
+                    const regiao = String(info.regiao || '—');
+
+                    const estado =
+                        props.Estado ||
+                        props.estado ||
+                        props.NM_UF ||
+                        props.name ||
+                        props.geometry_name ||
+                        uf;
+
+                    layer.bindTooltip(
+                        `
+    <div style="min-width:170px">
+      <div style="font-weight:800;font-size:14px;margin-bottom:4px">
+        ${escapeHtml(String(estado))} (${escapeHtml(uf)})
+      </div>
+      <div><strong>Região:</strong> ${escapeHtml(regiao)}</div>
+      <div><strong>Vendas:</strong> ${escapeHtml(moneyBR(valor))}</div>
+      <div><strong>Share:</strong> ${pct.toFixed(1)}%</div>
+    </div>
+    `,
+                        {
+                            sticky: true,
+                            direction: 'top',
+                            opacity: 1
+                        }
+                    );
+                }
+            }).addTo(salesMap);
+
+            const bounds = salesLayer.getBounds();
+            if (bounds.isValid()) {
+                salesMap.fitBounds(bounds, { padding: [10, 10] });
+            }
+
+            renderStateLabels(geojson, ufsMap);
+
+            setTimeout(() => {
+                if (salesMap) {
+                    salesMap.invalidateSize();
+                    renderStateLabels(geojson, ufsMap);
+                }
+            }, 300);
+
+        } catch (e) {
+            console.error('Erro ao carregar geografia:', e);
+            renderGeoList('listTopRegioes', 'geoBadgeRegioes', [], 'regiao');
+            renderGeoList('listTopEstados', 'geoBadgeUFs', [], 'uf');
+        }
+    }
     async function loadTops() {
         try {
             const [prodPayload, cliPayload] = await Promise.all([
-                fetchJson(`/api/dashboard-executivo-save.php?ym=${CURRENT_YM}`),
-                fetchJson(`/api/clientes_insights.php?ym=${CURRENT_YM}`)
+                fetchJson(`/api/dashboard/dashboard-executivo-save.php?ym=${CURRENT_YM}`),
+                fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
             ]);
 
             setText('topsUpdated', prodPayload?.updated_at || cliPayload?.updated_at || '--');
@@ -782,7 +1137,7 @@
 
     async function loadDailyChart() {
         try {
-            const payload = await fetchJson(`/api/dashboard-executivo-save.php?ym=${CURRENT_YM}`);
+            const payload = await fetchJson(`/api/dashboard/dashboard-executivo-save.php?ym=${CURRENT_YM}`);
             renderDailyChart(payload);
         } catch (e) {
             console.error('Erro ao carregar gráfico diário:', e);
@@ -796,18 +1151,22 @@
                 chart.update('none');
             }
         });
-    }
 
+        if (salesMap) {
+            salesMap.invalidateSize();
+        }
+    }
     async function refresh(forceTotvs = false) {
         const dash = (window.DASH_CURRENT || 'executivo');
-        const url = `/api/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
+        const url = `/api/dashboard/dashboard-data.php?dash=${encodeURIComponent(dash)}${forceTotvs ? '&force=1' : ''}`;
 
         try {
             const payload = await fetchJson(url);
             renderFromValues(payload);
             await Promise.allSettled([
                 loadDailyChart(),
-                loadTops()
+                loadTops(),
+                loadGeo()
             ]);
             return payload;
         } catch (e) {
@@ -816,10 +1175,10 @@
         }
     }
 
-    refresh(false).catch(() => {});
+    refresh(false).catch(() => { });
 
     setInterval(() => {
-        refresh(true).catch(() => {});
+        refresh(true).catch(() => { });
     }, 10 * 60 * 1000);
 
     window.addEventListener('load', () => {
