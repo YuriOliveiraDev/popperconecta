@@ -57,7 +57,7 @@ define('GRAPH_TENANT_ID', 'c9617533-25d4-4f27-a17f-cf9b7593999c');
 
 define('GRAPH_CLIENT_ID', 'ee898022-f9fe-483a-b4fd-f28143b35ed9');
 
-define('GRAPH_CLIENT_SECRET', '');
+define('GRAPH_CLIENT_SECRET', getenv('GRAPH_CLIENT_SECRET'));
 
 define('GRAPH_SENDER_EMAIL', 'no-reply@popper.com.br');
 
