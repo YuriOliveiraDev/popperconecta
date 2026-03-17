@@ -153,7 +153,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 <span>Lembrar de mim</span>
               </label>
 
-              <a class="auth-link" href="/esqueci-senha.php">Esqueci minha senha</a>
+              <a class="auth-link" href="/esqueci-senha.php">Primeiro Acesso / Esqueci minha senha</a>
             </div>
 
             <button class="auth-btn" type="submit">

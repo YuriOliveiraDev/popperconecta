@@ -1,875 +1,736 @@
-/* Saudação */
-.topbar__right{display:flex;align-items:center;gap:12px;}
-.topbar__greeting{color:rgba(255,255,255,.88);font-weight:500;font-size:13px;letter-spacing:.2px;white-space:nowrap;}
-.topbar__greeting-name{color:rgba(255,255,255,.95);font-weight:400;}
-@media (max-width:720px){.topbar__greeting{display:none;}}
-
-/* Perfil */
-.profile{position:relative;margin-left:10px;}
-.profile__btn{
-  position:relative;
-  border:0;
-  background:transparent;
-  padding:0;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:38px;
-  height:38px;
-  border-radius:999px;
-  transition: background .15s ease, box-shadow .15s ease;
-}
-.profile__btn:hover{background:rgba(255,255,255,.14); box-shadow:0 0 0 2px rgba(255,255,255,.12);}
-.profile__btn:focus-visible{outline:none; box-shadow:0 0 0 3px rgba(255,255,255,.28);}
-.profile__avatar{
-  width:30px;height:30px;border-radius:999px;object-fit:cover;
-  border:1px solid rgba(255,255,255,.22);
-}
-.profile__fallback{
-  width:30px;height:30px;border-radius:999px;
-  display:inline-flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:12px;letter-spacing:.5px;
-  color:rgba(255,255,255,.92);
-  border:1px solid rgba(255,255,255,.22);
-  background:rgba(255,255,255,.10);
-}
-
-/* Notificações */
-.notif{position:relative;}
-.notif__btn{
-  position:relative;border:0;background:transparent;padding:0;cursor:pointer;
-  display:inline-flex;align-items:center;justify-content:center;
-  width:38px;height:38px;border-radius:999px;
-}
-.notif__btn:hover{background:rgba(255,255,255,.14);}
-
-.notif__icon{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:20px;
-  height:20px;
-  color: rgba(255,255,255,.92);
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,.25));
-}
-.notif__icon svg{display:block;}
-
-.notif__badge{
-  position:absolute;
-  top:3px;
-  right:3px;
-  min-width:16px;
-  height:16px;
-  padding:0 4px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  background:#ef4444;
-  color:#fff;
-  font-size:10px;
-  font-weight:900;
-  line-height:1;
-  border-radius:999px;
-  border:2px solid rgba(92,44,140,1);
-  box-shadow:0 6px 14px rgba(239,68,68,.28);
-}
-
-/* ===== MENUS (perfil/notif) com animação ===== */
-.profile__menu,
-.notif__menu{
-  position:absolute;right:0;top:46px;
-  background:#0f172a;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:14px;
-  box-shadow:0 12px 28px rgba(0,0,0,.35);
-  padding:8px;
-  z-index:9999;
-
-  visibility:hidden;
-  pointer-events:none;
-
-  transform-origin:top right;
-  transform:translateY(-10px) scale(.985);
-  opacity:0;
-
-  transition:
-    transform .18s ease,
-    opacity .18s ease,
-    visibility 0s linear .18s;
-  will-change:transform, opacity;
-}
-
-.profile__menu{min-width:240px;}
-.notif__menu{width:360px;max-width:90vw;}
-
-.profile__header{padding:10px 10px 8px 10px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
-.profile__name{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
-.profile__email{opacity:.8;font-size:12px;margin-top:2px;color:rgba(255,255,255,.85);}
-.profile__item{display:flex;padding:10px 10px;border-radius:10px;text-decoration:none;color:rgba(255,255,255,.92);font-weight:700;font-size:13px;}
-.profile__item:hover{background:rgba(255,255,255,.10);}
-.profile__item--danger{color:#ffb4b4;}
-.profile__item--danger:hover{background:rgba(255,80,80,.14);}
-
-.notif__header{display:flex;align-items:center;justify-content:space-between;padding:10px 10px 8px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:6px;}
-.notif__title{font-weight:900;color:rgba(255,255,255,.95);font-size:14px;}
-.notif__markall{border:0;background:transparent;color:rgba(255,255,255,.80);font-weight:800;cursor:pointer;font-size:12px;}
-.notif__markall:hover{text-decoration:underline;}
-.notif__empty{padding:12px 10px;color:rgba(255,255,255,.75);font-size:13px;}
-
-.notif__item{
-  display:block;
-  padding:10px 12px;
-  border-radius:10px;
-  text-decoration:none;
-  color:inherit;
-  transition: background .12s ease, transform .08s ease;
-}
-.notif__item:hover{background: rgba(255,255,255,.08);}
-.notif__item.is-unread{
-  background: rgba(99,102,241,.14);
-  box-shadow: inset 0 0 0 1px rgba(99,102,241,.20);
-}
-.notif__item.is-unread::before{
-  content:"";
-  width:8px;height:8px;border-radius:999px;
-  background:#60a5fa;
-  display:inline-block;
-  margin-right:8px;
-  vertical-align: middle;
-  box-shadow:0 0 0 2px rgba(96,165,250,.18);
-}
-.notif__item:not(.is-unread){opacity:.72;}
-.notif__item:not(.is-unread) .notif__item-title{font-weight:600;}
-.notif__item-title{font-weight:800;margin-bottom:2px;}
-.notif__item-msg{opacity:.9;font-size:12px;margin-top:2px;}
-.notif__item-date{opacity:.7;font-size:11px;margin-top:6px;}
-
-.notif__item.is-disabled{opacity:.75;cursor:default;}
-.notif__item.is-disabled:hover{background:transparent;}
-
-/* ABRE PERFIL */
-.profile:hover .profile__menu,
-.profile:focus-within .profile__menu,
-.profile.is-open .profile__menu{
-  visibility:visible;
-  pointer-events:auto;
-  transform:translateY(0) scale(1);
-  opacity:1;
-  transition: transform .18s ease, opacity .18s ease, visibility 0s;
-}
-
-/* ABRE NOTIF */
-.notif:focus-within .notif__menu,
-.notif.is-open .notif__menu{
-  visibility:visible;
-  pointer-events:auto;
-  transform:translateY(0) scale(1);
-  opacity:1;
-  transition: transform .18s ease, opacity .18s ease, visibility 0s;
-}
-
-/* Ring quando aberto */
-.profile.is-open .profile__btn,
-.notif.is-open .notif__btn{
-  background:rgba(255,255,255,.14);
-  box-shadow:0 0 0 2px rgba(255,255,255,.12);
-}
-
-/* Pop do sino quando tiver não lidas */
-@keyframes bell-pop{
-  0%{transform:scale(1)}
-  30%{transform:scale(1.12)}
-  60%{transform:scale(.98)}
-  100%{transform:scale(1)}
-}
-.notif__btn:has(.notif__badge) .notif__icon{animation:bell-pop .6s ease;}
-
-/* Acessibilidade */
-@media (prefers-reduced-motion: reduce){
-  .profile__menu,.notif__menu{transition:none;transform:none;}
-}
-
-/* ===== HEADER ROXO ===== */
-:root{ --brand:#5c2c84; }
-
-body .topbar.topbar--site,
-body header.topbar.topbar--site,
-body header.topbar,
-body .topbar{
-  background-color: var(--brand) !important;
-  background: var(--brand) !important;
-  border-bottom: none !important;
-  box-shadow: none !important;
-}
-
-body .topbar,
-body .topbar *{
-  color: #f5f5f7 !important;
-}
-
-body .topbar a,
-body .topbar a:link,
-body .topbar a:visited{
-  color: #f5f5f7 !important;
-}
-body .topbar a:hover{color:#ffffff !important;}
-
-/* Dropdown com texto escuro (se seu menu for claro). Se seu menu é escuro, REMOVA isto. */
-body .topbar__dropdown-menu,
-body .topbar__dropdown-menu *{
-  color: rgba(15,23,42,.92) !important;
-}
-
-/* =========================================================
-   DASHBOARD SUBMENU (único sistema) - HOVER desktop + clique mobile
-   ========================================================= */
-
-/* importante: submenu não pode ser cortado */
-.topbar__dropdown-menu{ overflow: visible; position: relative; }
-
-/* grupo */
-.topbar__dropdown-group{ position: relative; }
-
-/* botão do grupo com cara de item */
-.topbar__dropdown-item--group{
-  width:100%;
-  text-align:left;
-  display:flex;
-  align-items:center;
-  gap:10px;
-  cursor:pointer;
-  background:transparent;
-  border:0;
-}
-
-/* caret */
-.topbar__dropdown-caret{
-  margin-left:auto;
-  opacity:.75;
-  transform: translateY(-1px);
-}
-
-/* submenu: flyout ao lado (desktop) */
-.topbar__dropdown-submenu{
-  position:absolute;
-  top: 0;
-  left: calc(100% + 25px);
-  min-width: 240px;
-  z-index: 10000;
-
-  /* fechado (para hover/clique funcionar) */
-  visibility:hidden;
-  pointer-events:none;
-  opacity:0;
-  transform: translateX(-8px) scale(.985);
-  transform-origin: top left;
-
-  /* visual igual dropdown (já que é submenu) */
-  background:#0f172a;
-  border:1px solid rgba(255,255,255,.14);
-  border-radius:14px;
-  box-shadow:0 12px 28px rgba(0,0,0,.35);
-  padding:8px;
-
-  transition:
-    transform .18s ease,
-    opacity .18s ease,
-    visibility 0s linear .18s;
-}
-/* =========================================================
-   SUBMENU colado no item (remove gap do hover)
-   ========================================================= */
-.topbar__dropdown-submenu{
-  position:absolute;
-  top:-6px;            /* sobe levemente alinhando com item */
-  left:100%;           /* ENCOSTA no botão */
-
-  margin-left:-2px;    /* elimina micro-gap invisível */
-
-  min-width:240px;
-  z-index:10000;
-
-  visibility:hidden;
-  pointer-events:none;
-  opacity:0;
-
-  transform:translateX(-6px) scale(.985);
-  transform-origin:top left;
-
-  transition:
-    transform .18s ease,
-    opacity .18s ease,
-    visibility 0s linear .18s;
-}
-/* abre no HOVER (desktop) e teclado */
-@media (hover:hover) and (pointer:fine){
-  .topbar__dropdown-group:hover > .topbar__dropdown-submenu,
-  .topbar__dropdown-group:focus-within > .topbar__dropdown-submenu{
-    visibility:visible;
-    pointer-events:auto;
-    opacity:1;
-    transform: translateX(0) scale(1);
-    transition: transform .18s ease, opacity .18s ease, visibility 0s;
-  }
-}
-
-/* abre no CLIQUE (mobile) via classe is-open */
-.topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
-  visibility:visible;
-  pointer-events:auto;
-  opacity:1;
-  transform: translateX(0) scale(1);
-  transition: transform .18s ease, opacity .18s ease, visibility 0s;
-}
-
-/* mobile: submenu vira “embaixo” */
-@media (max-width:720px){
-  .topbar__dropdown-submenu{
-    position: static;
-    left:auto; top:auto;
-    min-width: 100%;
-    margin-top: 6px;
-    transform: translateY(-8px) scale(.985);
-    transform-origin: top center;
-  }
-
-  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* =========================================================
-   FIX 1) Dropdowns não podem empurrar o header (altura gigante)
-   - deixa menus absolutos e "fechados" por padrão
-   ========================================================= */
-.topbar__dropdown{ position:relative; }
-
-.topbar__dropdown-menu{
-  position:absolute;
-  top:36px;
-  left:0;
-  z-index:9998;
-
-  /* fechado por padrão */
-  visibility:hidden;
-  opacity:0;
-  pointer-events:none;
-  transform: translateY(-10px) scale(.985);
-  transform-origin: top left;
-
-  transition: transform .18s ease, opacity .18s ease, visibility 0s linear .18s;
-}
-
-/* abre quando o wrapper tiver .is-open (seu JS usa isso) */
-.topbar__dropdown.is-open > .topbar__dropdown-menu{
-  visibility:visible;
-  opacity:1;
-  pointer-events:auto;
-  transform: translateY(0) scale(1);
-  transition: transform .18s ease, opacity .18s ease, visibility 0s;
-}
-
-/* (opcional) manter aberto com teclado */
-.topbar__dropdown:focus-within > .topbar__dropdown-menu{
-  visibility:visible;
-  opacity:1;
-  pointer-events:auto;
-  transform: translateY(0) scale(1);
-  transition: transform .18s ease, opacity .18s ease, visibility 0s;
-}
-
-/* =========================================================
-   FIX 2) Submenu com fundo igual ao dropdown + texto legível
-   (seu CSS força texto escuro dentro do dropdown, então
-   vamos deixar o submenu claro também)
-   ========================================================= */
-
-/* submenu abre ao lado no desktop */
-.topbar__dropdown-submenu{
-  background:#ffffff !important;
-  border:1px solid rgba(15,23,42,.12) !important;
-  box-shadow:0 12px 28px rgba(0,0,0,.18) !important;
-}
-
-/* garante texto escuro legível no submenu */
-.topbar__dropdown-submenu,
-.topbar__dropdown-submenu *{
-  color: rgba(15,23,42,.92) !important;
-}
-
-/* =========================================================
-   FIX 3) Submenu NÃO pode aparecer embaixo no desktop (senão cresce o header)
-   - só no mobile ele vira "static"
-   ========================================================= */
-@media (min-width: 721px){
-  .topbar__dropdown-submenu{
-    position:absolute !important;
-  }
-}
-
 /* =========================
-   DROPDOWN + SUBMENU (fix flicker / animação)
+   HEADER / TOPBAR
    ========================= */
 
-.topbar__dropdown { position: relative; }
+:root {
+  --header-bg: #0f172a;
+  --header-panel: #111827;
+  --header-panel-2: #1f2937;
+  --header-text: #f9fafb;
+  --header-muted: rgba(255, 255, 255, 0.72);
+  --header-border: rgba(255, 255, 255, 0.10);
+  --header-hover: rgba(255, 255, 255, 0.06);
+  --header-accent: #3b82f6;
+  --header-danger: #ef4444;
+  --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.32);
+}
 
-/* Menu base */
-.topbar__dropdown-menu{
+.topbar {
+  position: relative;
+  z-index: 2000;
+  min-height: 68px;
+  padding: 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #0f172a 0%, #16223a 100%);
+  color: var(--header-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.topbar__left,
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 0.2px;
+  margin-right: 6px;
+}
+
+.link,
+.topbar__dropdown-trigger {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--header-text);
+  text-decoration: none;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .18s ease, color .18s ease, transform .18s ease;
+}
+
+.link:hover,
+.topbar__dropdown-trigger:hover,
+.topbar__dropdown.is-open > .topbar__dropdown-trigger {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.link--active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.topbar__dropdown {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* ponte invisível para não "quebrar" o hover ao descer o mouse */
+.topbar__dropdown::after {
+  content: "";
   position: absolute;
-  top: calc(100% + 10px);
   left: 0;
-  min-width: 240px;
+  right: 0;
+  top: calc(100% - 2px);
+  height: 14px;
+  background: transparent;
+}
+
+.topbar__dropdown-menu,
+.topbar__dropdown-submenu,
+.profile__menu {
+  position: absolute;
+  min-width: 220px;
+  background: var(--header-panel);
+  border: 1px solid var(--header-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(8px) scale(.985);
+  transition:
+    opacity .16s ease,
+    transform .16s ease,
+    visibility .16s ease;
+}
+
+.topbar__dropdown-menu {
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 2100;
+  padding: 8px;
+}
+
+.topbar__dropdown-menu--wide {
+  min-width: 260px;
+}
+
+.topbar__dropdown.is-open > .topbar__dropdown-menu,
+.topbar__dropdown:hover > .topbar__dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.topbar__dropdown-item {
+  width: 100%;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--header-text);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.topbar__dropdown-item:hover,
+.topbar__dropdown-item:focus-visible {
+  background: var(--header-hover);
+  outline: none;
+}
+
+.topbar__dropdown-group {
+  position: relative;
+}
+
+.topbar__dropdown-item--group {
+  font-weight: 600;
+}
+
+.topbar__dropdown-submenu {
+  top: 0;
+  left: calc(100% + 8px);
+  z-index: 2110;
+  padding: 8px;
+  min-width: 220px;
+}
+
+/* ponte entre menu pai e submenu */
+.topbar__dropdown-group::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: -12px;
+  width: 16px;
+  height: 100%;
+  background: transparent;
+}
+
+.topbar__dropdown-group:hover > .topbar__dropdown-submenu,
+.topbar__dropdown-group:focus-within > .topbar__dropdown-submenu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.topbar__dropdown-caret {
+  opacity: .72;
+  font-size: 16px;
+}
+
+.topbar__greeting {
+  color: var(--header-muted);
+  font-size: 14px;
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.topbar__greeting-name {
+  color: #fff;
+  font-weight: 600;
+}
+
+.profile {
+  position: relative;
+}
+
+.profile__btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 999px;
+}
+
+.profile__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.profile__avatar,
+.profile__fallback {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile__avatar {
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.14);
+}
+
+.profile__fallback {
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.profile__menu {
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 250px;
+  z-index: 2200;
+  padding: 8px;
+}
+
+.profile.is-open .profile__menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.profile__header {
+  padding: 12px;
+  border-bottom: 1px solid var(--header-border);
+  margin-bottom: 6px;
+}
+
+.profile__name {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile__email {
+  color: var(--header-muted);
+  font-size: 12px;
+  margin-top: 2px;
+  word-break: break-word;
+}
+
+.profile__item {
+  display: block;
+  text-decoration: none;
+  color: #fff;
+  padding: 11px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.profile__item:hover {
+  background: var(--header-hover);
+}
+
+.profile__item--danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fecaca;
+}
+
+.popper-tv-logo {
+  position: fixed;
+  right: 18px;
+  bottom: 40px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
+}
+
+.popper-tv-logo.is-ready {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.popper-tv-logo img {
+  display: block;
+  width: auto;
+  height: 42px;
+  max-width: 180px;
+  object-fit: contain;
+}
+
+@media (max-width: 1200px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .topbar__left,
+  .topbar__right {
+    flex-wrap: wrap;
+  }
+
+  .topbar__greeting {
+    display: none;
+  }
+}
+/* =========================
+   HOTFIX — texto do menu branco
+   ========================= */
+
+.profile,
+.notif {
+  position: relative;
+}
+
+.profile__menu,
+.notif__menu {
+  position: absolute;
+  right: 0;
+  top: 46px;
   z-index: 9999;
 
+  visibility: hidden;
   opacity: 0;
-  transform: translateY(-6px);
   pointer-events: none;
+  transform: translateY(-10px) scale(.985);
 
-  transition: opacity .15s ease, transform .15s ease;
-  will-change: opacity, transform;
-
-  /* se quiser, mantém seu visual atual (bordas/cores) */
-  /* background: #fff; border: 1px solid rgba(0,0,0,.08); border-radius: 12px; */
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s linear .18s;
 }
 
-/* Estado aberto do menu */
-.topbar__dropdown.is-open > .topbar__dropdown-menu{
+.profile.is-open .profile__menu,
+.notif.is-open .notif__menu,
+.profile:focus-within .profile__menu,
+.notif:focus-within .notif__menu {
+  visibility: visible;
   opacity: 1;
-  transform: translateY(0);
   pointer-events: auto;
+  transform: translateY(0) scale(1);
+  transition:
+    transform .18s ease,
+    opacity .18s ease,
+    visibility 0s;
 }
 
-/* Itens */
-.topbar__dropdown-item{
+.profile__btn,
+.notif__btn {
+  cursor: pointer;
+}
+/* =========================
+   ALIGN FIX — menu e submenu admin
+   ========================= */
+
+.topbar__dropdown-item,
+.topbar__dropdown-item--group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 14px;
+}
+
+.topbar__dropdown-label {
+  display: inline-block;
+  text-align: left;
+  flex: 1 1 auto;
+}
+
+.topbar__dropdown-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  flex: 0 0 18px;
+}
+
+/* submenu lateral */
+.topbar__dropdown-submenu .topbar__dropdown-item {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: 14px;
+}
+
+/* se removeu os ícones do admin, evita sobrar espaço torto */
+.topbar__dropdown-item .topbar__dropdown-icon:empty {
+  display: none;
+}
+.topbar__dropdown-trigger::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  margin-left: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform .18s ease, opacity .18s ease;
+  opacity: .8;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.topbar__dropdown.is-open > .topbar__dropdown-trigger::after {
+  transform: rotate(225deg);
+}.topbar__dropdown-trigger::after {
+  content: none !important;
+  display: none !important;
+}
+.topbar__dropdown-caret {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: .72;
+  transform: translateX(0);
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+/* hover/aberto */
+.topbar__dropdown-group:hover > .topbar__dropdown-item--group .topbar__dropdown-caret,
+.topbar__dropdown-group:focus-within > .topbar__dropdown-item--group .topbar__dropdown-caret,
+.topbar__dropdown-group.is-open > .topbar__dropdown-item--group .topbar__dropdown-caret {
+  opacity: 1;
+  transform: translateX(3px);
+}
+.topbar__dropdown-item,
+.topbar__dropdown-item--group {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
+  text-align: left;
 }
 
-/* Grupo com submenu (pai) */
-.topbar__dropdown-group{ position: relative; }
-
-/* Botão “pai” do submenu */
-.topbar__dropdown-item--group{
-  width: 100%;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
+.topbar__dropdown-label {
+  flex: 1 1 auto;
+  text-align: left;
 }
 
-/* Submenu lateral */
+.topbar__dropdown-item--group {
+  justify-content: flex-start;
+}
+
+/* =========================
+   SETA MENU PRINCIPAL
+   ========================= */
+
+.topbar__dropdown-trigger{
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+
+/* seta */
+.menu-caret{
+  width:6px;
+  height:6px;
+  border-right:2px solid currentColor;
+  border-bottom:2px solid currentColor;
+  transform:rotate(45deg);
+  opacity:.75;
+  transition: transform .18s ease, opacity .18s ease;
+}
+
+/* animação quando abre */
+.topbar__dropdown.is-open > .topbar__dropdown-trigger .menu-caret{
+  transform: rotate(225deg);
+  opacity:1;
+}
+/* =========================
+   HEADER COLOR
+   ========================= */
+
+.topbar.topbar--site,
+header.topbar.topbar--site,
+body .topbar {
+  background-color: #2c2c7c !important;
+  background: #2c2c7c !important;
+  border-bottom: none !important;
+}
+.topbar.topbar--site {
+  background: linear-gradient(180deg,#2c2c7c 0%,#24246a 100%) !important;
+}
+/* =========================
+   SUBMENU COLOR
+   ========================= */
+
 .topbar__dropdown-submenu{
-  position: absolute;
-  top: -8px;               /* sobe um tiquinho para “colar” */
-  left: calc(100% + 8px);  /* distância lateral */
-  min-width: 240px;
-  z-index: 10000;
-
-  opacity: 0;
-  transform: translateX(-6px);
-  pointer-events: none;
-
-  transition: opacity .15s ease, transform .15s ease;
-  will-change: opacity, transform;
+  background: #5c2c84 !important;
+  border: 1px solid rgba(255,255,255,.15) !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,.35);
 }
 
-/* Estado aberto do submenu */
-.topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
-  opacity: 1;
-  transform: translateX(0);
-  pointer-events: auto;
+/* texto do submenu */
+.topbar__dropdown-submenu .topbar__dropdown-item,
+.topbar__dropdown-submenu .topbar__dropdown-label{
+  color:black !important;
 }
 
-/* “Ponte invisível” para evitar vão entre pai e submenu (elimina flicker) */
-.topbar__dropdown-group::after{
-  content:"";
-  position:absolute;
-  top: 0;
-  right: -10px;
-  width: 12px;
-  height: 100%;
+/* hover do item */
+.topbar__dropdown-submenu .topbar__dropdown-item:hover{
+  background: rgba(255,255,255,.12);
+}
+/* =========================
+   MENU + SUBMENU VISUAL
+   ========================= */
+
+/* menu dropdown */
+.topbar__dropdown-menu{
+  background:#ffffff !important;
+  border:1px solid rgba(0,0,0,.08) !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
 }
 
-/* Mobile: submenu vira “inline” (sem ficar flutuando ao lado) */
-@media (max-width: 860px){
-  .topbar__dropdown-menu{
-    left: 0;
-    right: auto;
-  }
-  .topbar__dropdown-submenu{
-    position: static;
-    min-width: 0;
-    transform: none;
-    opacity: 1;
-    pointer-events: auto;
-    display: none; /* abre/fecha via classe */
-    margin-left: 10px;
-    margin-top: 6px;
-  }
-  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
-    display: block;
-  }
+/* submenu */
+.topbar__dropdown-submenu{
+  background:#ffffff !important;
+  border:1px solid rgba(0,0,0,.08) !important;
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
 }
 
-/* =========================================================
-   MOBILE ONLY (não altera desktop)
-   Cole NO FINAL do CSS
-   ========================================================= */
-@media (max-width: 720px){
-
-  /* 1) Header não estoura largura */
-  .topbar.topbar--site{
-    padding: 10px 12px;
-  }
-
-  .topbar__left,
-  .topbar__right{
-    min-width: 0;
-  }
-
-  /* 2) Faz header virar 2 linhas */
-  .topbar.topbar--site{
-    display:flex;
-    flex-wrap:wrap;
-    align-items:center;
-    gap:10px;
-  }
-
-  .topbar__left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:1 1 auto;
-    min-width:0;
-  }
-
-  .topbar__right{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex:0 0 auto;
-  }
-
-  /* 3) Marca: diminui e evita quebrar */
-  .brand{
-    font-size: 14px;
-    font-weight: 900;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 52vw;
-  }
-
-  /* 4) Esconde links “grandes” no mobile (mantém só ícones/perfil/notif) */
-  .topbar__left > .link,
-  .topbar__left > .topbar__dropdown{
-    display:none !important;
-  }
-
-  /* 5) Cria um botão MENU (hambúrguer) usando ::before (sem mudar PHP)
-        - ele aparece no lugar dos links escondidos
-        - ao clicar, você abre com JS adicionando .is-mobile-open no header
-  */
-  .topbar.topbar--site::before{
-    content:"☰ Menu";
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    height:36px;
-    padding:0 12px;
-    border-radius:999px;
-    background: rgba(255,255,255,.14);
-    box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset;
-    font-weight:800;
-    font-size:13px;
-    cursor:pointer;
-    user-select:none;
-  }
-
-  /* 6) Quando header estiver “aberto”, mostramos os dropdowns em modo vertical
-        Você só precisa, no clique do ::before, togglar a classe:
-        document.querySelector('.topbar--site').classList.toggle('is-mobile-open')
-  */
-  .topbar.topbar--site.is-mobile-open .topbar__left{
-    flex: 1 1 100%;
-    order: 3;
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-top: 6px;
-  }
-
-  .topbar.topbar--site.is-mobile-open .topbar__left > .link,
-  .topbar.topbar--site.is-mobile-open .topbar__left > .topbar__dropdown{
-    display:flex !important;
-  }
-
-  /* 7) Dropdown no mobile vira “painel” full width */
-  .topbar__dropdown{
-    width:100%;
-    margin-left:0 !important; /* mata seus inline styles no mobile */
-  }
-
-  .topbar__dropdown-trigger{
-    width:100%;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:10px 12px;
-    border-radius:12px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.14);
-    text-decoration:none;
-  }
-
-  .topbar__dropdown-menu{
-    position: static !important;  /* não flutua */
-    width:100%;
-    min-width: 0;
-    max-width: none;
-    margin-top: 6px;
-
-    /* você já tem “fechado por padrão” com visibility/opacity,
-       então aqui a gente simplifica pro mobile */
-    visibility: visible !important;
-    opacity: 1 !important;
-    transform: none !important;
-    pointer-events: auto !important;
-
-    display:none; /* abre via .is-open no wrapper */
-  }
-
-  .topbar__dropdown.is-open > .topbar__dropdown-menu{
-    display:block;
-  }
-
-  /* 8) Submenu sempre inline (embaixo do item pai) */
-  .topbar__dropdown-submenu{
-    position: static !important;
-    left:auto !important;
-    top:auto !important;
-    min-width: 0 !important;
-    width: 100% !important;
-
-    margin: 6px 0 0 0 !important;
-
-    transform:none !important;
-    opacity:1 !important;
-    pointer-events:auto !important;
-
-    display:none; /* abre via .is-open do grupo */
-    border-radius: 12px;
-  }
-
-  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{
-    display:block;
-  }
-
-  /* 9) Item do grupo (pai) com espaçamento bom */
-  .topbar__dropdown-item--group{
-    padding: 10px 12px;
-    border-radius: 12px;
-  }
-
-  /* 10) Notif/Profile alinhados e menores */
-  .notif__btn,
-  .profile__btn{
-    width:36px;
-    height:36px;
-  }
-
-  /* 11) Saudação já some no seu CSS (max-width:720),
-         só garantindo que não “puxe” layout */
-  .topbar__greeting{
-    display:none !important;
-  }
+/* texto menu */
+.topbar__dropdown-item,
+.topbar__dropdown-item--group,
+.topbar__dropdown-label{
+  color:#1f2937 !important;
+  font-weight:600 !important; /* mais fino */
+  font-size:13px;
 }
 
-@media (max-width:720px){
-
-  /* botão do menu criado via JS */
-  .mobileMenuBtn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    height:36px;
-    padding:0 12px;
-    border-radius:999px;
-    border:1px solid rgba(255,255,255,.18);
-    background: rgba(255,255,255,.14);
-    font-weight:900;
-    font-size:13px;
-    cursor:pointer;
-    user-select:none;
-  }
-  .mobileMenuBtn:hover{ background: rgba(255,255,255,.18); }
-  .mobileMenuBtn span{ font-weight:900; }
-
-  /* deixa header mais “compacto” */
-  .topbar.topbar--site{
-    padding:10px 12px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-  }
-  .topbar__left{ gap:10px; min-width:0; }
-  .brand{
-    max-width: 44vw;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    font-size:14px;
-    font-weight:900;
-  }
-
-  /* esconde os links/dropdowns por padrão (mobile fechado) */
-  .topbar__left > .link,
-  .topbar__left > .topbar__dropdown{
-    display:none !important;
-  }
-
-  /* quando abrir o menu mobile, mostra tudo em coluna */
-  .topbar--site.is-mobile-open{
-    flex-wrap:wrap;
-  }
-
-  .topbar--site.is-mobile-open .topbar__left{
-    flex: 1 1 100%;
-    order: 3;
-    display:flex;
-    flex-wrap:wrap;
-    gap:8px;
-    margin-top:6px;
-  }
-
-  .topbar--site.is-mobile-open .topbar__left > .link,
-  .topbar--site.is-mobile-open .topbar__left > .topbar__dropdown{
-    display:flex !important;
-    width:100%;
-    margin-left:0 !important;
-  }
-
-  /* trigger vira “botão” full width */
-  .topbar__dropdown-trigger,
-  .topbar__left > .link{
-    width:100%;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:10px 12px;
-    border-radius:12px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.14);
-    text-decoration:none;
-  }
-
-  /* dropdown menu no mobile vira painel normal (não flutua) */
-  .topbar__dropdown-menu{
-    position: static !important;
-    width:100%;
-    min-width:0 !important;
-    margin-top:6px;
-
-    /* mantém sua lógica de abrir/fechar via .is-open */
-    visibility:visible !important;
-    opacity:1 !important;
-    transform:none !important;
-    pointer-events:auto !important;
-
-    display:none;
-  }
-  .topbar__dropdown.is-open > .topbar__dropdown-menu{ display:block; }
-
-  /* submenu sempre inline no mobile */
-  .topbar__dropdown-submenu{
-    position: static !important;
-    width:100% !important;
-    min-width:0 !important;
-    margin-top:6px !important;
-    display:none;
-  }
-  .topbar__dropdown-group.is-open > .topbar__dropdown-submenu{ display:block; }
-
-  /* some com saudação no mobile (você já tinha, mas garante) */
-  .topbar__greeting{ display:none !important; }
+/* hover */
+.topbar__dropdown-item:hover{
+  background:#f5f5f7;
 }
 
-/* =========================================================
-   FIX — quadrado roxo ao abrir menu mobile
-   ========================================================= */
-@media (max-width:720px){
-
-  /* header continua roxo */
-  .topbar.topbar--site{
-    position:relative;
-  }
-
-  /* container dos menus vira um painel */
-  .topbar--site.is-mobile-open .topbar__left{
-    background:#0f172a; /* mesmo fundo dos dropdowns */
-    border-radius:14px;
-    padding:10px;
-    margin-top:8px;
-
-    box-shadow:0 12px 28px rgba(0,0,0,.35);
-  }
-
-  /* remove fundo herdado dos links */
-  .topbar--site.is-mobile-open .topbar__dropdown,
-  .topbar--site.is-mobile-open .link{
-    background:transparent !important;
-  }
-
-  /* cada item vira card */
-  .topbar--site.is-mobile-open
-  .topbar__dropdown-trigger,
-  .topbar--site.is-mobile-open
-  .topbar__left > .link{
-    background:rgba(255,255,255,.06);
-    border:1px solid rgba(255,255,255,.12);
-  }
-
-  .topbar--site.is-mobile-open
-  .topbar__dropdown-trigger:hover{
-    background:rgba(255,255,255,.10);
-  }
-
+/* seta submenu */
+.topbar__dropdown-caret{
+  color:#6b7280;
 }
+/* =========================
+   HEADER MAIS ESTREITO + ROXO
+   ========================= */
 
-/* ✅ trava a altura visual do header (não deixa crescer) */
-body .topbar{
-  height:56px;                 /* ajuste se o seu header for outro */
+.topbar.topbar--site{
+  background:#2c2c7c !important;   /* roxo */
+  height:60px;                     /* deixa o header mais estreito */
+  min-height:60px;
+  padding:0 18px;
   display:flex;
   align-items:center;
 }
 
-/* garante que o lado direito não estique */
+/* área esquerda e direita */
+.topbar__left,
 .topbar__right{
-  height:56px;                 /* igual ao header */
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+/* links do menu */
+.topbar__dropdown-trigger,
+.link,
+.brand{
+  font-size:13px;
+  font-weight:500;
+  color:#ffffff !important;
+  display:flex;
   align-items:center;
 }
 
-/* botão continua no mesmo tamanho */
-.profile__btn{
-  width:38px;
-  height:38px;
-  overflow:visible;
-  position:relative;
+/* seta do menu */
+.menu-caret{
+  border-right:2px solid #ffffff;
+  border-bottom:2px solid #ffffff;
 }
 
-/* ✅ NÃO aumenta width/height -> usa scale (não influencia layout) */
+/* remove espaçamento excessivo */
+.topbar__dropdown{
+  margin-left:10px !important;
+}
+
+/* =========================
+   HEADER LAYOUT MODERNO
+   ========================= */
+
+.topbar.topbar--site{
+  background:#6b3a8f !important;
+  height:48px;
+  padding:0 20px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+/* menu esquerdo */
+.topbar__left{
+  display:flex;
+  align-items:center;
+  gap:22px;
+}
+
+/* links */
+.topbar__dropdown-trigger,
+.link,
+.brand{
+  font-size:14px;
+  font-weight:500;
+  color:#ffffff !important;
+}
+
+/* hover menu */
+.topbar__dropdown-trigger:hover,
+.link:hover{
+  opacity:.85;
+}
+
+/* lado direito */
+.topbar__right{
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+
+/* texto saudação */
+.topbar__greeting{
+  font-size:14px;
+  color:#ffffff;
+  font-weight:400;
+}
+/* =========================
+   AVATAR USUARIO
+   ========================= */
+
+.profile__btn{
+  border:none;
+  background:transparent;
+  padding:0;
+  cursor:pointer;
+}
+
+/* avatar redondo */
 .profile__avatar,
 .profile__fallback{
-  width:30px;
-  height:30px;
-  border-radius:999px;
-  transform: scale(1.45);      /* 30 * 1.45 ≈ 44px */
-  transform-origin:center;
-  border:1px solid rgba(255,255,255,.22);
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#7e4da3;
+  color:#ffffff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
+  font-size:13px;
+}
+
+/* se tiver foto */
+.profile__avatar{
   object-fit:cover;
+}
+.topbar__dropdown{
   position:relative;
-  z-index:2;
+}
+/* =========================
+   HEADER ROXO
+   ========================= */
+
+header.topbar,
+.topbar,
+.topbar--site,
+header.topbar.topbar--site{
+  background:#5c2c84 !important;
+  background-color:#5c2c84!important;
+}
+
+/* remover qualquer gradiente antigo */
+.topbar{
+  background-image:none !important;
+}
+/* =========================
+   BRAND SEM EFEITO DE HOVER
+   ========================= */
+
+.brand,
+.brand:hover,
+.brand:focus,
+.brand:active,
+.brand:visited{
+  background: transparent !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+  color: #ffffff !important;
+}
+
+.brand:hover{
+  opacity: 1 !important;
 }

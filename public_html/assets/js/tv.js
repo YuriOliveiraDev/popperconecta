@@ -1,3 +1,4 @@
+
 (function () {
     'use strict';
 
@@ -447,7 +448,7 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     animation: false,
-                    layout: { padding: { top: 52, right: 10, bottom: 10, left: 10 } },
+                    layout: { padding: { top: 64, right: 10, bottom: 10, left: 10 } },
                     plugins: {
                         legend: {
                             display: true,
@@ -478,7 +479,7 @@
                         },
                         y: {
                             beginAtZero: true,
-                            grace: '18%',
+                            grace: '22%',
                             ticks: {
                                 callback: (v) => brl.format(v),
                                 color: '#64748b',
@@ -489,7 +490,36 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    id: 'paceValueLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx, chartArea } = chart;
+                        if (!chartArea) return;
+
+                        const meta = chart.getDatasetMeta(0);
+                        const dataset = chart.data.datasets[0];
+                        if (!meta || !dataset) return;
+
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillStyle = 'rgba(31, 41, 55, 0.98)';
+                        ctx.font = '700 16px Inter, system-ui, sans-serif';
+
+                        meta.data.forEach((bar, i) => {
+                            const raw = Number(dataset.data[i] ?? 0);
+                            if (!Number.isFinite(raw)) return;
+
+                            const x = bar.x;
+                            const y = Math.max(bar.y - 10, chartArea.top + 24);
+
+                            ctx.fillText(brl.format(raw), x, y);
+                        });
+
+                        ctx.restore();
+                    }
+                }]
             });
         }
     }

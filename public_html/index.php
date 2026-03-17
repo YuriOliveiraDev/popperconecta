@@ -1,9 +1,8 @@
 <?php
 declare(strict_types=1);
-date_default_timezone_set('America/Sao_Paulo');
 
-require_once __DIR__ . '/app/auth.php';
-require_once __DIR__ . '/app/db.php';
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 
 require_login();
 
@@ -53,7 +52,9 @@ try {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Início — <?= h((string) APP_NAME) ?></title>
-
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet"
+    href="/assets/css/apps/geo-vendas.css?v=<?= filemtime(__DIR__ . '/assets/css/apps/geo-vendas.css') ?>">
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>">
   <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>">
   <link rel="stylesheet" href="/assets/css/carousel.css?v=<?= filemtime(__DIR__ . '/assets/css/carousel.css') ?>">
@@ -63,7 +64,7 @@ try {
 
 <body class="page page--gav">
 
-  <?php require_once __DIR__ . '/app/header.php'; ?>
+  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main>
     <section class="carousel carousel--full full-bleed" id="mainCarousel">
@@ -258,7 +259,15 @@ try {
 
             </div>
           </article>
-
+          <!-- GEO VENDAS SLIDE -->
+          <article class="slide slide--geo-vendas" data-id="geo-vendas">
+            <div id="geoVendasHome" data-geo-vendas-app data-endpoint="/api/dashboard/clientes_insights.php"
+              data-geojson="/assets/maps/brasil-ufs.geojson" data-ym="<?= date('Y-m') ?>"
+              data-title="Top Regiões e Mapa de Vendas" data-subtitle-prefix="Distribuição por UF e região"
+              data-map-title="Mapa do Brasil por venda" data-regions-title="Top Regiões" data-states-title="Top Estados"
+              style="height:100%; padding:18px 22px; box-sizing:border-box;">
+            </div>
+          </article>
           <!-- COMUNICADOS -->
           <?php foreach ($comunicados as $c): ?>
             <?php
@@ -306,15 +315,29 @@ try {
     </section>
   </main>
 
-  <?php require_once __DIR__ . '/app/footer.php'; ?>
+  <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
-
   <script src="/assets/js/header.js"></script>
-  <script src="/assets/js/dropdowns.js"></script>
   <script src="/assets/js/index-carousel.js"></script>
   <script src="/assets/js/index.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="/assets/js/apps/geo-vendas.js?v=<?= filemtime(__DIR__ . '/assets/js/apps/geo-vendas.js') ?>"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const app = GeoVendasApp.create('#geoVendasHome');
+        await app.load();
+
+        window.addEventListener('resize', () => {
+          app.refreshSize();
+        });
+      } catch (e) {
+        console.error('Erro ao iniciar GeoVendasApp no index:', e);
+      }
+    });
+  </script>
 </body>
 
 </html>

@@ -48,8 +48,8 @@ $extra_js_head = array_values(array_unique($extra_js_head));
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= header_e($page_title) ?></title>
-    <link rel="icon" sizes="32x32" href="/assets/img/favicon.png">
-    <link rel="icon" sizes="16x16" href="/assets/img/favicon.png">
+<link rel="icon" sizes="32x32" href="/assets/img/favicon.png">
+<link rel="icon" sizes="16x16" href="/assets/img/favicon.png">
     <link rel="icon"
         href="/assets/img/favicon.ico?v=<?= @filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/img/favicon.ico') ?>">
     <link rel="shortcut icon"
@@ -70,7 +70,6 @@ $extra_js_head = array_values(array_unique($extra_js_head));
 
     <?php require APP_ROOT . '/app/partials/topbar.php'; ?>
 
-    <div class="beta-corner" id="betaCorner">
-        <span> ⚠ Este sistema está em fase de testes (BETA).<br>
-            Algumas funcionalidades podem sofrer alterações.</span>
+    <div class="popper-tv-logo" id="popperTvLogo">
+        <img src="/assets/img/logo.png" alt="Popper">
     </div>

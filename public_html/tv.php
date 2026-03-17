@@ -1,8 +1,14 @@
 <?php
 declare(strict_types=1);
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-
 require_login();
+/* =========================================================
+   ANTI-CACHE (TV Box / Kiosk)
+========================================================= */
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Cache-Control: post-check=0, pre-check=0', false);
+header('Pragma: no-cache');
+header('Expires: 0');
 
 $u = current_user();
 $activePage = 'home';
@@ -31,13 +37,18 @@ try {
 ?>
 <!doctype html>
 <html lang="pt-br">
-
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Início — <?= h((string) APP_NAME) ?></title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="/assets/css/tv.css?v=<?= filemtime(__DIR__ . '/assets/css/tv.css') ?>">
+
+  <!-- LEAFLET LOCAL -->
+  <link rel="stylesheet" href="/assets/vendor/leaflet/leaflet.css?v=<?= @filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/vendor/leaflet/leaflet.css') ?: time() ?>">
+
+  <link rel="stylesheet" href="/assets/css/tv.css?v=<?= @filemtime(__DIR__ . '/assets/css/tv.css') ?: time() ?>">
 </head>
 
 <body class="page page--gav">
@@ -46,15 +57,13 @@ try {
 
       <button class="carousel__fullscreen" id="fullscreenBtn" aria-label="Tela cheia">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round" />
+          <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </button>
 
       <button class="carousel__arrow carousel__arrow--prev" id="prevBtn" aria-label="Anterior">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-            stroke-linejoin="round" />
+          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </button>
 
@@ -64,7 +73,6 @@ try {
           <!-- DASHBOARD -->
           <article class="slide slide--dashboard" data-id="dashboard">
             <div class="dash-tv-wrap">
-
               <div class="dash-tv-grid">
 
                 <div class="dash-tv-card">
@@ -163,7 +171,6 @@ try {
               <div class="dash-tv-updated">
                 Atualizado em <span id="tv-updated-footer">--</span>
               </div>
-
             </div>
           </article>
 
@@ -225,6 +232,7 @@ try {
               </div>
             </div>
           </article>
+
           <!-- GEO / MAPA -->
           <article class="slide slide--geo" data-id="geo">
             <div class="geo-slide">
@@ -271,6 +279,7 @@ try {
               </div>
             </div>
           </article>
+
           <!-- COMUNICADOS -->
           <?php foreach ($comunicados as $c): ?>
             <?php
@@ -307,34 +316,70 @@ try {
 
       <button class="carousel__arrow carousel__arrow--next" id="nextBtn" aria-label="Próximo">
         <svg viewBox="0 0 24 24" fill="none">
-          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-            stroke-linejoin="round" />
+          <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </button>
 
       <div class="carousel__dots" id="dots"></div>
     </section>
   </main>
-  <!-- LOGO FIXA -->
+
   <div class="tv-logo">
     <img src="/assets/img/logo.png" alt="Popper">
   </div>
+
+  <!-- DEBUG VISÍVEL -->
+  <div id="tv-debug" style="
+    position:fixed;
+    left:12px;
+    bottom:12px;
+    z-index:99999;
+    background:rgba(0,0,0,.78);
+    color:#fff;
+    padding:10px 12px;
+    border-radius:10px;
+    font:12px/1.4 Arial,sans-serif;
+    max-width:520px;
+    display:none;
+    white-space:pre-wrap;
+  "></div>
+
   <script>
     (function () {
+      const dbg = document.getElementById('tv-debug');
+      function showDebug(msg) {
+        if (!dbg) return;
+        dbg.style.display = 'block';
+        dbg.textContent += (dbg.textContent ? "\n" : "") + msg;
+      }
+
+      window.__tvDebug = showDebug;
+
+      window.addEventListener('error', function (e) {
+        showDebug('JS ERROR: ' + (e.message || 'erro desconhecido'));
+      });
+
+      window.addEventListener('unhandledrejection', function (e) {
+        showDebug('PROMISE ERROR: ' + ((e.reason && e.reason.message) ? e.reason.message : String(e.reason)));
+      });
+
       const goReady = () => document.body.classList.add('is-ready');
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', goReady, { once: true });
       } else {
         goReady();
       }
+
       window.DASH_CURRENT = 'executivo';
     })();
   </script>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="/assets/js/index-carousel.js?v=<?= filemtime(__DIR__ . '/assets/js/index-carousel.js') ?>"></script>
-  <script src="/assets/js/tv.js?v=<?= filemtime(__DIR__ . '/assets/js/tv.js') ?>"></script>
-</body>
+  <!-- LOCAIS, NÃO CDN -->
+  <script src="/assets/vendor/chart/chart.umd.min.js?v=<?= @filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/vendor/chart/chart.umd.min.js') ?: time() ?>"></script>
+  <script src="/assets/vendor/leaflet/leaflet.js?v=<?= @filemtime($_SERVER['DOCUMENT_ROOT'] . '/assets/vendor/leaflet/leaflet.js') ?: time() ?>"></script>
 
+  <script src="/assets/js/index-carousel.js?v=<?= @filemtime(__DIR__ . '/assets/js/index-carousel.js') ?: time() ?>"></script>
+  <script src="/assets/js/tv.js?v=<?= @filemtime(__DIR__ . '/assets/js/tv.js') ?: time() ?>"></script>
+
+</body>
 </html>
