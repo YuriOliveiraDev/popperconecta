@@ -734,3 +734,20 @@ header.topbar.topbar--site{
 .brand:hover{
   opacity: 1 !important;
 }
+.beta-corner{
+  position: fixed;
+  right: 20px;
+  bottom: 80px; /* sobe um pouco para não ficar atrás do footer */
+  z-index: 9999;
+
+  font-family: "Poppins", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: right;
+
+  color: #64748b;
+  opacity: 0.75;
+
+  pointer-events: none; /* não bloqueia clique */
+  user-select: none;
+}

@@ -2386,3 +2386,83 @@ header.topbar,
   justify-content: center !important;
   border-radius: 50%;
 }
+
+/* =========================================================
+   FIX GEO VENDAS — INDEX
+========================================================= */
+
+.slide--geo-vendas {
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 18px 20px !important;
+  display: flex !important;
+  align-items: stretch !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.slide--geo-vendas > #geoVendasHome,
+.slide--geo-vendas [data-geo-vendas-app] {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+/* se o app interno monta esse grid */
+.geo-vendas,
+.geo-vendas__grid {
+  height: 100% !important;
+  min-height: 0 !important;
+}
+
+.geo-vendas__grid {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 1fr) minmax(520px, 1.5fr) minmax(280px, 1fr) !important;
+  gap: 16px !important;
+  align-items: stretch !important;
+}
+
+/* cards laterais e card do mapa */
+.geo-vendas__card,
+.geo-card,
+.geo-card--map {
+  min-height: 0 !important;
+  height: 100% !important;
+  overflow: hidden !important;
+}
+
+/* container real do mapa */
+.sales-map,
+.geo-vendas__map,
+#salesMap,
+.leaflet-container {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 540px !important;
+  border-radius: 20px !important;
+}
+
+/* card central precisa deixar o mapa crescer */
+.geo-card--map,
+.geo-vendas__map-wrap {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.geo-card--map .sales-map,
+.geo-vendas__map-wrap .leaflet-container {
+  flex: 1 1 auto !important;
+  min-height: 540px !important;
+}
+
+/* listas laterais com scroll interno */
+.geo-list,
+#listTopRegioes,
+#listTopEstados {
+  min-height: 0 !important;
+  overflow: auto !important;
+}

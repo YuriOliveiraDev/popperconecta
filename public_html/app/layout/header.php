@@ -70,6 +70,7 @@ $extra_js_head = array_values(array_unique($extra_js_head));
 
     <?php require APP_ROOT . '/app/partials/topbar.php'; ?>
 
-    <div class="popper-tv-logo" id="popperTvLogo">
-        <img src="/assets/img/logo.png" alt="Popper">
+    <div class="beta-corner" id="betaCorner">
+        <span> ⚠ Este sistema está em fase de testes (BETA).<br>
+            Algumas funcionalidades podem sofrer alterações.</span>
     </div>

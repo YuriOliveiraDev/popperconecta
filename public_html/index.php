@@ -324,20 +324,45 @@ try {
   <script src="/assets/js/index.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/assets/js/apps/geo-vendas.js?v=<?= filemtime(__DIR__ . '/assets/js/apps/geo-vendas.js') ?>"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        const app = GeoVendasApp.create('#geoVendasHome');
-        await app.load();
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const app = GeoVendasApp.create('#geoVendasHome');
+      await app.load();
 
-        window.addEventListener('resize', () => {
+      const refreshGeo = () => {
+        try {
           app.refreshSize();
+        } catch (e) {
+          console.warn('Falha ao atualizar tamanho do mapa:', e);
+        }
+      };
+
+      window.addEventListener('resize', refreshGeo);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(refreshGeo, 250);
+      });
+
+      setTimeout(refreshGeo, 200);
+      setTimeout(refreshGeo, 600);
+      setTimeout(refreshGeo, 1200);
+
+      const track = document.getElementById('track');
+      if (track) {
+        const obs = new MutationObserver(() => {
+          setTimeout(refreshGeo, 120);
         });
-      } catch (e) {
-        console.error('Erro ao iniciar GeoVendasApp no index:', e);
+        obs.observe(track, {
+          attributes: true,
+          childList: false,
+          subtree: false
+        });
       }
-    });
-  </script>
+    } catch (e) {
+      console.error('Erro ao iniciar GeoVendasApp no index:', e);
+    }
+  });
+</script>
 </body>
 
 </html>
