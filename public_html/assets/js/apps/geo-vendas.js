@@ -137,7 +137,7 @@
         let currentGeoJson = null;
         let currentUfsMap = null;
 
-        const endpoint = options.endpoint || root.dataset.endpoint || '/api/clientes_insights.php';
+        const endpoint = options.endpoint || root.dataset.endpoint || '/api/dashboard/clientes_insights.php';
         const geojsonUrl = options.geojson || root.dataset.geojson || '/assets/maps/brasil-ufs.geojson';
         const ym = options.ym || root.dataset.ym || new Date().toISOString().slice(0, 7);
         const title = options.title || root.dataset.title || 'Top Regiões e Mapa de Vendas';
@@ -148,14 +148,6 @@
 
         root.innerHTML = `
             <div class="geo-vendas">
-                <div class="geo-vendas__header">
-                    <div>
-                        <h3 class="geo-vendas__title">${escapeHtml(title)}</h3>
-                        <div class="geo-vendas__subtitle">
-                            ${escapeHtml(subtitlePrefix)} — <span data-role="updated">--</span>
-                        </div>
-                    </div>
-                </div>
 
                 <div class="geo-vendas__grid">
                     <section class="geo-vendas__card">
@@ -340,7 +332,7 @@
                         </div>
                     `, {
                         sticky: true,
-                        direction: 'top',
+                        direction: 'auto',
                         opacity: 1
                     });
 
