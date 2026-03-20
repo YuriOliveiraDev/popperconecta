@@ -62,35 +62,35 @@ if (!function_exists('header_normalize_asset_path')) {
 }
 
 if (!function_exists('header_build_notification_href')) {
-function header_build_notification_href(string $link): array
-{
-    $link = trim($link);
+    function header_build_notification_href(string $link): array
+    {
+        $link = trim($link);
 
-    if ($link === '') {
+        if ($link === '') {
+            return [
+                'href' => '#',
+                'clickable' => false,
+            ];
+        }
+
+        // normaliza barras
+        $link = str_replace('\\', '/', $link);
+
+        // CORREÇÃO ESPECÍFICA RH
+        if ($link === '/rh_redemptions.php' || $link === 'rh_redemptions.php') {
+            $link = '/admin/rh/rh_redemptions.php';
+        }
+
+        // garante barra inicial
+        if ($link[0] !== '/') {
+            $link = '/' . $link;
+        }
+
         return [
-            'href' => '#',
-            'clickable' => false,
+            'href' => $link,
+            'clickable' => true,
         ];
     }
-
-    // normaliza barras
-    $link = str_replace('\\', '/', $link);
-
-    // CORREÇÃO ESPECÍFICA RH
-    if ($link === '/rh_redemptions.php' || $link === 'rh_redemptions.php') {
-        $link = '/admin/rh/rh_redemptions.php';
-    }
-
-    // garante barra inicial
-    if ($link[0] !== '/') {
-        $link = '/' . $link;
-    }
-
-    return [
-        'href' => $link,
-        'clickable' => true,
-    ];
-}
 }
 
 if (!function_exists('header_get_admin_items')) {
@@ -108,9 +108,9 @@ if (!function_exists('header_get_admin_items')) {
             }
 
             $items[] = [
-                'url'   => (string) ($meta['url'] ?? '#'),
+                'url' => (string) ($meta['url'] ?? '#'),
                 'label' => (string) ($meta['label'] ?? $perm),
-                'icon'  => (string) ($meta['icon'] ?? ''),
+                'icon' => (string) ($meta['icon'] ?? ''),
             ];
         }
 
@@ -146,6 +146,9 @@ if (!function_exists('header_get_dashboard_groups')) {
         $financeiro = [];
         if (user_can('dash.financeiro.contasp', $user)) {
             $financeiro[] = ['label' => 'Contas a Pagar', 'url' => '/dashboards/dashboardContasP.php'];
+        }
+        if (user_can('dash.financeiro.inadimplencia', $user)) {
+            $financeiro[] = ['label' => 'Inadimplência', 'url' => '/dashboards/inadimplencia.php'];
         }
         if ($financeiro) {
             $groups[] = [

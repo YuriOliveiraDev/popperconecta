@@ -21,6 +21,7 @@ const DASHBOARD_CATALOG = [
   'dash.comercial.clientes'    => ['label' => 'Clientes',    'url' => '/dashboards/clientes.php',              'group' => 'Comercial'],
 
   'dash.financeiro.contasp'    => ['label' => 'Contas a Pagar','url' => '/dashboards/dashboardContasP.php',         'group' => 'Financeiro'],
+  'dash.financeiro.inadimplencia' => ['label' => 'Inadimplência', 'url' => '/dashboards/inadimplencia.php',    'group' => 'Financeiro'],
 
   'dash.comex.importacoes'     => ['label' => 'Importações', 'url' => '/dashboards/importacoes.php',           'group' => 'Comex'],
 ];

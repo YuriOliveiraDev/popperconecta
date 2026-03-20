@@ -18,6 +18,7 @@ define('TOTVS_CONSULTAS', [
     'kpi_contasapagar' => '000072',
     'kpi_pedidos'     => '000070',
     // 'kpi_outra'     => '000040',
+    ''
 ]);
 
 // Credenciais (recomendado: variáveis de ambiente no servidor)
