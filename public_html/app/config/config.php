@@ -60,4 +60,3 @@ define('GRAPH_CLIENT_ID', 'ee898022-f9fe-483a-b4fd-f28143b35ed9');
 define('GRAPH_CLIENT_SECRET', 'a038Q~_RzMEhnX2Nw7qNHUvOum80zUNCY83~TaKS');
 
 define('GRAPH_SENDER_EMAIL', 'no-reply@popper.com.br');
-

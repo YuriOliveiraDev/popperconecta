@@ -1,0 +1,15 @@
+{
+    "name": "yuri.yang/htdocs",
+    "autoload": {
+        "psr-4": {
+            "YuriYang\\Htdocs\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Yuri Oliveira",
+            "email": "yurideoliveira2712@gmail.com"
+        }
+    ],
+    "require": {}
+}

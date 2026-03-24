@@ -44,10 +44,7 @@ $extra_css = [
                 <p>Painel com cruzamento entre faturamento e títulos vencidos do TOTVS. (A partir de 01/08/2025)</p>
             </div>
 
-            <div class="inad-actions">
-                <button class="btn-refresh" id="btnRefresh" type="button">Atualizar</button>
-                <div class="updated-at" id="updatedAt">Carregando...</div>
-            </div>
+
         </section>
 
         <section class="inad-filters">
@@ -283,6 +280,7 @@ $extra_css = [
                     <div class="inline-actions">
                         <button class="btn-filter" id="btnApplyTable" type="button">Aplicar</button>
                         <button class="btn-clear" id="btnClearTable" type="button">Limpar</button>
+                        <button class="btn-secondary" id="btnOpenEmailModal" type="button">Enviar aviso</button>
                     </div>
                 </div>
             </div>
@@ -316,6 +314,78 @@ $extra_css = [
                 </table>
             </div>
         </section>
+        <div class="modal" id="modalAvisoEmail" aria-hidden="true">
+            <div class="modal__backdrop" data-close-email-modal></div>
+
+            <div class="modal__dialog modal__dialog--xl" role="dialog" aria-modal="true"
+                aria-labelledby="modalAvisoTitulo">
+                <div class="modal__header">
+                    <div>
+                        <h2 id="modalAvisoTitulo">Enviar aviso de inadimplência</h2>
+                        <p id="modalAvisoResumo">Selecione o filtro e revise o e-mail antes do envio.</p>
+                    </div>
+
+                    <button type="button" class="modal__close" id="btnCloseEmailModal" aria-label="Fechar">×</button>
+                </div>
+
+                <div class="modal__body">
+                    <div class="email-modal-grid">
+                        <div class="email-form-side">
+
+                            <div class="form-row">
+                                <label for="emailDestinatario">Para</label>
+                                <input type="text" id="emailDestinatario" placeholder="email@empresa.com.br">
+                            </div>
+
+                            <div class="form-row">
+                                <label for="emailCc">CC</label>
+                                <input type="text" id="emailCc" placeholder="cc1@empresa.com.br; cc2@empresa.com.br">
+                            </div>
+
+                            <div class="form-row">
+                                <label for="emailAssunto">Assunto</label>
+                                <input type="text" id="emailAssunto" name="inad_notice_topic_locked"
+                                    placeholder="Assunto do e-mail" readonly tabindex="-1"
+                                    style="background:#f3f4f6; cursor:not-allowed;">
+                            </div>
+
+                            <div class="form-row">
+                                <label for="emailMensagemExtra">Observação adicional</label>
+                                <textarea id="emailMensagemExtra" rows="5"
+                                    placeholder="Digite uma mensagem complementar..."></textarea>
+                            </div>
+
+                            <div class="email-meta-cards">
+                                <div class="mini-kpi">
+                                    <span>Clientes</span>
+                                    <strong id="emailQtdClientes">0</strong>
+                                </div>
+                                <div class="mini-kpi">
+                                    <span>Total inadimplente</span>
+                                    <strong id="emailTotalInad">R$ 0,00</strong>
+                                </div>
+                                <div class="mini-kpi">
+                                    <span>Títulos</span>
+                                    <strong id="emailQtdTitulos">0</strong>
+                                </div>
+                            </div>
+
+                            <div class="modal__actions">
+                                <button type="button" class="btn-clear" id="btnPreviewEmail">Atualizar prévia</button>
+                                <button type="button" class="btn-filter" id="btnEnviarEmailAviso">Enviar e-mail</button>
+                            </div>
+                        </div>
+
+                        <div class="email-preview-side">
+                            <div class="preview-head">
+                                <strong>Prévia do e-mail</strong>
+                            </div>
+                            <div id="emailPreviewHtml" class="email-preview-box"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <div class="modal" id="modalCliente" aria-hidden="true">

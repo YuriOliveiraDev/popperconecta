@@ -2,6 +2,7 @@
   const state = {
     payload: null,
     clientes: [],
+    vendedores080: [],
     chart: null,
     selectedPreset: "6m",
     loaderCount: 0,
@@ -204,6 +205,32 @@
     }
   }
 
+  async function loadVendedores080(force = false) {
+    if (state.vendedores080.length && !force) return state.vendedores080;
+
+    const resp = await fetch("/api/totvs_vendedores_080.php", {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+    });
+
+    const text = await resp.text();
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("Resposta inválida da 000080:", text);
+      throw new Error("A API de vendedores 000080 não retornou JSON válido.");
+    }
+
+    if (!resp.ok || !data.ok) {
+      throw new Error(data?.message || "Erro ao carregar vendedores 000080.");
+    }
+
+    state.vendedores080 = Array.isArray(data.items) ? data.items : [];
+    return state.vendedores080;
+  }
+
   function getGroupByLabel(groupBy) {
     switch (String(groupBy || "")) {
       case "day":
@@ -250,9 +277,11 @@
     state.selectedPreset = preset;
     setActivePresetButton(preset);
   }
+
   if (typeof Chart !== "undefined" && window.ChartDataLabels) {
     Chart.register(window.ChartDataLabels);
   }
+
   function renderTrendChart(data) {
     const canvas = document.getElementById("inadTrendChart");
     if (!canvas || typeof Chart === "undefined") {
@@ -490,9 +519,11 @@
       const inad = toNumber(cli.inad_total);
       const fat = toNumber(cli.faturado_periodo);
       const risk = getRiskMeta(cli);
+      const clienteKey = cli.cliente_key || `${cli.cliente || ""}|${cli.loja || ""}`;
 
       return {
         ...cli,
+        cliente_key: clienteKey,
         participacao_total_pct: totalInad > 0 ? (inad / totalInad) * 100 : 0,
         faixa_principal: getMaiorFaixa(cli.titulos),
         risk_label: risk.label,
@@ -864,8 +895,8 @@
         return `
         <button type="button"
                 class="ranking-item ranking-item--fat ${esc(
-          riskClass(pctInad, inad, cli.maior_atraso_dias)
-        )}"
+                  riskClass(pctInad, inad, cli.maior_atraso_dias)
+                )}"
                 data-key="${esc(cli.cliente_key)}">
           <div class="ranking-left">
             <span class="ranking-pos">${idx + 1}</span>
@@ -1268,6 +1299,445 @@
     renderClientes(clientesTabela);
   }
 
+  function handleLoadError(err) {
+    console.error(err);
+    destroyTrendChart();
+
+    if ($("#updatedAt")) {
+      $("#updatedAt").textContent = "Erro ao carregar dados";
+    }
+
+    const subtitle = document.getElementById("chartSubtitle");
+    if (subtitle) {
+      subtitle.textContent = "Erro ao carregar tendência da inadimplência.";
+    }
+  }
+
+  function parseEmails(value) {
+    return String(value || "")
+      .split(/[;,]/)
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+
+  function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email || "").trim());
+  }
+
+  function getClientesParaAviso() {
+    return filtrarClientesTabela(state.clientes || [])
+      .slice()
+      .sort((a, b) => toNumber(b.inad_total) - toNumber(a.inad_total));
+  }
+
+  function limparNomePessoa(texto) {
+    return String(texto || "")
+      .replace(/^\d+\s*[-=>]\s*/g, "")
+      .replace(/^\d+\s+/g, "")
+      .trim();
+  }
+
+  function pegarPrimeirosDoisNomes(texto) {
+    const partes = limparNomePessoa(texto).split(/\s+/).filter(Boolean);
+    if (!partes.length) return "";
+    return partes.slice(0, 2).join(" ");
+  }
+
+  function getCodigoVendedorAtual() {
+    const clientes = getClientesParaAviso();
+
+    const codigos = [
+      ...new Set(
+        clientes
+          .map((c) => String(c.vendedor_codigo || c.E1_VEND1 || "").trim())
+          .filter(Boolean)
+      ),
+    ];
+
+    if (codigos.length === 1) {
+      return codigos[0];
+    }
+
+    return "";
+  }
+
+  function getVendedor080Atual() {
+    const codigo = getCodigoVendedorAtual();
+    if (!codigo) return null;
+
+    return (
+      (state.vendedores080 || []).find(
+        (v) => String(v.codigo || "").trim() === codigo
+      ) || null
+    );
+  }
+
+  function getNomeVendedorContexto() {
+    const vendedor080 = getVendedor080Atual();
+    if (vendedor080?.nome) {
+      return pegarPrimeirosDoisNomes(vendedor080.nome) || limparNomePessoa(vendedor080.nome);
+    }
+
+    const clientes = getClientesParaAviso();
+
+    const nomesUnicos = [
+      ...new Set(
+        clientes
+          .map((c) => limparNomePessoa(c.vendedor_nome || c.vendedor || ""))
+          .filter(Boolean)
+      ),
+    ];
+
+    if (nomesUnicos.length === 1) {
+      return pegarPrimeirosDoisNomes(nomesUnicos[0]);
+    }
+
+    const filtroDigitado = ($("#filterVendedor")?.value || "").trim();
+    if (filtroDigitado) {
+      return pegarPrimeirosDoisNomes(filtroDigitado) || filtroDigitado;
+    }
+
+    return "Carteira geral";
+  }
+
+  function getContextoEmail() {
+    return getNomeVendedorContexto();
+  }
+
+  function getEmailVendedorAtual() {
+    const vendedor080 = getVendedor080Atual();
+    return String(vendedor080?.email || "").trim();
+  }
+
+  function autoPreencherEnviarPara() {
+    const inputPara = $("#emailDestinatario");
+    if (!inputPara) return;
+
+    const email = getEmailVendedorAtual();
+    inputPara.value = email || "";
+  }
+
+  function buildEmailSubject(clientes) {
+    const vendedor = getContextoEmail();
+    return `Aviso de inadimplência - ${vendedor}: ${num(clientes.length)} cliente(s)`;
+  }
+
+  function buildEmailHtml(clientes, mensagemExtra = "") {
+    const totalInad = sum(clientes, (c) => c.inad_total);
+    const totalTitulos = sum(clientes, (c) => c.inad_qtd_titulos);
+    const vendedor = getContextoEmail();
+
+    const linhas = clientes
+      .map(
+        (cli) => `
+      <tr>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
+          ${esc(cli.cliente || "-")}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
+          ${esc(cli.loja || "-")}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top; font-weight:600;">
+          ${esc(cli.nome || "-")}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
+          ${esc(onlyNameOrCode(cli.vendedor_nome, cli.vendedor_codigo))}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
+          ${esc(onlyNameOrCode(cli.supervisor_nome, cli.supervisor_codigo))}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#b91c1c; vertical-align:top; font-weight:700; white-space:nowrap;">
+          ${brl(cli.inad_total)}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top; text-align:center;">
+          ${num(cli.inad_qtd_titulos)}
+        </td>
+        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top; white-space:nowrap;">
+          ${num(cli.maior_atraso_dias)} dias
+        </td>
+      </tr>
+    `
+      )
+      .join("");
+
+    const extra = String(mensagemExtra || "").trim()
+      ? `
+      <div style="margin:0 0 18px; padding:14px 16px; background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; color:#9a3412;">
+        ${esc(mensagemExtra).replace(/\n/g, "<br>")}
+      </div>
+    `
+      : "";
+
+    return `
+  <div style="margin:0; padding:24px 12px; background:#f4f6fb;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center">
+          <table width="960" cellpadding="0" cellspacing="0" border="0" style="width:960px; max-width:960px; background:#ffffff; border-radius:16px; overflow:hidden;">
+            <tr>
+              <td style="background:#f8fafc; border-bottom:1px solid #e5e7eb; padding:20px 24px;">
+                <table width="100%">
+                  <tr>
+                    <td style="vertical-align:middle;">
+                      <div style="font-size:12px; color:#6b7280; margin-bottom:6px;">
+                        COMUNICADO AUTOMÁTICO • INADIMPLÊNCIA
+                      </div>
+
+                      <div style="font-size:22px; font-weight:800; color:#111827;">
+                        Aviso de inadimplência
+                      </div>
+
+                      <div style="margin-top:6px; font-size:14px; color:#4b5563;">
+                        Carteira vinculada a <strong>${esc(vendedor)}</strong>
+                      </div>
+                    </td>
+
+                    <td align="right" style="vertical-align:middle;">
+                      <img src="https://popperconecta.com.br/assets/img/logo.png" alt="Popper Conecta" style="max-height:48px;">
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:24px;">
+                <p style="margin:0 0 12px; color:#374151;">Olá,</p>
+
+                <p style="margin:0 0 12px; color:#374151;">
+                  Segue abaixo a relação de <strong>clientes inadimplentes</strong> vinculados à carteira de
+                  <strong>${esc(vendedor)}</strong>.
+                </p>
+
+                <p style="margin:0 0 20px; color:#374151;">
+                  Pedimos a gentileza de verificar os casos listados e seguir com as tratativas necessárias.
+                </p>
+
+                ${extra}
+
+                <table width="100%" style="margin-bottom:20px;">
+                  <tr>
+                    <td style="padding:10px;">
+                      <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px;">
+                        <div style="font-size:12px; color:#6b7280;">Clientes</div>
+                        <div style="font-size:22px; font-weight:800;">${num(clientes.length)}</div>
+                      </div>
+                    </td>
+
+                    <td style="padding:10px;">
+                      <div style="border:1px solid #fecaca; background:#fff7f7; border-radius:12px; padding:14px;">
+                        <div style="font-size:12px; color:#7f1d1d;">Total inadimplente</div>
+                        <div style="font-size:22px; font-weight:800; color:#b91c1c;">
+                          ${brl(totalInad)}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td style="padding:10px;">
+                      <div style="border:1px solid #e5e7eb; border-radius:12px; padding:14px;">
+                        <div style="font-size:12px; color:#6b7280;">Títulos</div>
+                        <div style="font-size:22px; font-weight:800;">${num(totalTitulos)}</div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+                  <thead>
+                    <tr style="background:#f3f4f6;">
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Código</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Loja</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Cliente</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Vendedor</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Supervisor</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Inadimplência</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Títulos</th>
+                      <th style="padding:10px; border:1px solid #e5e7eb;">Maior atraso</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${
+                      linhas ||
+                      `
+                      <tr>
+                        <td colspan="8" style="padding:18px; text-align:center; color:#6b7280; border:1px solid #e5e7eb;">
+                          Nenhum cliente inadimplente encontrado para o filtro selecionado.
+                        </td>
+                      </tr>
+                    `
+                    }
+                  </tbody>
+                </table>
+
+                <p style="margin-top:20px; font-size:13px; color:#6b7280;">
+                  Em caso de dúvidas, responda este e-mail.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+`;
+  }
+
+  function setAssuntoGerado(clientes) {
+    const input = $("#emailAssunto");
+    if (!input) return;
+
+    const assunto = buildEmailSubject(clientes);
+    input.value = assunto;
+    input.setAttribute("value", assunto);
+  }
+
+  function refreshEmailPreview() {
+    autoPreencherEnviarPara();
+
+    const clientes = getClientesParaAviso();
+    const mensagemExtra = $("#emailMensagemExtra")?.value || "";
+    const html = buildEmailHtml(clientes, mensagemExtra);
+
+    if ($("#emailPreviewHtml")) {
+      $("#emailPreviewHtml").innerHTML = html;
+    }
+
+    setAssuntoGerado(clientes);
+
+    if ($("#emailQtdClientes")) {
+      $("#emailQtdClientes").textContent = num(clientes.length);
+    }
+
+    if ($("#emailTotalInad")) {
+      $("#emailTotalInad").textContent = brl(sum(clientes, (c) => c.inad_total));
+    }
+
+    if ($("#emailQtdTitulos")) {
+      $("#emailQtdTitulos").textContent = num(sum(clientes, (c) => c.inad_qtd_titulos));
+    }
+
+    if ($("#modalAvisoResumo")) {
+      $("#modalAvisoResumo").textContent =
+        `Vendedor: ${getContextoEmail()} • ${num(clientes.length)} cliente(s) encontrados`;
+    }
+
+    return { clientes, html };
+  }
+
+  async function openEmailModal() {
+    try {
+      if (!state.vendedores080.length) {
+        await loadVendedores080();
+      }
+    } catch (err) {
+      console.error(err);
+    }
+
+    refreshEmailPreview();
+
+    const modal = $("#modalAvisoEmail");
+    if (!modal) return;
+
+    modal.classList.add("is-open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeEmailModal() {
+    const modal = $("#modalAvisoEmail");
+    if (!modal) return;
+
+    modal.classList.remove("is-open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  async function enviarAvisoEmail() {
+    const para = parseEmails($("#emailDestinatario")?.value || "");
+    const cc = parseEmails($("#emailCc")?.value || "");
+    const assunto = ($("#emailAssunto")?.value || "").trim();
+
+    if (!para.length) {
+      alert("Informe pelo menos um destinatário no campo Para.");
+      return;
+    }
+
+    const invalidos = [...para, ...cc].filter((email) => !isValidEmail(email));
+    if (invalidos.length) {
+      alert(`Existem e-mails inválidos: ${invalidos.join(", ")}`);
+      return;
+    }
+
+    const { clientes, html } = refreshEmailPreview();
+
+    if (!clientes.length) {
+      alert("Nenhum cliente inadimplente encontrado para envio.");
+      return;
+    }
+
+    const payload = {
+      para,
+      cc,
+      assunto,
+      html,
+      clientes: clientes.map((cli) => ({
+        cliente: cli.cliente,
+        loja: cli.loja,
+        nome: cli.nome,
+        vendedor_codigo: cli.vendedor_codigo,
+        vendedor_nome: cli.vendedor_nome,
+        supervisor_codigo: cli.supervisor_codigo,
+        supervisor_nome: cli.supervisor_nome,
+        inad_total: toNumber(cli.inad_total),
+        inad_qtd_titulos: toNumber(cli.inad_qtd_titulos),
+        maior_atraso_dias: toNumber(cli.maior_atraso_dias),
+      })),
+      filtros: {
+        vendedor: $("#filterVendedor")?.value || "",
+        supervisor: $("#filterSupervisor")?.value || "",
+        faixa: $("#filterFaixa")?.value || "",
+        valor_min: $("#filterValorMin")?.value || "",
+        date_from: $("#filterDateFrom")?.value || "",
+        date_to: $("#filterDateTo")?.value || "",
+      },
+    };
+
+    await withLoader(
+      async () => {
+        const resp = await fetch("/api/inadimplencia_enviar_email.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const rawText = await resp.text();
+
+        let data;
+        try {
+          data = JSON.parse(rawText);
+        } catch (e) {
+          console.error("Resposta bruta do servidor:", rawText);
+          throw new Error("O servidor não retornou um JSON válido. Verifique o PHP do endpoint.");
+        }
+
+        if (!resp.ok || !data.ok) {
+          throw new Error(data?.message || "Falha ao enviar e-mail.");
+        }
+
+        alert("E-mail enviado com sucesso.");
+        closeEmailModal();
+      },
+      {
+        title: "Enviando aviso…",
+        sub: "Preparando e disparando e-mail",
+      }
+    ).catch((err) => {
+      alert(err.message || "Erro ao enviar e-mail.");
+    });
+  }
+
   document.addEventListener("click", (e) => {
     const sortTh = e.target.closest(".th-sort");
     if (sortTh) {
@@ -1345,6 +1815,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       closeModal();
+      closeEmailModal();
       return;
     }
 
@@ -1366,20 +1837,42 @@
     }
   });
 
-  function handleLoadError(err) {
-    console.error(err);
-    destroyTrendChart();
+  $("#btnOpenEmailModal")?.addEventListener("click", openEmailModal);
+  $("#btnCloseEmailModal")?.addEventListener("click", closeEmailModal);
+  $("#btnPreviewEmail")?.addEventListener("click", refreshEmailPreview);
+  $("#btnEnviarEmailAviso")?.addEventListener("click", enviarAvisoEmail);
 
-    if ($("#updatedAt")) {
-      $("#updatedAt").textContent = "Erro ao carregar dados";
-    }
+  document.querySelectorAll("[data-close-email-modal]").forEach((el) => {
+    el.addEventListener("click", closeEmailModal);
+  });
 
-    const subtitle = document.getElementById("chartSubtitle");
-    if (subtitle) {
-      subtitle.textContent = "Erro ao carregar tendência da inadimplência.";
-    }
-  }
+  [
+    "#emailMensagemExtra",
+    "#filterVendedor",
+    "#filterSupervisor",
+    "#filterFaixa",
+    "#filterValorMin",
+    "#filterDateFrom",
+    "#filterDateTo",
+  ].forEach((sel) => {
+    $(sel)?.addEventListener("change", async () => {
+      try {
+        if (!state.vendedores080.length) {
+          await loadVendedores080();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      refreshEmailPreview();
+    });
+  });
 
   setActivePresetButton(state.selectedPreset);
-  loadData().catch(handleLoadError);
+
+  Promise.allSettled([loadVendedores080(), loadData()]).then((results) => {
+    const dataResult = results[1];
+    if (dataResult?.status === "rejected") {
+      handleLoadError(dataResult.reason);
+    }
+  });
 })();

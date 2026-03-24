@@ -300,6 +300,8 @@ try {
 
             'inad_total' => 0.0,
             'inad_qtd_titulos' => 0,
+            'inad_total_periodo_pct' => 0.0,
+            'inad_qtd_titulos_periodo_pct' => 0,
             'maior_atraso_dias' => 0,
             'media_atraso_dias' => 0,
             'indice_inadimplencia_pct' => 0.0,
@@ -519,13 +521,6 @@ try {
                 $dateToTs = strtotime(date('Y-m-d 23:59:59', $dateToBase));
             }
         }
-    } else {
-        [$presetFromTs, $presetToTs] = getPresetRange($preset);
-        $dateFromTs = $presetFromTs;
-        $dateToTs = $presetToTs;
-        $usarFiltroData = true;
-        $dateFrom = date('Y-m-d', $presetFromTs);
-        $dateTo = date('Y-m-d', $presetToTs);
     }
 
     if ($dateFromTs !== null && $dateToTs !== null && $dateFromTs > $dateToTs) {
@@ -560,7 +555,6 @@ try {
         'supervisor' => $filterSuper,
         'faixa_atraso' => $filterFaixa,
         'valor_min' => $filterMinVal,
-        'corte_emissao_inad' => $dataCorteEmissaoInad,
     ], JSON_UNESCAPED_UNICODE));
 
     $cacheFile = sys_get_temp_dir() . '/totvs_inadimplentes_' . $cacheKey . '.json';
@@ -664,13 +658,6 @@ try {
             continue;
         }
 
-        // corta títulos emitidos antes de 01/08/2025
-
-
-        if ($dataCorteEmissaoInadTs !== null && $tsEmissao < $dataCorteEmissaoInadTs) {
-            continue;
-        }
-
         $tsVencto = parseYmd($vencto);
         if ($tsVencto === null) {
             continue;
@@ -680,9 +667,7 @@ try {
             continue;
         }
 
-        if ($usarFiltroData && !inRange($tsVencto, $dateFromTs, $dateToTs)) {
-            continue;
-        }
+        $entraNoPeriodoComparativo = !$usarFiltroData || inRange($tsVencto, $dateFromTs, $dateToTs);
 
         $diasAtraso = (int) floor(($todayTs - $tsVencto) / 86400);
         if ($diasAtraso < 0) {
@@ -724,6 +709,11 @@ try {
         $clientes[$key]['inad_qtd_titulos']++;
         $clientes[$key]['maior_atraso_dias'] = max($clientes[$key]['maior_atraso_dias'], $diasAtraso);
 
+        if ($entraNoPeriodoComparativo) {
+            $clientes[$key]['inad_total_periodo_pct'] += $saldo;
+            $clientes[$key]['inad_qtd_titulos_periodo_pct']++;
+        }
+
         $clientes[$key]['titulos'][] = [
             'filial' => (string) ($row['E1_FILIAL'] ?? ''),
             'prefixo' => (string) ($row['E1_PREFIXO'] ?? ''),
@@ -754,7 +744,7 @@ try {
             }
         }
 
-        if ($usarFiltroData && $tsVencto !== null && inRange($tsVencto, $dateFromTs, $dateToTs)) {
+        if ($entraNoPeriodoComparativo) {
             $periodoKey = buildPeriodoKey($tsVencto, $groupBy);
 
             if (!isset($historicoMap[$periodoKey])) {
@@ -837,6 +827,8 @@ try {
 
             $fatPorCliente[$key]['inad_total'] = 0.0;
             $fatPorCliente[$key]['inad_qtd_titulos'] = 0;
+            $fatPorCliente[$key]['inad_total_periodo_pct'] = 0.0;
+            $fatPorCliente[$key]['inad_qtd_titulos_periodo_pct'] = 0;
             $fatPorCliente[$key]['maior_atraso_dias'] = 0;
             $fatPorCliente[$key]['media_atraso_dias'] = 0.0;
             $fatPorCliente[$key]['indice_inadimplencia_pct'] = 0.0;
@@ -902,7 +894,7 @@ try {
     foreach ($clientes as $key => $cli) {
         $clientes[$key]['indice_inadimplencia_pct'] =
             $cli['faturado_periodo'] > 0
-            ? round(($cli['inad_total'] / $cli['faturado_periodo']) * 100, 2)
+            ? round(($cli['inad_total_periodo_pct'] / $cli['faturado_periodo']) * 100, 2)
             : 0.0;
 
         usort($clientes[$key]['titulos'], function ($a, $b) {
@@ -918,18 +910,22 @@ try {
 
         $inadTotal = $inadCli ? (float) ($inadCli['inad_total'] ?? 0) : 0.0;
         $inadQtdTitulos = $inadCli ? (int) ($inadCli['inad_qtd_titulos'] ?? 0) : 0;
+        $inadTotalPeriodoPct = $inadCli ? (float) ($inadCli['inad_total_periodo_pct'] ?? 0) : 0.0;
+        $inadQtdTitulosPeriodoPct = $inadCli ? (int) ($inadCli['inad_qtd_titulos_periodo_pct'] ?? 0) : 0;
         $maiorAtraso = $inadCli ? (int) ($inadCli['maior_atraso_dias'] ?? 0) : 0;
         $mediaAtraso = $inadCli ? (float) ($inadCli['media_atraso_dias'] ?? 0) : 0.0;
         $titulos = $inadCli ? (array) ($inadCli['titulos'] ?? []) : [];
 
         $fatCli['inad_total'] = $inadTotal;
         $fatCli['inad_qtd_titulos'] = $inadQtdTitulos;
+        $fatCli['inad_total_periodo_pct'] = $inadTotalPeriodoPct;
+        $fatCli['inad_qtd_titulos_periodo_pct'] = $inadQtdTitulosPeriodoPct;
         $fatCli['maior_atraso_dias'] = $maiorAtraso;
         $fatCli['media_atraso_dias'] = $mediaAtraso;
         $fatCli['titulos'] = $titulos;
         $fatCli['indice_inadimplencia_pct'] =
             $fatCli['faturado_periodo'] > 0
-            ? round(($inadTotal / $fatCli['faturado_periodo']) * 100, 2)
+            ? round(($inadTotalPeriodoPct / $fatCli['faturado_periodo']) * 100, 2)
             : 0.0;
 
         $topFatBase[] = $fatCli;
@@ -1009,6 +1005,8 @@ try {
        KPIS
     ========================================================= */
     $totalInad = 0.0;
+    $totalInadPeriodoPct = 0.0;
+    $totalFaturadoPeriodo = 0.0;
     $totalTitulos = 0;
     $totalClientesInad = 0;
     $somaDiasAtraso = 0.0;
@@ -1016,8 +1014,13 @@ try {
 
     foreach ($clientesFiltrados as $cli) {
         $totalInad += (float) ($cli['inad_total'] ?? 0);
+        $totalInadPeriodoPct += (float) ($cli['inad_total_periodo_pct'] ?? 0);
+        $totalFaturadoPeriodo += (float) ($cli['faturado_periodo'] ?? 0);
         $totalTitulos += (int) ($cli['inad_qtd_titulos'] ?? 0);
-        $totalClientesInad++;
+
+        if ((float) ($cli['inad_total'] ?? 0) > 0) {
+            $totalClientesInad++;
+        }
 
         foreach (($cli['titulos'] ?? []) as $t) {
             $dias = (int) ($t['dias_atraso'] ?? 0);
@@ -1030,6 +1033,9 @@ try {
 
     $ticketMedioInad = $totalClientesInad > 0 ? round($totalInad / $totalClientesInad, 2) : 0.0;
     $mediaDiasAtraso = $qtdDias > 0 ? round($somaDiasAtraso / $qtdDias, 1) : 0.0;
+    $indiceInadSobreFaturadoPct = $totalFaturadoPeriodo > 0
+        ? round(($totalInadPeriodoPct / $totalFaturadoPeriodo) * 100, 2)
+        : 0.0;
 
     /* =========================================================
        HISTÓRICO
@@ -1095,6 +1101,8 @@ try {
 
             'inad_total' => round((float) $cli['inad_total'], 2),
             'inad_qtd_titulos' => (int) $cli['inad_qtd_titulos'],
+            'inad_total_periodo_pct' => round((float) $cli['inad_total_periodo_pct'], 2),
+            'inad_qtd_titulos_periodo_pct' => (int) $cli['inad_qtd_titulos_periodo_pct'],
             'maior_atraso_dias' => (int) $cli['maior_atraso_dias'],
             'media_atraso_dias' => (float) $cli['media_atraso_dias'],
             'indice_inadimplencia_pct' => round((float) $cli['indice_inadimplencia_pct'], 2),
@@ -1153,10 +1161,13 @@ try {
             'supervisor' => $filterSuper,
             'faixa_atraso' => $filterFaixa,
             'valor_min' => $filterMinVal,
-            'corte_emissao_inad' => $dataCorteEmissaoInad,
+            'regra_inadimplencia_real' => '000076 vem do SQL/TOTVS; período da tela usado apenas para % inad e histórico',
         ],
         'kpis' => [
             'total_inadimplente' => round($totalInad, 2),
+            'total_inadimplente_periodo_pct' => round($totalInadPeriodoPct, 2),
+            'total_faturado_periodo' => round($totalFaturadoPeriodo, 2),
+            'indice_inadimplencia_pct' => $indiceInadSobreFaturadoPct,
             'total_titulos' => (int) $totalTitulos,
             'clientes_inadimplentes' => (int) $totalClientesInad,
             'ticket_medio_inadimplencia' => round($ticketMedioInad, 2),
@@ -1191,14 +1202,18 @@ try {
         ],
         'debug' => [
             'fat_rows_total' => count($fatRows),
+            'inad_rows_total' => count($inadRows),
             'fat_clientes_total' => count($fatPorCliente),
             'clientes_total' => count($clientes),
+            'clientes_filtrados_total' => count($clientesFiltrados),
             'top_faturados_total' => count($topFat),
             'historico_total' => count($historicoInadimplencia),
             'preset' => $preset,
             'group_by_req' => $groupByReq,
             'group_by_final' => $groupBy,
-            'corte_emissao_inad' => $dataCorteEmissaoInad,
+            'total_inad_periodo_pct' => round($totalInadPeriodoPct, 2),
+            'total_faturado_periodo' => round($totalFaturadoPeriodo, 2),
+            'indice_inadimplencia_pct' => $indiceInadSobreFaturadoPct,
         ],
     ];
 
