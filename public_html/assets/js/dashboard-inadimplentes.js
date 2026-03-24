@@ -2,6 +2,8 @@
   const state = {
     payload: null,
     clientes: [],
+    chart: null,
+    selectedPreset: "6m",
     loaderCount: 0,
     totals: {
       inad: 0,
@@ -202,8 +204,254 @@
     }
   }
 
+  function getGroupByLabel(groupBy) {
+    switch (String(groupBy || "")) {
+      case "day":
+        return "Diário";
+      case "week":
+        return "Semanal";
+      case "month":
+        return "Mensal";
+      default:
+        return "-";
+    }
+  }
+
+  function getLastVariation(hist) {
+    if (!Array.isArray(hist) || hist.length < 2) {
+      return null;
+    }
+
+    for (let i = hist.length - 1; i >= 0; i--) {
+      const item = hist[i];
+      if (item && item.variacao_pct !== null && item.variacao_pct !== undefined) {
+        return Number(item.variacao_pct);
+      }
+    }
+
+    return null;
+  }
+
+  function destroyTrendChart() {
+    if (state.chart) {
+      state.chart.destroy();
+      state.chart = null;
+    }
+  }
+
+  function setActivePresetButton(preset) {
+    document.querySelectorAll(".btn-preset").forEach((btn) => {
+      btn.classList.toggle("is-active", btn.dataset.preset === preset);
+    });
+  }
+
+  function syncPresetFromPayload(data) {
+    const preset = data?.filtros_aplicados?.preset || state.selectedPreset || "6m";
+    state.selectedPreset = preset;
+    setActivePresetButton(preset);
+  }
+  if (typeof Chart !== "undefined" && window.ChartDataLabels) {
+    Chart.register(window.ChartDataLabels);
+  }
+  function renderTrendChart(data) {
+    const canvas = document.getElementById("inadTrendChart");
+    if (!canvas || typeof Chart === "undefined") {
+      return;
+    }
+
+    const historico = Array.isArray(data?.historico_inadimplencia)
+      ? data.historico_inadimplencia
+      : [];
+
+    const subtitle = document.getElementById("chartSubtitle");
+    const currentValue = document.getElementById("chartCurrentValue");
+    const variation = document.getElementById("chartVariation");
+    const grouping = document.getElementById("chartGrouping");
+
+    if (!historico.length) {
+      destroyTrendChart();
+
+      if (subtitle) subtitle.textContent = "Sem dados para o período selecionado.";
+      if (currentValue) currentValue.textContent = brl(0);
+      if (variation) variation.textContent = "0,00%";
+      if (grouping) {
+        grouping.textContent = getGroupByLabel(data?.filtros_aplicados?.group_by);
+      }
+
+      return;
+    }
+
+    const labels = historico.map((item) => item.label || item.periodo || "");
+    const valores = historico.map((item) => Number(item.inad_total || 0));
+    const ultimo = historico[historico.length - 1] || {};
+    const variacaoPct = getLastVariation(historico);
+    const groupBy = data?.filtros_aplicados?.group_by || "-";
+
+    let acumulado = [];
+    if (groupBy === "month") {
+      let soma = 0;
+      acumulado = valores.map((valor) => {
+        soma += Number(valor || 0);
+        return soma;
+      });
+    }
+
+    if (subtitle) {
+      subtitle.textContent =
+        groupBy === "month"
+          ? "Evolução mensal da inadimplência com visão acumulada."
+          : `Acompanhamento da inadimplência por período (${getGroupByLabel(groupBy)}).`;
+    }
+
+    if (currentValue) {
+      currentValue.textContent = brl(ultimo.inad_total || 0);
+    }
+
+    if (variation) {
+      variation.textContent =
+        variacaoPct === null
+          ? "-"
+          : `${variacaoPct >= 0 ? "+" : ""}${pct(variacaoPct)}%`;
+    }
+
+    if (grouping) {
+      grouping.textContent =
+        groupBy === "month" ? "Mensal + acumulado" : getGroupByLabel(groupBy);
+    }
+
+    destroyTrendChart();
+
+    const datasets = [
+      {
+        label: "Inadimplência mensal",
+        data: valores,
+        tension: 0.35,
+        fill: false,
+        borderWidth: 3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        pointHitRadius: 12,
+      },
+    ];
+
+    if (groupBy === "month") {
+      datasets.push({
+        label: "Acumulado",
+        data: acumulado,
+        tension: 0.35,
+        fill: false,
+        borderWidth: 2,
+        borderDash: [4, 4],
+        pointRadius: 0,
+        pointHoverRadius: 4,
+        pointHitRadius: 10,
+      });
+    }
+
+    state.chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels,
+        datasets,
+      },
+      plugins: window.ChartDataLabels ? [window.ChartDataLabels] : [],
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        clip: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        layout: {
+          padding: {
+            top: 28,
+            right: 12,
+            bottom: 0,
+            left: 8,
+          },
+        },
+        plugins: {
+          legend: {
+            display: false,
+          },
+          datalabels: {
+            display(context) {
+              return context.datasetIndex === 0;
+            },
+            clamp: true,
+            clip: false,
+            align: "top",
+            anchor: "end",
+            offset: 8,
+            color: "#111827",
+            font: {
+              weight: "700",
+              size: 10,
+            },
+            formatter(value) {
+              const n = Number(value || 0);
+              return brl(n);
+            },
+          },
+          tooltip: {
+            backgroundColor: "#111827",
+            titleColor: "#ffffff",
+            bodyColor: "#ffffff",
+            borderColor: "rgba(255,255,255,0.08)",
+            borderWidth: 1,
+            padding: 10,
+            displayColors: true,
+            callbacks: {
+              label(context) {
+                return `${context.dataset.label}: ${brl(context.raw || 0)}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            grid: {
+              display: false,
+              drawBorder: false,
+            },
+            ticks: {
+              maxRotation: 0,
+              autoSkip: true,
+              maxTicksLimit: 8,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            suggestedMax: Math.max(...(groupBy === "month" ? acumulado : valores)) * 1.15,
+            grid: {
+              color: "rgba(148, 163, 184, 0.18)",
+              drawBorder: false,
+            },
+            ticks: {
+              stepSize: 100000,
+              padding: 8,
+              callback(value) {
+                const n = Number(value || 0);
+                return `R$ ${(n / 1000).toFixed(0)} mil`;
+              },
+            },
+          },
+        },
+        elements: {
+          line: {
+            capBezierPoints: true,
+          },
+        },
+      },
+    });
+  }
+
   function buildQuery(force = false) {
     const params = new URLSearchParams();
+
+    params.set("preset", state.selectedPreset || "6m");
+    params.set("group_by", "auto");
 
     if (force) params.set("force", "1");
 
@@ -283,6 +531,8 @@
       const clientesRaw = Array.isArray(data.clientes) ? data.clientes : [];
       state.clientes = decorateClientes(clientesRaw);
       state.payload = { ...data, clientes: state.clientes };
+
+      syncPresetFromPayload(state.payload);
       render(state.payload);
     });
   }
@@ -366,7 +616,10 @@
       row.faturado_periodo += toNumber(cli.faturado_periodo);
       row.clientes += 1;
       row.titulos += toNumber(cli.inad_qtd_titulos);
-      row.maior_atraso_dias = Math.max(row.maior_atraso_dias, toNumber(cli.maior_atraso_dias));
+      row.maior_atraso_dias = Math.max(
+        row.maior_atraso_dias,
+        toNumber(cli.maior_atraso_dias)
+      );
     });
 
     return [...map.values()]
@@ -417,34 +670,52 @@
       (c) => toNumber(c.faturado_periodo) > 0 && toNumber(c.maior_atraso_dias) > 90
     );
 
-    insights.push(`A inadimplência total representa <strong>${pct(pctSobreFat)}%</strong> do faturamento considerado no período.`);
-    insights.push(`Os <strong>10 maiores inadimplentes</strong> concentram <strong>${pct(top10?.pct || 0)}%</strong> do saldo vencido.`);
-    
+    insights.push(
+      `A inadimplência total representa <strong>${pct(pctSobreFat)}%</strong> do faturamento considerado no período.`
+    );
+    insights.push(
+      `Os <strong>10 maiores inadimplentes</strong> concentram <strong>${pct(
+        top10?.pct || 0
+      )}%</strong> do saldo vencido.`
+    );
+
     if (faixaDominante && faixaDominante.valor > 0) {
       insights.push(
-        `A faixa de atraso <strong>${esc(faixaDominante.faixa)} dias</strong> concentra o maior volume: <strong>${brl(faixaDominante.valor)}</strong>.`
+        `A faixa de atraso <strong>${esc(
+          faixaDominante.faixa
+        )} dias</strong> concentra o maior volume: <strong>${brl(
+          faixaDominante.valor
+        )}</strong>.`
       );
     }
 
     if (vendedorTop) {
       insights.push(
-        `O vendedor com maior carteira inadimplente é <strong>${esc(vendedorTop.nome)}</strong>, com <strong>${brl(vendedorTop.inad_total)}</strong>.`
+        `O vendedor com maior carteira inadimplente é <strong>${esc(
+          vendedorTop.nome
+        )}</strong>, com <strong>${brl(vendedorTop.inad_total)}</strong>.`
       );
     }
 
     if (supervisorTop) {
       insights.push(
-        `O supervisor com maior exposição é <strong>${esc(supervisorTop.nome)}</strong>, com <strong>${brl(supervisorTop.inad_total)}</strong>.`
+        `O supervisor com maior exposição é <strong>${esc(
+          supervisorTop.nome
+        )}</strong>, com <strong>${brl(supervisorTop.inad_total)}</strong>.`
       );
     }
 
     insights.push(
-      `Existem <strong>${num(riscoAlto.length)}</strong> clientes em risco alto/crítico, sendo <strong>${num(criticos.length)}</strong> em nível crítico.`
+      `Existem <strong>${num(riscoAlto.length)}</strong> clientes em risco alto/crítico, sendo <strong>${num(
+        criticos.length
+      )}</strong> em nível crítico.`
     );
 
     if (clientesComFatEAltoRisco.length > 0) {
       insights.push(
-        `<strong>${num(clientesComFatEAltoRisco.length)}</strong> clientes faturaram no período e possuem atraso superior a 90 dias, exigindo atenção comercial e financeira.`
+        `<strong>${num(
+          clientesComFatEAltoRisco.length
+        )}</strong> clientes faturaram no período e possuem atraso superior a 90 dias, exigindo atenção comercial e financeira.`
       );
     }
 
@@ -461,13 +732,28 @@
     };
 
     renderKpis(data.kpis || {}, clientes);
+    renderTrendChart(data);
     renderInsights(clientes);
-    renderTopInad(data.top_inadimplentes?.length ? decorateClientes(data.top_inadimplentes) : clientes.slice().sort((a, b) => b.inad_total - a.inad_total).slice(0, 50));
-    renderTopFat(data.top_faturados?.length ? decorateClientes(data.top_faturados) : clientes.slice().sort((a, b) => b.faturado_periodo - a.faturado_periodo).slice(0, 50));
+    renderTopInad(
+      data.top_inadimplentes?.length
+        ? decorateClientes(data.top_inadimplentes)
+        : clientes.slice().sort((a, b) => b.inad_total - a.inad_total).slice(0, 50)
+    );
+    renderTopFat(
+      data.top_faturados?.length
+        ? decorateClientes(data.top_faturados)
+        : clientes.slice().sort((a, b) => b.faturado_periodo - a.faturado_periodo).slice(0, 50)
+    );
     renderConcentracao(clientes);
     renderAging(clientes);
-    renderRankingCarteira("#rankingVendedor", buildCarteiraRanking(clientes, "vendedor_codigo", "vendedor_nome"));
-    renderRankingCarteira("#rankingSupervisor", buildCarteiraRanking(clientes, "supervisor_codigo", "supervisor_nome"));
+    renderRankingCarteira(
+      "#rankingVendedor",
+      buildCarteiraRanking(clientes, "vendedor_codigo", "vendedor_nome")
+    );
+    renderRankingCarteira(
+      "#rankingSupervisor",
+      buildCarteiraRanking(clientes, "supervisor_codigo", "supervisor_nome")
+    );
 
     const clientesTabela = filtrarClientesTabela(clientes);
     renderClientes(clientesTabela);
@@ -485,7 +771,8 @@
     const totalFat = sum(clientes, (c) => c.faturado_periodo);
     const totalTitulos = sum(clientes, (c) => c.inad_qtd_titulos) || toNumber(kpis.total_titulos);
     const clientesInad = clientes.length || toNumber(kpis.clientes_inadimplentes);
-    const ticket = clientesInad > 0 ? totalInad / clientesInad : toNumber(kpis.ticket_medio_inadimplencia);
+    const ticket =
+      clientesInad > 0 ? totalInad / clientesInad : toNumber(kpis.ticket_medio_inadimplencia);
     const mediaDias =
       clientesInad > 0
         ? clientes.reduce((acc, cli) => acc + toNumber(cli.maior_atraso_dias), 0) / clientesInad
@@ -514,9 +801,7 @@
       return;
     }
 
-    el.innerHTML = insights
-      .map((item) => `<div class="insight-item">${item}</div>`)
-      .join("");
+    el.innerHTML = insights.map((item) => `<div class="insight-item">${item}</div>`).join("");
   }
 
   function renderTopInad(items) {
@@ -533,7 +818,9 @@
       .slice(0, 50)
       .map(
         (cli, idx) => `
-      <button type="button" class="ranking-item ranking-item--click" data-key="${esc(cli.cliente_key)}">
+      <button type="button" class="ranking-item ranking-item--click" data-key="${esc(
+          cli.cliente_key
+        )}">
         <div class="ranking-left">
           <span class="ranking-pos">${idx + 1}</span>
           <div>
@@ -576,7 +863,9 @@
 
         return `
         <button type="button"
-                class="ranking-item ranking-item--fat ${esc(riskClass(pctInad, inad, cli.maior_atraso_dias))}"
+                class="ranking-item ranking-item--fat ${esc(
+          riskClass(pctInad, inad, cli.maior_atraso_dias)
+        )}"
                 data-key="${esc(cli.cliente_key)}">
           <div class="ranking-left">
             <span class="ranking-pos">${idx + 1}</span>
@@ -797,7 +1086,9 @@
 
     if ($("#modalClienteResumo")) {
       $("#modalClienteResumo").textContent =
-        `Cliente ${cli.cliente || "-"} / Loja ${cli.loja || "0001"} • Inadimplente: ${brl(cli.inad_total)} • Faturado: ${brl(cli.faturado_periodo)}`;
+        `Cliente ${cli.cliente || "-"} / Loja ${cli.loja || "0001"} • Inadimplente: ${brl(
+          cli.inad_total
+        )} • Faturado: ${brl(cli.faturado_periodo)}`;
     }
 
     if ($("#modalSummary")) {
@@ -894,6 +1185,11 @@
     });
   }
 
+  function resetPresetToDefault() {
+    state.selectedPreset = "6m";
+    setActivePresetButton("6m");
+  }
+
   function filtrarClientesTabela(items) {
     const filtros = getTableFilters();
 
@@ -982,14 +1278,21 @@
       } else {
         state.sortTable.field = field;
         state.sortTable.dir =
-          field === "nome" ||
-          field === "vendedor_nome" ||
-          field === "supervisor_nome"
+          field === "nome" || field === "vendedor_nome" || field === "supervisor_nome"
             ? "asc"
             : "desc";
       }
 
       rerenderTableOnly();
+      return;
+    }
+
+    const presetBtn = e.target.closest(".btn-preset");
+    if (presetBtn) {
+      const preset = presetBtn.dataset.preset || "6m";
+      state.selectedPreset = preset;
+      setActivePresetButton(preset);
+      loadData(true).catch(handleLoadError);
       return;
     }
 
@@ -1022,6 +1325,7 @@
 
     if (e.target.id === "btnClearFilters") {
       clearTopFilters();
+      resetPresetToDefault();
       loadData(true).catch(handleLoadError);
       return;
     }
@@ -1064,10 +1368,18 @@
 
   function handleLoadError(err) {
     console.error(err);
+    destroyTrendChart();
+
     if ($("#updatedAt")) {
       $("#updatedAt").textContent = "Erro ao carregar dados";
     }
+
+    const subtitle = document.getElementById("chartSubtitle");
+    if (subtitle) {
+      subtitle.textContent = "Erro ao carregar tendência da inadimplência.";
+    }
   }
 
+  setActivePresetButton(state.selectedPreset);
   loadData().catch(handleLoadError);
 })();

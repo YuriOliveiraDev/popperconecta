@@ -312,6 +312,175 @@ try {
         ];
     }
 
+    function monthLabelPt(string $ym): string
+    {
+        $meses = [
+            '01' => 'Jan',
+            '02' => 'Fev',
+            '03' => 'Mar',
+            '04' => 'Abr',
+            '05' => 'Mai',
+            '06' => 'Jun',
+            '07' => 'Jul',
+            '08' => 'Ago',
+            '09' => 'Set',
+            '10' => 'Out',
+            '11' => 'Nov',
+            '12' => 'Dez',
+        ];
+
+        $ano = substr($ym, 0, 4);
+        $mes = substr($ym, 5, 2);
+
+        return ($meses[$mes] ?? $mes) . '/' . $ano;
+    }
+
+    function getPresetRange(string $preset): array
+    {
+        $today = strtotime(date('Y-m-d 00:00:00'));
+        $toTs = strtotime(date('Y-m-d 23:59:59', $today));
+
+        switch ($preset) {
+            case '30d':
+                $fromTs = strtotime('-29 days', $today);
+                break;
+
+            case '90d':
+                $fromTs = strtotime('-89 days', $today);
+                break;
+
+            case '12m':
+                $fromTs = strtotime(date('Y-m-01 00:00:00', strtotime('-11 months', $today)));
+                break;
+
+            case '6m':
+            default:
+                $fromTs = strtotime(date('Y-m-01 00:00:00', strtotime('-5 months', $today)));
+                break;
+        }
+
+        return [$fromTs, $toTs];
+    }
+
+    function detectGroupBy(?int $fromTs, ?int $toTs, string $groupBy): string
+    {
+        if ($groupBy !== 'auto') {
+            return in_array($groupBy, ['day', 'week', 'month'], true) ? $groupBy : 'month';
+        }
+
+        if ($fromTs === null || $toTs === null) {
+            return 'month';
+        }
+
+        $days = (int) floor(($toTs - $fromTs) / 86400) + 1;
+
+        if ($days <= 45) {
+            return 'day';
+        }
+        if ($days <= 120) {
+            return 'week';
+        }
+        return 'month';
+    }
+
+    function startOfWeekTs(int $ts): int
+    {
+        $day = (int) date('N', $ts);
+        return strtotime(date('Y-m-d 00:00:00', strtotime('-' . ($day - 1) . ' days', $ts)));
+    }
+
+    function buildPeriodoKey(int $ts, string $groupBy): string
+    {
+        if ($groupBy === 'day') {
+            return date('Y-m-d', $ts);
+        }
+
+        if ($groupBy === 'week') {
+            return date('Y-m-d', startOfWeekTs($ts));
+        }
+
+        return date('Y-m', $ts);
+    }
+
+    function buildPeriodoLabel(string $key, string $groupBy): string
+    {
+        if ($groupBy === 'day') {
+            return date('d/m', strtotime($key));
+        }
+
+        if ($groupBy === 'week') {
+            $ini = strtotime($key . ' 00:00:00');
+            $fim = strtotime('+6 days', $ini);
+            return date('d/m', $ini) . ' a ' . date('d/m', $fim);
+        }
+
+        return monthLabelPt($key);
+    }
+
+    function initHistoricoMap(?int $fromTs, ?int $toTs, string $groupBy): array
+    {
+        if ($fromTs === null || $toTs === null) {
+            return [];
+        }
+
+        $map = [];
+
+        if ($groupBy === 'day') {
+            $cursor = strtotime(date('Y-m-d 00:00:00', $fromTs));
+            $limit = strtotime(date('Y-m-d 00:00:00', $toTs));
+
+            while ($cursor <= $limit) {
+                $key = date('Y-m-d', $cursor);
+                $map[$key] = [
+                    'periodo' => $key,
+                    'label' => buildPeriodoLabel($key, $groupBy),
+                    'inad_total' => 0.0,
+                    'titulos' => 0,
+                    'clientes' => [],
+                ];
+                $cursor = strtotime('+1 day', $cursor);
+            }
+
+            return $map;
+        }
+
+        if ($groupBy === 'week') {
+            $cursor = startOfWeekTs($fromTs);
+            $limit = startOfWeekTs($toTs);
+
+            while ($cursor <= $limit) {
+                $key = date('Y-m-d', $cursor);
+                $map[$key] = [
+                    'periodo' => $key,
+                    'label' => buildPeriodoLabel($key, $groupBy),
+                    'inad_total' => 0.0,
+                    'titulos' => 0,
+                    'clientes' => [],
+                ];
+                $cursor = strtotime('+7 days', $cursor);
+            }
+
+            return $map;
+        }
+
+        $cursor = strtotime(date('Y-m-01 00:00:00', $fromTs));
+        $limit = strtotime(date('Y-m-01 00:00:00', $toTs));
+
+        while ($cursor <= $limit) {
+            $key = date('Y-m', $cursor);
+            $map[$key] = [
+                'periodo' => $key,
+                'label' => buildPeriodoLabel($key, $groupBy),
+                'inad_total' => 0.0,
+                'titulos' => 0,
+                'clientes' => [],
+            ];
+            $cursor = strtotime('+1 month', $cursor);
+        }
+
+        return $map;
+    }
+
     /* =========================================================
        PARAMS
     ========================================================= */
@@ -327,6 +496,12 @@ try {
 
     $dateFrom = trim((string) ($_GET['date_from'] ?? ''));
     $dateTo = trim((string) ($_GET['date_to'] ?? ''));
+    $preset = trim((string) ($_GET['preset'] ?? '6m'));
+    $groupByReq = trim((string) ($_GET['group_by'] ?? 'auto'));
+
+    if (!in_array($preset, ['30d', '90d', '6m', '12m'], true)) {
+        $preset = '6m';
+    }
 
     $usarFiltroData = ($dateFrom !== '' || $dateTo !== '');
 
@@ -344,17 +519,27 @@ try {
                 $dateToTs = strtotime(date('Y-m-d 23:59:59', $dateToBase));
             }
         }
+    } else {
+        [$presetFromTs, $presetToTs] = getPresetRange($preset);
+        $dateFromTs = $presetFromTs;
+        $dateToTs = $presetToTs;
+        $usarFiltroData = true;
+        $dateFrom = date('Y-m-d', $presetFromTs);
+        $dateTo = date('Y-m-d', $presetToTs);
     }
+
+    if ($dateFromTs !== null && $dateToTs !== null && $dateFromTs > $dateToTs) {
+        [$dateFromTs, $dateToTs] = [$dateToTs, $dateFromTs];
+        [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+    }
+
+    $groupBy = detectGroupBy($dateFromTs, $dateToTs, $groupByReq);
 
     $search = trim((string) ($_GET['search'] ?? ''));
     $filterVend = trim((string) ($_GET['vendedor'] ?? ''));
     $filterSuper = trim((string) ($_GET['supervisor'] ?? ''));
     $filterFaixa = trim((string) ($_GET['faixa_atraso'] ?? ''));
     $filterMinVal = (float) ($_GET['valor_min'] ?? 0);
-
-    // corte fixo para não entrar título antigo na inadimplência
-    $dataCorteEmissaoInad = '20250801';
-    $dataCorteEmissaoInadTs = parseYmd($dataCorteEmissaoInad);
 
     /* =========================================================
        CACHE
@@ -366,6 +551,9 @@ try {
         'usar_filtro_data' => $usarFiltroData,
         'date_from' => $dateFrom,
         'date_to' => $dateTo,
+        'preset' => $preset,
+        'group_by_req' => $groupByReq,
+        'group_by_final' => $groupBy,
         'dias_min_atraso' => $diasMinimosInadimplencia,
         'search' => $search,
         'vendedor' => $filterVend,
@@ -437,6 +625,7 @@ try {
     ========================================================= */
     $clientes = [];
     $fatPorCliente = [];
+    $historicoMap = initHistoricoMap($dateFromTs, $dateToTs, $groupBy);
 
     $aging = [
         '1-30' => 0.0,
@@ -476,14 +665,7 @@ try {
         }
 
         // corta títulos emitidos antes de 01/08/2025
-        if ($emissao === '' || strlen($emissao) !== 8 || $emissao < $dataCorteEmissaoInad) {
-            continue;
-        }
 
-        $tsEmissao = parseYmd($emissao);
-        if ($tsEmissao === null) {
-            continue;
-        }
 
         if ($dataCorteEmissaoInadTs !== null && $tsEmissao < $dataCorteEmissaoInadTs) {
             continue;
@@ -570,6 +752,24 @@ try {
             if (isset($aging[$bucket])) {
                 $aging[$bucket] += $saldo;
             }
+        }
+
+        if ($usarFiltroData && $tsVencto !== null && inRange($tsVencto, $dateFromTs, $dateToTs)) {
+            $periodoKey = buildPeriodoKey($tsVencto, $groupBy);
+
+            if (!isset($historicoMap[$periodoKey])) {
+                $historicoMap[$periodoKey] = [
+                    'periodo' => $periodoKey,
+                    'label' => buildPeriodoLabel($periodoKey, $groupBy),
+                    'inad_total' => 0.0,
+                    'titulos' => 0,
+                    'clientes' => [],
+                ];
+            }
+
+            $historicoMap[$periodoKey]['inad_total'] += $saldo;
+            $historicoMap[$periodoKey]['titulos']++;
+            $historicoMap[$periodoKey]['clientes'][$key] = true;
         }
     }
 
@@ -832,6 +1032,40 @@ try {
     $mediaDiasAtraso = $qtdDias > 0 ? round($somaDiasAtraso / $qtdDias, 1) : 0.0;
 
     /* =========================================================
+       HISTÓRICO
+    ========================================================= */
+    ksort($historicoMap);
+
+    $historicoInadimplencia = [];
+    $valorAnterior = null;
+
+    foreach ($historicoMap as $item) {
+        $valorAtual = round((float) ($item['inad_total'] ?? 0), 2);
+        $variacao = null;
+        $variacaoPct = null;
+
+        if ($valorAnterior !== null) {
+            $variacao = round($valorAtual - $valorAnterior, 2);
+
+            if ((float) $valorAnterior > 0) {
+                $variacaoPct = round((($valorAtual - $valorAnterior) / $valorAnterior) * 100, 2);
+            }
+        }
+
+        $historicoInadimplencia[] = [
+            'periodo' => (string) ($item['periodo'] ?? ''),
+            'label' => (string) ($item['label'] ?? ''),
+            'inad_total' => $valorAtual,
+            'titulos' => (int) ($item['titulos'] ?? 0),
+            'clientes' => count((array) ($item['clientes'] ?? [])),
+            'variacao' => $variacao,
+            'variacao_pct' => $variacaoPct,
+        ];
+
+        $valorAnterior = $valorAtual;
+    }
+
+    /* =========================================================
        RANKINGS
     ========================================================= */
     $topInad = $clientesFiltrados;
@@ -911,6 +1145,8 @@ try {
             'usar_filtro_data' => $usarFiltroData,
             'date_from' => $dateFrom,
             'date_to' => $dateTo,
+            'preset' => $preset,
+            'group_by' => $groupBy,
             'dias_min_atraso' => $diasMinimosInadimplencia,
             'search' => $search,
             'vendedor' => $filterVend,
@@ -933,6 +1169,7 @@ try {
             ['faixa' => '91-180', 'valor' => round($aging['91-180'], 2)],
             ['faixa' => '180+', 'valor' => round($aging['180+'], 2)],
         ],
+        'historico_inadimplencia' => $historicoInadimplencia,
         'top_inadimplentes' => array_values($topInad),
         'top_faturados' => array_values($topFat),
         'clientes' => array_values($clientesFiltrados),
@@ -940,6 +1177,13 @@ try {
             'vendedores' => $vendedores,
             'supervisores' => $supervisores,
             'faixas_atraso' => ['1-30', '31-60', '61-90', '91-180', '180+'],
+            'presets_historico' => [
+                ['value' => '30d', 'label' => '30 dias'],
+                ['value' => '90d', 'label' => '90 dias'],
+                ['value' => '6m', 'label' => '6 meses'],
+                ['value' => '12m', 'label' => '12 meses'],
+            ],
+            'group_by' => ['day', 'week', 'month'],
         ],
         'totvs_info' => [
             '000076' => $info76,
@@ -950,6 +1194,10 @@ try {
             'fat_clientes_total' => count($fatPorCliente),
             'clientes_total' => count($clientes),
             'top_faturados_total' => count($topFat),
+            'historico_total' => count($historicoInadimplencia),
+            'preset' => $preset,
+            'group_by_req' => $groupByReq,
+            'group_by_final' => $groupBy,
             'corte_emissao_inad' => $dataCorteEmissaoInad,
         ],
     ];

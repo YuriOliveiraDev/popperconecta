@@ -151,7 +151,40 @@ $extra_css = [
                 <div class="empty">Carregando insights...</div>
             </div>
         </section>
+        <section class="card card-chart">
+            <div class="card-head card-head--chart">
+                <div>
+                    <h2>Tendência da inadimplência</h2>
+                    <p id="chartSubtitle">Acompanhamento da subida e queda no período.</p>
+                </div>
 
+                <div class="chart-presets" id="chartPresets">
+                    <button type="button" class="btn-preset is-active" data-preset="30d">30 dias</button>
+                    <button type="button" class="btn-preset" data-preset="90d">90 dias</button>
+                    <button type="button" class="btn-preset" data-preset="6m">6 meses</button>
+                    <button type="button" class="btn-preset" data-preset="12m">12 meses</button>
+                </div>
+            </div>
+
+            <div class="chart-summary" id="chartSummary">
+                <div class="metric-chip">
+                    <span class="metric-chip__label">Mês atual</span>
+                    <strong class="metric-chip__value" id="chartCurrentValue">R$ 0,00</strong>
+                </div>
+                <div class="metric-chip">
+                    <span class="metric-chip__label">Variação</span>
+                    <strong class="metric-chip__value" id="chartVariation">0,00%</strong>
+                </div>
+                <div class="metric-chip">
+                    <span class="metric-chip__label">Agrupamento</span>
+                    <strong class="metric-chip__value" id="chartGrouping">-</strong>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="inadTrendChart"></canvas>
+            </div>
+        </section>
         <section class="inad-grid inad-grid--3">
             <article class="card">
                 <div class="card-head">
@@ -173,9 +206,7 @@ $extra_css = [
                 </div>
                 <div id="concentracaoList" class="metric-list"></div>
             </article>
-        </section>
 
-        <section class="inad-grid inad-grid--3">
             <article class="card">
                 <div class="card-head">
                     <h2>Faixas de atraso</h2>
@@ -198,7 +229,7 @@ $extra_css = [
             </article>
         </section>
 
-        <section class="card">
+        <section class="card card--table-fixed">
             <div class="card-head">
                 <h2>Todos os clientes inadimplentes</h2>
             </div>
@@ -261,14 +292,22 @@ $extra_css = [
                     <thead>
                         <tr>
                             <th class="th-sort" data-sort="nome">Cliente <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="vendedor_nome">Vendedor <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="supervisor_nome">Supervisor <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="inad_total">Inadimplente <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="faturado_periodo">Faturado período <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="indice_inadimplencia_pct">% Inad. <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="participacao_total_pct">Part. total <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="inad_qtd_titulos">Títulos <span class="sort-indicator"></span></th>
-                            <th class="th-sort" data-sort="maior_atraso_dias">Maior atraso <span class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="vendedor_nome">Vendedor <span class="sort-indicator"></span>
+                            </th>
+                            <th class="th-sort" data-sort="supervisor_nome">Supervisor <span
+                                    class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="inad_total">Inadimplente <span class="sort-indicator"></span>
+                            </th>
+                            <th class="th-sort" data-sort="faturado_periodo">Faturado período <span
+                                    class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="indice_inadimplencia_pct">% Inad. <span
+                                    class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="participacao_total_pct">Part. total <span
+                                    class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="inad_qtd_titulos">Títulos <span
+                                    class="sort-indicator"></span></th>
+                            <th class="th-sort" data-sort="maior_atraso_dias">Maior atraso <span
+                                    class="sort-indicator"></span></th>
                             <th class="th-sort" data-sort="risk_score">Risco <span class="sort-indicator"></span></th>
                             <th>Ação</th>
                         </tr>
@@ -317,8 +356,11 @@ $extra_css = [
     <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
     <script src="/assets/js/loader.js?v=<?= filemtime(APP_ROOT . '/assets/js/loader.js') ?>"></script>
-    <script src="/assets/js/dashboard-inadimplentes.js?v=<?= filemtime(APP_ROOT . '/assets/js/dashboard-inadimplentes.js') ?>"></script>
+    <script
+        src="/assets/js/dashboard-inadimplentes.js?v=<?= filemtime(APP_ROOT . '/assets/js/dashboard-inadimplentes.js') ?>"></script>
     <script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 </body>
 
 </html>

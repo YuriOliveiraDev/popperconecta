@@ -886,3 +886,313 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================================
+   TABELA COM ALTURA FIXA (15 ITENS)
+========================================= */
+
+.card--table-fixed {
+  display: flex;
+  flex-direction: column;
+  height: 720px; /* ajuste fino se quiser */
+}
+
+.card--table-fixed .table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+/* altura aproximada de linha */
+.inad-table tbody tr {
+  height: 44px;
+}
+
+/* mantém header fixo */
+.inad-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+/* scrollbar bonita vertical */
+.card--table-fixed .table-wrap::-webkit-scrollbar {
+  width: 10px;
+}
+
+.card--table-fixed .table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(92, 44, 140, 0.4);
+  border-radius: 999px;
+}
+
+@media (max-width: 1366px) {
+  .ranking-item {
+    padding: 12px;
+  }
+
+  .ranking-left strong,
+  .ranking-right strong {
+    font-size: 0.95rem;
+  }
+
+  .ranking-left small,
+  .ranking-right small {
+    font-size: 0.82rem;
+  }
+}
+
+
+/* ======================================================
+   RESPONSIVO
+====================================================== */
+@media (max-width: 1600px) {
+  .inad-kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .inad-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1400px) {
+  .inad-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .insights-list {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* continua com 2 colunas */
+  .inad-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .inad-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .inad-grid--3 {
+    grid-template-columns: 1fr;
+  }
+
+  .ranking-list--scroll-10 {
+    max-height: 620px;
+  }
+}
+
+@media (max-width: 700px) {
+  .inad-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .inad-header,
+  .card-head,
+  .modal-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal {
+    padding: 12px;
+  }
+
+  .modal-content {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+  }
+
+  .modal-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.inad-grid {
+  display: grid;
+  gap: 20px;
+  align-items: stretch;
+}
+
+.inad-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1600px) {
+  .inad-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .inad-grid--3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1400px) {
+
+  /* remove largura fixa gigante */
+  .inad-table {
+    min-width: 100%;
+  }
+
+  /* esconder colunas desnecessárias */
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7), /* Part. total */
+
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8), /* Títulos */
+
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9)  /* Maior atraso */
+  {
+    display: none;
+  }
+
+}
+
+/* ======================================================
+   TABELA NOTEBOOK - SEM SCROLL HORIZONTAL
+====================================================== */
+@media (max-width: 1600px) {
+  .table-wrap,
+  .card--table-fixed .table-wrap {
+    overflow-x: hidden !important;
+  }
+
+  .inad-table {
+    width: 100% !important;
+    min-width: 100% !important;
+    table-layout: fixed;
+  }
+
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7), /* Part. total */
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8), /* Títulos */
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9)  /* Maior atraso */ {
+    display: none !important;
+  }
+
+  .inad-table th:nth-child(1),
+  .inad-table td:nth-child(1) {
+    width: 28% !important;
+  }
+
+  .inad-table th:nth-child(2),
+  .inad-table td:nth-child(2) {
+    width: 18% !important;
+  }
+
+  .inad-table th:nth-child(3),
+  .inad-table td:nth-child(3) {
+    width: 16% !important;
+  }
+
+  .inad-table th:nth-child(4),
+  .inad-table td:nth-child(4) {
+    width: 12% !important;
+  }
+
+  .inad-table th:nth-child(5),
+  .inad-table td:nth-child(5) {
+    width: 12% !important;
+  }
+
+  .inad-table th:nth-child(6),
+  .inad-table td:nth-child(6) {
+    width: 8% !important;
+  }
+
+  .inad-table th:nth-child(10),
+  .inad-table td:nth-child(10) {
+    width: 8% !important;
+  }
+
+  .inad-table th:nth-child(11),
+  .inad-table td:nth-child(11) {
+    width: 8% !important;
+  }
+}
+.chart-container {
+    position: relative;
+    width: 100%;
+    height: 320px; /* ajuste aqui */
+}
+
+@media (min-width: 1400px) {
+    .chart-container {
+        height: 380px;
+    }
+}
+.chart-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-preset {
+    appearance: none;
+    border: 1px solid #d7dce5;
+    background: #fff;
+    color: #0f172a;
+    border-radius: 10px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.btn-preset:hover {
+    background: #f8fafc;
+    border-color: #c7d2fe;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.08);
+}
+
+.btn-preset:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.btn-preset:focus-visible {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18);
+}
+
+.btn-preset.is-active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+}
+
+.btn-preset.is-active:hover {
+    background: #111c36;
+    border-color: #111c36;
+}
+
+@media (max-width: 768px) {
+    .chart-presets {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .btn-preset {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+}
