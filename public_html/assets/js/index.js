@@ -69,7 +69,17 @@ function qsUrl(path, params = {}) {
   });
   return url.toString();
 }
+function setCardsLoading(isLoading) {
+  document.querySelectorAll(".dash-tv-grid .dash-tv-card").forEach((card) => {
+    card.classList.toggle("is-loading", isLoading);
+  });
+}
 
+function setCardLoadingBySelector(selector, isLoading) {
+  document.querySelectorAll(selector).forEach((el) => {
+    el.classList.toggle("is-loading", isLoading);
+  });
+}
 /* ======================================================
    CACHE (10 min)
 ====================================================== */
@@ -232,10 +242,13 @@ function applyDashboard(data) {
 async function loadDashboard(opts = { force: false, preferCache: false }) {
   const key = KEY_DASH(CURRENT_YM);
 
+  setCardsLoading(true);
+
   if (opts.preferCache && !opts.force) {
     const cached = cacheGet(key);
     if (cached && isValidDashboardPayload(cached)) {
       applyDashboard(cached);
+      setCardsLoading(false);
       return cached;
     }
   }
@@ -255,6 +268,7 @@ async function loadDashboard(opts = { force: false, preferCache: false }) {
 
     cacheSet(key, data);
     applyDashboard(data);
+    setCardsLoading(false);
     return data;
   } catch (e) {
     console.warn("Erro dashboard:", e);
@@ -262,9 +276,11 @@ async function loadDashboard(opts = { force: false, preferCache: false }) {
     const fallback = cacheGet(key);
     if (fallback && isValidDashboardPayload(fallback)) {
       applyDashboard(fallback);
+      setCardsLoading(false);
       return fallback;
     }
 
+    setCardsLoading(false);
     return null;
   }
 }
@@ -886,8 +902,11 @@ function scheduleRefresh() {
 }
 
 async function bootDashboard() {
+  setCardsLoading(true);
+
   await loadDashboard({ force: true, preferCache: false });
   await loadTopsCarousel({ force: true, preferCache: false });
+
   setTimeout(() => {
     loadDailyChart({ force: true, preferCache: false });
   }, 200);

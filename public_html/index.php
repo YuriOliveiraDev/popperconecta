@@ -91,7 +91,7 @@ try {
 
             <div class="dash-tv-grid">
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-label">Meta do mês</div>
                 <div class="kpi-value" id="tv-meta">--</div>
 
@@ -111,7 +111,7 @@ try {
                 </div>
               </div>
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-label">Vendas do mês (atual)</div>
                 <div class="kpi-value" id="tv-mes">--</div>
 
@@ -126,7 +126,7 @@ try {
                 </div>
               </div>
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-label">Deveria ter até hoje</div>
                 <div class="kpi-value" id="tv-deveria">--</div>
 
@@ -135,7 +135,7 @@ try {
                 </div>
               </div>
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-label">Projeção de fechamento (mês)</div>
                 <div class="kpi-value" id="tv-projecao">--</div>
 
@@ -144,7 +144,7 @@ try {
                 </div>
               </div>
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-label">Hoje</div>
                 <div class="kpi-value" id="tv-hoje">--</div>
 
@@ -155,7 +155,7 @@ try {
                 </div>
               </div>
 
-              <div class="dash-tv-card">
+              <div class="dash-tv-card is-loading">
                 <div class="kpi-value" id="tv-meta-dia">--</div>
 
                 <div class="meta-progress">
@@ -178,7 +178,6 @@ try {
 
             </div>
 
-            <!-- ✅ DATA/HORA CENTRALIZADA (ABAIXO DOS CARDS) -->
             <div class="dash-tv-updated">
               Atualizado em <span id="tv-updated-footer">--</span>
             </div>
@@ -259,6 +258,7 @@ try {
 
             </div>
           </article>
+
           <!-- GEO VENDAS SLIDE -->
           <article class="slide slide--geo-vendas" data-id="geo-vendas">
             <div id="geoVendasHome" data-geo-vendas-app data-endpoint="/api/dashboard/clientes_insights.php"
@@ -268,6 +268,7 @@ try {
               style="height:100%; padding:18px 22px; box-sizing:border-box;">
             </div>
           </article>
+
           <!-- COMUNICADOS -->
           <?php foreach ($comunicados as $c): ?>
             <?php
@@ -324,45 +325,45 @@ try {
   <script src="/assets/js/index.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="/assets/js/apps/geo-vendas.js?v=<?= filemtime(__DIR__ . '/assets/js/apps/geo-vendas.js') ?>"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', async () => {
-    try {
-      const app = GeoVendasApp.create('#geoVendasHome');
-      await app.load();
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const app = GeoVendasApp.create('#geoVendasHome');
+        await app.load();
 
-      const refreshGeo = () => {
-        try {
-          app.refreshSize();
-        } catch (e) {
-          console.warn('Falha ao atualizar tamanho do mapa:', e);
+        const refreshGeo = () => {
+          try {
+            app.refreshSize();
+          } catch (e) {
+            console.warn('Falha ao atualizar tamanho do mapa:', e);
+          }
+        };
+
+        window.addEventListener('resize', refreshGeo);
+        window.addEventListener('orientationchange', () => {
+          setTimeout(refreshGeo, 250);
+        });
+
+        setTimeout(refreshGeo, 200);
+        setTimeout(refreshGeo, 600);
+        setTimeout(refreshGeo, 1200);
+
+        const track = document.getElementById('track');
+        if (track) {
+          const obs = new MutationObserver(() => {
+            setTimeout(refreshGeo, 120);
+          });
+          obs.observe(track, {
+            attributes: true,
+            childList: false,
+            subtree: false
+          });
         }
-      };
-
-      window.addEventListener('resize', refreshGeo);
-      window.addEventListener('orientationchange', () => {
-        setTimeout(refreshGeo, 250);
-      });
-
-      setTimeout(refreshGeo, 200);
-      setTimeout(refreshGeo, 600);
-      setTimeout(refreshGeo, 1200);
-
-      const track = document.getElementById('track');
-      if (track) {
-        const obs = new MutationObserver(() => {
-          setTimeout(refreshGeo, 120);
-        });
-        obs.observe(track, {
-          attributes: true,
-          childList: false,
-          subtree: false
-        });
+      } catch (e) {
+        console.error('Erro ao iniciar GeoVendasApp no index:', e);
       }
-    } catch (e) {
-      console.error('Erro ao iniciar GeoVendasApp no index:', e);
-    }
-  });
-</script>
+    });
+  </script>
 </body>
 
 </html>

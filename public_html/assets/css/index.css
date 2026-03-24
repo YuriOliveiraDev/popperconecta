@@ -2466,3 +2466,127 @@ header.topbar,
   min-height: 0 !important;
   overflow: auto !important;
 }
+/* =========================================================
+   SKELETON LOADING — DASHBOARD HOME
+========================================================= */
+
+.dash-tv-card.is-loading .kpi-value,
+.dash-tv-card.is-loading .kpi-sub,
+.dash-tv-card.is-loading .kpi-detail,
+.dash-tv-card.is-loading .meta-progress-pct {
+  color: transparent !important;
+}
+
+.dash-tv-card.is-loading .kpi-value,
+.dash-tv-card.is-loading .kpi-sub,
+.dash-tv-card.is-loading .kpi-detail span,
+.dash-tv-card.is-loading .meta-progress-pct,
+.dash-tv-card.is-loading #tv-updated,
+.dash-tv-card.is-loading #tv-realizado,
+.dash-tv-card.is-loading #tv-falta,
+.dash-tv-card.is-loading #tv-mes-fat,
+.dash-tv-card.is-loading #tv-mes-im,
+.dash-tv-card.is-loading #tv-mes-ag,
+.dash-tv-card.is-loading #tv-dias,
+.dash-tv-card.is-loading #tv-prod,
+.dash-tv-card.is-loading #tv-ating,
+.dash-tv-card.is-loading #tv-proj-pct,
+.dash-tv-card.is-loading #tv-hoje-fat,
+.dash-tv-card.is-loading #tv-hoje-im,
+.dash-tv-card.is-loading #tv-dias-rest,
+.dash-tv-card.is-loading #tv-restante,
+.dash-tv-card.is-loading #tv-meta-teo {
+  position: relative;
+  display: inline-block;
+  min-height: 1em;
+  min-width: 72px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, .9) 25%,
+    rgba(241, 245, 249, 1) 37%,
+    rgba(226, 232, 240, .9) 63%
+  );
+  background-size: 400% 100%;
+  animation: dash-skeleton 1.2s ease-in-out infinite;
+}
+
+.dash-tv-card.is-loading .kpi-value {
+  width: 55%;
+  min-height: 34px;
+  border-radius: 10px;
+}
+
+.dash-tv-card.is-loading .kpi-sub {
+  width: 42%;
+}
+
+.dash-tv-card.is-loading .kpi-detail {
+  color: transparent !important;
+}
+
+.dash-tv-card.is-loading .kpi-detail::before {
+  content: "";
+  display: block;
+  width: 88%;
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, .9) 25%,
+    rgba(241, 245, 249, 1) 37%,
+    rgba(226, 232, 240, .9) 63%
+  );
+  background-size: 400% 100%;
+  animation: dash-skeleton 1.2s ease-in-out infinite;
+}
+
+.dash-tv-card.is-loading .kpi-detail::after {
+  content: "";
+  display: block;
+  width: 70%;
+  height: 14px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, .9) 25%,
+    rgba(241, 245, 249, 1) 37%,
+    rgba(226, 232, 240, .9) 63%
+  );
+  background-size: 400% 100%;
+  animation: dash-skeleton 1.2s ease-in-out infinite;
+}
+
+.dash-tv-card.is-loading .meta-progress {
+  background: rgba(226, 232, 240, .9) !important;
+  overflow: hidden !important;
+}
+
+.dash-tv-card.is-loading .meta-progress-bar {
+  width: 45% !important;
+  background: linear-gradient(
+    90deg,
+    rgba(203, 213, 225, .9) 25%,
+    rgba(241, 245, 249, 1) 50%,
+    rgba(203, 213, 225, .9) 75%
+  ) !important;
+  background-size: 300% 100% !important;
+  animation: dash-skeleton 1.2s ease-in-out infinite;
+}
+
+.dash-tv-card.is-loading .meta-progress-pct {
+  width: 36px;
+  height: 12px;
+  min-width: 36px;
+}
+
+@keyframes dash-skeleton {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+

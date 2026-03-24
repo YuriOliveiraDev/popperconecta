@@ -172,9 +172,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
     </section>
   </main>
-
-  <?php require_once __DIR__ . '/app/footer.php'; ?>
-
   <script src="/assets/vendor/jquery/jquery-3.2.1.min.js"></script>
   <script src="/assets/vendor/bootstrap/js/popper.js"></script>
   <script src="/assets/vendor/bootstrap/js/bootstrap.min.js"></script>
@@ -222,5 +219,4 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     })();
   </script>
 </body>
-
 </html>
