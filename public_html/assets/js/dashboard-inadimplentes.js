@@ -1434,9 +1434,6 @@
         <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
           ${esc(cli.cliente || "-")}
         </td>
-        <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top;">
-          ${esc(cli.loja || "-")}
-        </td>
         <td style="padding:12px 10px; border-bottom:1px solid #e5e7eb; color:#1f2937; vertical-align:top; font-weight:600;">
           ${esc(cli.nome || "-")}
         </td>
@@ -1473,7 +1470,7 @@
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td align="center">
-          <table width="960" cellpadding="0" cellspacing="0" border="0" style="width:960px; max-width:960px; background:#ffffff; border-radius:16px; overflow:hidden;">
+          <table width="1120" cellpadding="0" cellspacing="0" border="0" style="width:1120px; max-width:1120px; background:#ffffff; border-radius:16px; overflow:hidden;">
             <tr>
               <td style="background:#f8fafc; border-bottom:1px solid #e5e7eb; padding:20px 24px;">
                 <table width="100%">
@@ -1546,7 +1543,6 @@
                   <thead>
                     <tr style="background:#f3f4f6;">
                       <th style="padding:10px; border:1px solid #e5e7eb;">Código</th>
-                      <th style="padding:10px; border:1px solid #e5e7eb;">Loja</th>
                       <th style="padding:10px; border:1px solid #e5e7eb;">Cliente</th>
                       <th style="padding:10px; border:1px solid #e5e7eb;">Vendedor</th>
                       <th style="padding:10px; border:1px solid #e5e7eb;">Supervisor</th>
@@ -1560,7 +1556,7 @@
                       linhas ||
                       `
                       <tr>
-                        <td colspan="8" style="padding:18px; text-align:center; color:#6b7280; border:1px solid #e5e7eb;">
+                        <td colspan="7" style="padding:18px; text-align:center; color:#6b7280; border:1px solid #e5e7eb;">
                           Nenhum cliente inadimplente encontrado para o filtro selecionado.
                         </td>
                       </tr>

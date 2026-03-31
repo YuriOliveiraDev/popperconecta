@@ -1355,3 +1355,93 @@
         grid-template-columns: 1fr;
     }
 }
+/* Aumentar largura do modal */
+.modal__dialog--xl {
+    width: 95vw;          /* ocupa quase toda tela */
+    max-width: 1400px;    /* limite grande */
+}
+
+/* Deixar conteúdo respirar melhor */
+.email-modal-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr; /* lado form fixo + preview grande */
+    gap: 20px;
+}
+
+/* Preview maior */
+.email-preview-box {
+    max-height: 75vh;
+    overflow: auto;
+}
+
+/* Evitar corte */
+.modal__body {
+    overflow: hidden;
+}
+.modal__dialog--xl {
+    width: min(96vw, 1650px);
+    max-width: 1650px;
+    height: 92vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal__body {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+}
+
+.email-modal-grid {
+    display: grid;
+    grid-template-columns: 380px minmax(0, 1fr);
+    gap: 20px;
+    height: 100%;
+    min-height: 0;
+    padding: 20px;
+}
+
+.email-form-side {
+    min-width: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.email-preview-side {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.preview-head {
+    flex: 0 0 auto;
+    margin-bottom: 10px;
+}
+
+.email-preview-box {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    border: 1px solid #d9dee7;
+    border-radius: 16px;
+    background: #eef2f7;
+    padding: 16px;
+}
+
+.email-preview-box > div {
+    min-width: 1180px;
+}
+
+.email-preview-box table {
+    border-collapse: collapse;
+}
+
+.email-preview-box img {
+    max-width: 100%;
+    height: auto;
+}
+.card--table-fixed {
+    margin-bottom: 80px; /* ajusta conforme quiser */
+}

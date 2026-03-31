@@ -238,16 +238,6 @@ $extra_css = [
                 </div>
 
                 <div class="field field-inline">
-                    <label for="filtroVendedorTabela">Vendedor</label>
-                    <input type="text" id="filtroVendedorTabela" placeholder="Código ou nome">
-                </div>
-
-                <div class="field field-inline">
-                    <label for="filtroSupervisorTabela">Supervisor</label>
-                    <input type="text" id="filtroSupervisorTabela" placeholder="Código ou nome">
-                </div>
-
-                <div class="field field-inline">
                     <label for="filtroFaixaTabela">Faixa atraso</label>
                     <select id="filtroFaixaTabela">
                         <option value="">Todas</option>
