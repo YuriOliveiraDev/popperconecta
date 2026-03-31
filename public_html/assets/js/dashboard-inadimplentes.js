@@ -1489,6 +1489,8 @@
       "giuliana.paulino@popper.com.br",
       "tiago.legnani@tufflog.com.br",
       "yasmim.santos@tufflog.com.br",
+      "alice.silva@tufflog.com.br",
+      "maila.moraes@popper.com.br",
     ];
 
     const emailSupervisor = getSupervisorEmailAtual();

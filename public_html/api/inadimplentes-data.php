@@ -201,9 +201,10 @@ try {
         return substr($ymd, 6, 2) . '/' . substr($ymd, 4, 2) . '/' . substr($ymd, 0, 4);
     }
 
-    function clienteKey(string $codigo, string $loja): string
+    function clienteKey(string $codigo, string $loja, string $vendedor = ''): string
     {
-        return trim($codigo) . '|' . trim($loja);
+        $vend = trim($vendedor) !== '' ? trim($vendedor) : 'SEM_VENDEDOR';
+        return trim($codigo) . '|' . trim($loja) . '|' . $vend;
     }
 
     function onlyDigits(string $v): string
@@ -290,7 +291,7 @@ try {
         return [
             'cliente' => $codCliente,
             'loja' => $loja,
-            'cliente_key' => clienteKey($codCliente, $loja),
+            'cliente_key' => clienteKey($codCliente, $loja, $vend1),
             'nome' => $nome,
             'cnpj' => $cnpj,
             'vendedor_codigo' => $vend1,
@@ -674,7 +675,7 @@ try {
             $diasAtraso = 0;
         }
 
-        $key = clienteKey($codCliente, $loja);
+        $key = clienteKey($codCliente, $loja, $vend1);
 
         if (!isset($clientes[$key])) {
             $clientes[$key] = criarClienteBase(
@@ -812,7 +813,7 @@ try {
             continue;
         }
 
-        $key = clienteKey($codCliente, $loja);
+        $key = clienteKey($codCliente, $loja, $vend1);
 
         if (!isset($fatPorCliente[$key])) {
             $fatPorCliente[$key] = criarClienteBase(
