@@ -10,11 +10,27 @@ require_once APP_ROOT . '/app/integrations/mail_graph.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
+function normalize_email_list(array $emails): array
+{
+    $emails = array_map(
+        static fn($v): string => mb_strtolower(trim((string) $v)),
+        $emails
+    );
+
+    $emails = array_values(array_filter($emails));
+
+    return array_values(array_unique($emails));
+}
+
 function send_mail_graph_multi(array $to, array $cc, string $subject, string $html): array
 {
     $token = graph_get_token();
 
     $url = 'https://graph.microsoft.com/v1.0/users/' . rawurlencode(GRAPH_SENDER_EMAIL) . '/sendMail';
+
+    // Backend obedece exatamente o que veio da tela
+    $to = normalize_email_list($to);
+    $cc = normalize_email_list($cc);
 
     $toRecipients = array_map(
         static fn(string $email): array => [
@@ -109,15 +125,9 @@ try {
         throw new RuntimeException('Payload inválido.');
     }
 
-    $para = array_values(array_filter(array_map(
-        static fn($v): string => trim((string) $v),
-        (array) ($data['para'] ?? [])
-    )));
-
-    $cc = array_values(array_filter(array_map(
-        static fn($v): string => trim((string) $v),
-        (array) ($data['cc'] ?? [])
-    )));
+    // Backend obedece exatamente os campos visíveis
+    $para = normalize_email_list((array) ($data['para'] ?? []));
+    $ccFinal = normalize_email_list((array) ($data['cc'] ?? []));
 
     $assunto = trim((string) ($data['assunto'] ?? 'Aviso de inadimplência'));
     $html = (string) ($data['html'] ?? '');
@@ -130,20 +140,22 @@ try {
         throw new RuntimeException('Informe ao menos um destinatário.');
     }
 
-    $emails = array_merge($para, $cc);
+    $emails = array_merge($para, $ccFinal);
     foreach ($emails as $email) {
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new RuntimeException('E-mail inválido: ' . $email);
         }
     }
 
-    $result = send_mail_graph_multi($para, $cc, $assunto, $html);
+    $result = send_mail_graph_multi($para, $ccFinal, $assunto, $html);
 
     echo json_encode([
         'ok' => true,
         'message' => 'E-mail enviado com sucesso.',
         'graph_http_code' => $result['http_code'] ?? null,
         'sender' => defined('GRAPH_SENDER_EMAIL') ? GRAPH_SENDER_EMAIL : null,
+        'para_final' => $para,
+        'cc_final' => $ccFinal,
     ], JSON_UNESCAPED_UNICODE);
     exit;
 

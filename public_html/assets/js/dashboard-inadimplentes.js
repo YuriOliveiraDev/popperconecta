@@ -498,6 +498,12 @@
     if (faixa) params.set("faixa_atraso", faixa);
     if (valorMin) params.set("valor_min", valorMin);
 
+    const diasAtraso = $("#filterDiasAtraso")?.value?.trim();
+
+    if (diasAtraso !== "" && diasAtraso !== null) {
+      params.set("dias_min_atraso", diasAtraso);
+    }
+
     return params.toString();
   }
 
@@ -895,8 +901,8 @@
         return `
         <button type="button"
                 class="ranking-item ranking-item--fat ${esc(
-                  riskClass(pctInad, inad, cli.maior_atraso_dias)
-                )}"
+          riskClass(pctInad, inad, cli.maior_atraso_dias)
+        )}"
                 data-key="${esc(cli.cliente_key)}">
           <div class="ranking-left">
             <span class="ranking-pos">${idx + 1}</span>
@@ -1409,12 +1415,100 @@
     return String(vendedor080?.email || "").trim();
   }
 
+  function getSupervisorAtual() {
+    const clientes = getClientesParaAviso();
+
+    const supervisores = [
+      ...new Map(
+        clientes
+          .map((c) => {
+            const codigo = String(c.supervisor_codigo || "").trim();
+            const nome = limparNomePessoa(c.supervisor_nome || "");
+            if (!codigo && !nome) return null;
+
+            return [
+              codigo || nome,
+              {
+                codigo,
+                nome,
+              },
+            ];
+          })
+          .filter(Boolean)
+      ).values(),
+    ];
+
+    if (supervisores.length === 1) {
+      return supervisores[0];
+    }
+
+    const filtroSupervisor = ($("#filterSupervisor")?.value || "").trim();
+    if (filtroSupervisor) {
+      return {
+        codigo: "",
+        nome: filtroSupervisor,
+      };
+    }
+
+    return {
+      codigo: "",
+      nome: "",
+    };
+  }
+
+  function getSupervisorEmailMap() {
+    return {
+      "000119": "dulvano.barcelos@popper.com.br",
+      "000111": "nathan.mattos@popper.com.br",
+      "000115": "luiza.bechtloff@popper.com.br",
+      "000001": "demetrio.chaim@popper.com.br",
+    };
+  }
+
+  function getSupervisorEmailAtual() {
+    const supervisor = getSupervisorAtual();
+    const codigo = String(supervisor?.codigo || "").trim();
+
+    if (!codigo) return "";
+
+    const mapa = getSupervisorEmailMap();
+    return String(mapa[codigo] || "").trim();
+  }
+
   function autoPreencherEnviarPara() {
     const inputPara = $("#emailDestinatario");
     if (!inputPara) return;
 
     const email = getEmailVendedorAtual();
     inputPara.value = email || "";
+  }
+
+  function getEmailsCcPadrao() {
+    const emails = [
+      "paulo.machado@popper.com.br",
+      "giuliana.paulino@popper.com.br",
+      "tiago.legnani@tufflog.com.br",
+      "yasmim.santos@tufflog.com.br",
+    ];
+
+    const emailSupervisor = getSupervisorEmailAtual();
+    if (emailSupervisor) {
+      emails.push(emailSupervisor);
+    }
+
+    return [...new Set(
+      emails
+        .map((v) => String(v || "").trim())
+        .filter(Boolean)
+    )];
+  }
+
+  function autoPreencherCc() {
+    const inputCc = $("#emailCc");
+    if (!inputCc) return;
+
+    const ccPadrao = getEmailsCcPadrao();
+    inputCc.value = ccPadrao.join("; ");
   }
 
   function buildEmailSubject(clientes) {
@@ -1552,16 +1646,15 @@
                     </tr>
                   </thead>
                   <tbody>
-                    ${
-                      linhas ||
-                      `
+                    ${linhas ||
+      `
                       <tr>
                         <td colspan="7" style="padding:18px; text-align:center; color:#6b7280; border:1px solid #e5e7eb;">
                           Nenhum cliente inadimplente encontrado para o filtro selecionado.
                         </td>
                       </tr>
                     `
-                    }
+      }
                   </tbody>
                 </table>
 
@@ -1589,6 +1682,7 @@
 
   function refreshEmailPreview() {
     autoPreencherEnviarPara();
+    autoPreencherCc();
 
     const clientes = getClientesParaAviso();
     const mensagemExtra = $("#emailMensagemExtra")?.value || "";
@@ -1613,8 +1707,11 @@
     }
 
     if ($("#modalAvisoResumo")) {
+      const supervisor = getSupervisorAtual();
+      const supervisorNome = supervisor?.nome || supervisor?.codigo || "Não definido";
+
       $("#modalAvisoResumo").textContent =
-        `Vendedor: ${getContextoEmail()} • ${num(clientes.length)} cliente(s) encontrados`;
+        `Vendedor: ${getContextoEmail()} • Supervisor: ${supervisorNome} • ${num(clientes.length)} cliente(s) encontrados`;
     }
 
     return { clientes, html };
@@ -1671,11 +1768,17 @@
       return;
     }
 
+    const supervisorAtual = getSupervisorAtual();
+    const supervisorEmailAtual = getSupervisorEmailAtual();
+
     const payload = {
       para,
       cc,
       assunto,
       html,
+      supervisor_codigo: supervisorAtual?.codigo || "",
+      supervisor_nome: supervisorAtual?.nome || "",
+      supervisor_email: supervisorEmailAtual || "",
       clientes: clientes.map((cli) => ({
         cliente: cli.cliente,
         loja: cli.loja,
@@ -1797,7 +1900,7 @@
     }
 
     if (e.target.id === "btnApplyTable") {
-      rerenderTableOnly();
+      loadData(true).catch(handleLoadError);
       return;
     }
 
@@ -1862,7 +1965,27 @@
       refreshEmailPreview();
     });
   });
+  let filtroTabelaTimer = null;
 
+  function triggerFiltroTabela() {
+    clearTimeout(filtroTabelaTimer);
+    filtroTabelaTimer = setTimeout(() => {
+      rerenderTableOnly();
+    }, 180);
+  }
+
+  [
+    "#filtroBusca",
+    "#filtroFaixaTabela",
+    "#filtroValorMinTabela",
+    "#filtroStatusTabela",
+  ].forEach((sel) => {
+    const el = $(sel);
+    if (!el) return;
+
+    el.addEventListener("input", triggerFiltroTabela);
+    el.addEventListener("change", triggerFiltroTabela);
+  });
   setActivePresetButton(state.selectedPreset);
 
   Promise.allSettled([loadVendedores080(), loadData()]).then((results) => {
@@ -1871,4 +1994,70 @@
       handleLoadError(dataResult.reason);
     }
   });
+
 })();
+function isNotebookView() {
+  return window.innerWidth <= 1366;
+}
+
+function truncateText(text, max) {
+  const value = String(text || '').trim();
+  if (!value) return '-';
+  if (!isNotebookView()) return value;
+  return value.length > max ? value.slice(0, max).trim() + '…' : value;
+}
+
+function formatCurrencyShort(value) {
+  const n = Number(value || 0);
+
+  if (!isNotebookView()) {
+    return formatCurrency(n); // mantém sua função atual normal
+  }
+
+  if (Math.abs(n) >= 1000000) {
+    return 'R$ ' + (n / 1000000).toFixed(1).replace('.', ',') + ' mi';
+  }
+
+  if (Math.abs(n) >= 1000) {
+    return 'R$ ' + (n / 1000).toFixed(1).replace('.', ',') + ' mil';
+  }
+
+  return 'R$ ' + n.toFixed(0).replace('.', ',');
+}
+
+function formatPercentShort(value) {
+  const n = Number(value || 0);
+
+  if (!isNotebookView()) {
+    return formatPercent(n); // mantém sua função atual normal
+  }
+
+  return n.toFixed(1).replace('.', ',') + '%';
+}
+
+function formatDaysShort(value) {
+  const n = Number(value || 0);
+  return isNotebookView() ? `${n}d` : `${n} dias`;
+}
+// 🔥 FILTRO EM TEMPO REAL (live)
+[
+  "#filtroBusca",
+  "#filtroVendedorTabela",
+  "#filtroSupervisorTabela",
+  "#filtroFaixaTabela",
+  "#filtroValorMinTabela",
+  "#filtroStatusTabela"
+].forEach((sel) => {
+  const el = document.querySelector(sel);
+  if (!el) return;
+
+  // Para digitação
+  el.addEventListener("input", () => {
+    rerenderTableOnly();
+  });
+
+  // Para select/dropdown
+  el.addEventListener("change", () => {
+    rerenderTableOnly();
+  });
+});

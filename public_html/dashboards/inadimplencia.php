@@ -264,6 +264,10 @@ $extra_css = [
                         <option value="Crítico">Crítico</option>
                     </select>
                 </div>
+                <div class="filter-group">
+                    <label for="filterDiasAtraso">Ignorar últimos (dias)</label>
+                    <input type="number" id="filterDiasAtraso" min="0" max="30" value="3">
+                </div>
 
                 <div class="field field-inline field-actions">
                     <label>&nbsp;</label>

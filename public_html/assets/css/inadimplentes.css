@@ -900,7 +900,6 @@
 .card--table-fixed .table-wrap {
   flex: 1;
   overflow-y: auto;
-  overflow-x: hidden;
 }
 /* altura aproximada de linha */
 .inad-table tbody tr {
@@ -1061,67 +1060,6 @@
 /* ======================================================
    TABELA NOTEBOOK - SEM SCROLL HORIZONTAL
 ====================================================== */
-@media (max-width: 1600px) {
-  .table-wrap,
-  .card--table-fixed .table-wrap {
-    overflow-x: hidden !important;
-  }
-
-  .inad-table {
-    width: 100% !important;
-    min-width: 100% !important;
-    table-layout: fixed;
-  }
-
-  .inad-table th:nth-child(7),
-  .inad-table td:nth-child(7), /* Part. total */
-  .inad-table th:nth-child(8),
-  .inad-table td:nth-child(8), /* Títulos */
-  .inad-table th:nth-child(9),
-  .inad-table td:nth-child(9)  /* Maior atraso */ {
-    display: none !important;
-  }
-
-  .inad-table th:nth-child(1),
-  .inad-table td:nth-child(1) {
-    width: 28% !important;
-  }
-
-  .inad-table th:nth-child(2),
-  .inad-table td:nth-child(2) {
-    width: 18% !important;
-  }
-
-  .inad-table th:nth-child(3),
-  .inad-table td:nth-child(3) {
-    width: 16% !important;
-  }
-
-  .inad-table th:nth-child(4),
-  .inad-table td:nth-child(4) {
-    width: 12% !important;
-  }
-
-  .inad-table th:nth-child(5),
-  .inad-table td:nth-child(5) {
-    width: 12% !important;
-  }
-
-  .inad-table th:nth-child(6),
-  .inad-table td:nth-child(6) {
-    width: 8% !important;
-  }
-
-  .inad-table th:nth-child(10),
-  .inad-table td:nth-child(10) {
-    width: 8% !important;
-  }
-
-  .inad-table th:nth-child(11),
-  .inad-table td:nth-child(11) {
-    width: 8% !important;
-  }
-}
 .chart-container {
     position: relative;
     width: 100%;
@@ -1444,4 +1382,437 @@
 }
 .card--table-fixed {
     margin-bottom: 80px; /* ajusta conforme quiser */
+}
+
+/* ======================================================
+   TABELA NOTEBOOK - AJUSTE REAL
+====================================================== */
+
+/* desktop normal */
+.inad-table {
+  width: 100%;
+  min-width: 1760px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* notebook */
+@media (max-width: 1366px) {
+  .page-inad {
+    padding: 16px;
+  }
+
+  .card,
+  .kpi-card,
+  .table-wrap,
+  .inad-grid,
+  .inad-grid--3 {
+    min-width: 0;
+  }
+
+  .table-wrap,
+  .card--table-fixed .table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .inad-table {
+    min-width: 1200px; /* ainda permite leitura sem quebrar tudo */
+  }
+
+  /* esconder o que você pediu */
+  .inad-table th:nth-child(5),
+  .inad-table td:nth-child(5), /* Faturado período */
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7)  /* Part. total */ {
+    display: none;
+  }
+
+  /* redistribuição das larguras */
+  .inad-table th:nth-child(1),
+  .inad-table td:nth-child(1) {
+    width: 260px;
+  }
+
+  .inad-table th:nth-child(2),
+  .inad-table td:nth-child(2) {
+    width: 180px;
+  }
+
+  .inad-table th:nth-child(3),
+  .inad-table td:nth-child(3) {
+    width: 180px;
+  }
+
+  .inad-table th:nth-child(4),
+  .inad-table td:nth-child(4) {
+    width: 130px;
+  }
+
+  .inad-table th:nth-child(6),
+  .inad-table td:nth-child(6) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9) {
+    width: 110px;
+  }
+
+  .inad-table th:nth-child(10),
+  .inad-table td:nth-child(10) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(11),
+  .inad-table td:nth-child(11) {
+    width: 90px;
+  }
+}
+
+/* ======================================================
+   TOP 50 CLIENTES FATURADOS
+====================================================== */
+#topFatList .ranking-item,
+#topFatList .ranking-item--fat {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#topFatList .ranking-left {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-items: flex-start;
+}
+
+#topFatList .ranking-left > div {
+  min-width: 0;
+  width: 100%;
+}
+
+#topFatList .ranking-left strong,
+#topFatList .ranking-left small,
+#topFatList .ranking-right strong,
+#topFatList .ranking-right small {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#topFatList .fat-extra {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#topFatList .ranking-right {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+@media (max-width: 1366px) {
+  #topFatList .ranking-item,
+  #topFatList .ranking-item--fat {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #topFatList .ranking-right {
+    width: 100%;
+    text-align: left;
+  }
+
+  #topFatList .ranking-left strong,
+  #topFatList .ranking-left small,
+  #topFatList .ranking-right strong,
+  #topFatList .ranking-right small {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: initial;
+    word-break: break-word;
+  }
+}
+/* ======================================================
+   NOTEBOOK - TABELA SEM CORTE
+====================================================== */
+@media (max-width: 1366px) {
+  .page-inad {
+    padding: 16px;
+    min-width: 0;
+  }
+
+  .card--table-fixed {
+    height: auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .card--table-fixed .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .inad-table {
+    width: 100%;
+    min-width: 1080px; /* mantém leitura sem esmagar */
+    table-layout: fixed;
+  }
+
+  /* esconder só o necessário no notebook */
+  .inad-table th:nth-child(5),
+  .inad-table td:nth-child(5), /* Faturado período */
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7)  /* Part. total */ {
+    display: none;
+  }
+
+  /* larguras ajustadas */
+  .inad-table th:nth-child(1),
+  .inad-table td:nth-child(1) {
+    width: 270px;
+  }
+
+  .inad-table th:nth-child(2),
+  .inad-table td:nth-child(2) {
+    width: 220px;
+  }
+
+  .inad-table th:nth-child(3),
+  .inad-table td:nth-child(3) {
+    width: 210px;
+  }
+
+  .inad-table th:nth-child(4),
+  .inad-table td:nth-child(4) {
+    width: 140px;
+  }
+
+  .inad-table th:nth-child(6),
+  .inad-table td:nth-child(6) {
+    width: 95px;
+  }
+
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8) {
+    width: 80px;
+  }
+
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9) {
+    width: 110px;
+  }
+
+  .inad-table th:nth-child(10),
+  .inad-table td:nth-child(10) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(11),
+  .inad-table td:nth-child(11) {
+    width: 90px;
+  }
+}
+
+@media (max-width: 1366px) {
+  .filters-grid--table,
+  .filters-inline {
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+
+  .filters-grid--table .field-search {
+    min-width: 220px;
+  }
+
+  .filters-grid--table .field,
+  .field-inline {
+    min-width: 170px;
+  }
+
+  .inline-actions {
+    flex-wrap: nowrap;
+  }
+}
+/* ======================================================
+   NOTEBOOK - TABELA MAIS COMPACTA
+====================================================== */
+@media (max-width: 1366px) {
+  .page-inad {
+    padding: 14px;
+  }
+
+  .card--table-fixed .table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .inad-table {
+    width: 100%;
+    min-width: 980px;
+    table-layout: fixed;
+  }
+
+  /* esconder colunas menos importantes no notebook */
+  .inad-table th:nth-child(5),
+  .inad-table td:nth-child(5), /* faturado período */
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7)  /* part. total */ {
+    display: none;
+  }
+
+  .inad-table th,
+  .inad-table td {
+    padding: 10px 8px;
+    font-size: 0.92rem;
+  }
+
+  /* larguras */
+  .inad-table th:nth-child(1),
+  .inad-table td:nth-child(1) {
+    width: 220px;
+  }
+
+  .inad-table th:nth-child(2),
+  .inad-table td:nth-child(2) {
+    width: 180px;
+  }
+
+  .inad-table th:nth-child(3),
+  .inad-table td:nth-child(3) {
+    width: 170px;
+  }
+
+  .inad-table th:nth-child(4),
+  .inad-table td:nth-child(4) {
+    width: 120px;
+  }
+
+  .inad-table th:nth-child(6),
+  .inad-table td:nth-child(6) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8) {
+    width: 70px;
+  }
+
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9) {
+    width: 95px;
+  }
+
+  .inad-table th:nth-child(10),
+  .inad-table td:nth-child(10) {
+    width: 80px;
+  }
+
+  .inad-table th:nth-child(11),
+  .inad-table td:nth-child(11) {
+    width: 80px;
+  }
+}
+
+/* ======================================================
+   NOTEBOOK - TABELA MAIS COMPACTA
+====================================================== */
+@media (max-width: 1366px) {
+  .page-inad {
+    padding: 14px;
+  }
+
+  .card--table-fixed .table-wrap {
+    overflow-x: auto;
+    overflow-y: auto;
+  }
+
+  .inad-table {
+    width: 100%;
+    min-width: 980px;
+    table-layout: fixed;
+  }
+
+  /* esconder colunas menos importantes no notebook */
+  .inad-table th:nth-child(5),
+  .inad-table td:nth-child(5), /* faturado período */
+  .inad-table th:nth-child(7),
+  .inad-table td:nth-child(7)  /* part. total */ {
+    display: none;
+  }
+
+  .inad-table th,
+  .inad-table td {
+    padding: 10px 8px;
+    font-size: 0.92rem;
+  }
+
+  /* larguras */
+  .inad-table th:nth-child(1),
+  .inad-table td:nth-child(1) {
+    width: 220px;
+  }
+
+  .inad-table th:nth-child(2),
+  .inad-table td:nth-child(2) {
+    width: 180px;
+  }
+
+  .inad-table th:nth-child(3),
+  .inad-table td:nth-child(3) {
+    width: 170px;
+  }
+
+  .inad-table th:nth-child(4),
+  .inad-table td:nth-child(4) {
+    width: 120px;
+  }
+
+  .inad-table th:nth-child(6),
+  .inad-table td:nth-child(6) {
+    width: 90px;
+  }
+
+  .inad-table th:nth-child(8),
+  .inad-table td:nth-child(8) {
+    width: 70px;
+  }
+
+  .inad-table th:nth-child(9),
+  .inad-table td:nth-child(9) {
+    width: 95px;
+  }
+
+  .inad-table th:nth-child(10),
+  .inad-table td:nth-child(10) {
+    width: 80px;
+  }
+
+  .inad-table th:nth-child(11),
+  .inad-table td:nth-child(11) {
+    width: 80px;
+  }
+}
+/* =========================================
+   SCROLL HORIZONTAL NA TABELA
+========================================= */
+
+.table-wrap,
+.card--table-fixed .table-wrap {
+  overflow-x: auto !important;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* mantém tabela larga */
+.inad-table {
+  min-width: 1600px; /* pode ajustar */
 }

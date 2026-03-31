@@ -488,7 +488,7 @@ try {
     ========================================================= */
     $force = (isset($_GET['force']) && $_GET['force'] === '1');
 
-    $diasMinimosInadimplencia = (int) ($_GET['dias_min_atraso'] ?? 3);
+    $diasMinimosInadimplencia = max(0, min(30, (int) ($_GET['dias_min_atraso'] ?? 3)));
     if ($diasMinimosInadimplencia < 0) {
         $diasMinimosInadimplencia = 0;
     }
