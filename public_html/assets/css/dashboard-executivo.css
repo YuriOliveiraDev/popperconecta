@@ -669,3 +669,21 @@ main.container.dashboard-exec {
 .dashboard-exec .exec-chart {
   max-height: none !important;
 }
+.exec-chart__head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.exec-chart__month-total{
+  font-size:14px;
+  color:#64748b;
+  margin-top:4px;
+}
+
+.exec-chart__month-total strong{
+  font-size:18px;
+  color:#0f172a;
+}

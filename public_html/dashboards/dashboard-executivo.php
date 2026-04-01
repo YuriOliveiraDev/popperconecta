@@ -38,15 +38,15 @@ if (isset($_GET['ym']) && preg_match('/^\d{4}-\d{2}$/', (string) $_GET['ym'])) {
 }
 
 $meses = [
-  1  => 'Jan',
-  2  => 'Fev',
-  3  => 'Mar',
-  4  => 'Abr',
-  5  => 'Mai',
-  6  => 'Jun',
-  7  => 'Jul',
-  8  => 'Ago',
-  9  => 'Set',
+  1 => 'Jan',
+  2 => 'Fev',
+  3 => 'Mar',
+  4 => 'Abr',
+  5 => 'Mai',
+  6 => 'Jun',
+  7 => 'Jul',
+  8 => 'Ago',
+  9 => 'Set',
   10 => 'Out',
   11 => 'Nov',
   12 => 'Dez',
@@ -74,11 +74,8 @@ require_once APP_ROOT . '/app/layout/header.php';
             } ?>
             <?php $ym = sprintf('2026-%02d', $m); ?>
 
-            <button
-              type="button"
-              class="chip <?= $ym === $activeYm ? 'is-active' : '' ?>"
-              data-ym="<?= htmlspecialchars($ym, ENT_QUOTES, 'UTF-8') ?>"
-            >
+            <button type="button" class="chip <?= $ym === $activeYm ? 'is-active' : '' ?>"
+              data-ym="<?= htmlspecialchars($ym, ENT_QUOTES, 'UTF-8') ?>">
               <?= htmlspecialchars($label, ENT_QUOTES, 'UTF-8') ?>/26
             </button>
           <?php endforeach; ?>
@@ -91,7 +88,15 @@ require_once APP_ROOT . '/app/layout/header.php';
     </div>
 
     <div class="chart-card grid-col-span-3 exec-chart">
-      <h3 class="chart-title" id="ttlChart">Faturamento Diário (mês)</h3>
+      <div class="exec-chart__head">
+        <div>
+          <h3 class="chart-title" id="ttlChart">Faturamento Diário (mês)</h3>
+          <div class="exec-chart__month-total">
+            Total do mês: <strong id="chartMonthTotal">R$ 0,00</strong>
+          </div>
+        </div>
+      </div>
+
       <div class="chart-box">
         <canvas id="chartDiario"></canvas>
       </div>
@@ -131,6 +136,7 @@ require_once APP_ROOT . '/app/layout/header.php';
 </script>
 
 <script src="/assets/js/loader.js?v=<?= filemtime(APP_ROOT . '/assets/js/loader.js') ?>" defer></script>
-<script src="/assets/js/dashboard-executivo.js?v=<?= filemtime(APP_ROOT . '/assets/js/dashboard-executivo.js') ?>" defer></script>
+<script src="/assets/js/dashboard-executivo.js?v=<?= filemtime(APP_ROOT . '/assets/js/dashboard-executivo.js') ?>"
+  defer></script>
 <script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>" defer></script>
 <script src="/assets/js/index-carousel.js?v=<?= filemtime(APP_ROOT . '/assets/js/index-carousel.js') ?>" defer></script>

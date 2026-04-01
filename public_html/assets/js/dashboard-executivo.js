@@ -341,6 +341,15 @@ async function load() {
 
   setText('updatedAt', `Atualizado em: ${updatedAt}`);
 
+  const totalMesDiario = Object.values(payload.diario_mes || {})
+    .reduce((acc, val) => acc + asNumber(val), 0);
+
+  const totalMesExibir = totalMesDiario > 0
+    ? totalMesDiario
+    : asNumber(v.mes_total);
+
+  setText('chartMonthTotal', moneyBR(totalMesExibir));
+
   // HOJE
   setText('kpiHojeTotal', moneyBR(v.hoje_total));
   setText('kpiHojeFat', moneyBR(v.hoje_faturado));
