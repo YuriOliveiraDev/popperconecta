@@ -6,21 +6,6 @@ error_reporting(E_ALL);
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 require_once APP_ROOT . '/app/config/config.php';
-require_once APP_ROOT . '/app/integrations/mail_graph.php';
-
-header('Content-Type: application/json; charset=utf-8');
-
-function normalize_email_list(array $emails): array
-{
-    $emails = array_map(
-        static fn($v): string => mb_strtolower(trim((string) $v)),
-        $emails
-    );
-
-    $emails = array_values(array_filter($emails));
-
-    return array_values(array_unique($emails));
-}
 
 function brl_excel($value): float
 {
@@ -55,10 +40,10 @@ function xlsx_number_cell(string $ref, $value, int $styleIndex = 0): string
     return '<c r="' . $ref . '"' . $styleAttr . '><v>' . $num . '</v></c>';
 }
 
-function gerar_xlsx_titulos_detalhados(array $clientes): array
+function gerar_xlsx_titulos_detalhados(array $clientes, string $nomeArquivo = 'inadimplencia_detalhada.xlsx'): array
 {
     if (!class_exists('ZipArchive')) {
-        throw new RuntimeException('A extensão ZipArchive não está habilitada no servidor. Para gerar XLSX, habilite a extensão zip do PHP.');
+        throw new RuntimeException('A extensão ZipArchive não está habilitada no servidor.');
     }
 
     $headers = [
@@ -115,7 +100,7 @@ function gerar_xlsx_titulos_detalhados(array $clientes): array
                 (string) ($t['vencto_fmt'] ?? ''),
                 (string) ($t['dias_atraso'] ?? ''),
                 (string) ($t['faixa_atraso'] ?? ''),
-                brl_excel($t['saldo'] ?? 0), // 🔥 só saldo agora
+                brl_excel($t['saldo'] ?? 0),
                 (string) ($t['forma_pagamento'] ?? ''),
             ];
         }
@@ -129,8 +114,8 @@ function gerar_xlsx_titulos_detalhados(array $clientes): array
         foreach ($row as $colIndex => $value) {
             $cellRef = xlsx_col_name($colIndex + 1) . $excelRow;
 
-            // Colunas monetárias: O = 15, P = 16
-            if ($colIndex === 15) {
+            // Saldo = coluna 12 -> índice 11
+            if ($colIndex === 11) {
                 $sheetRowsXml .= xlsx_number_cell($cellRef, $value, 1);
             } else {
                 $sheetRowsXml .= xlsx_inline_string_cell($cellRef, (string) $value);
@@ -144,64 +129,44 @@ function gerar_xlsx_titulos_detalhados(array $clientes): array
     $lastRow = count($rows);
 
     $sheetXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        . '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
         . '<dimension ref="A1:' . $lastColumn . $lastRow . '"/>'
-        . '<sheetViews><sheetView workbookViewId="0"/></sheetViews>'
+        . '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>'
         . '<sheetFormatPr defaultRowHeight="15"/>'
         . '<cols>'
         . '<col min="1" max="1" width="16" customWidth="1"/>'
-        . '<col min="2" max="2" width="10" customWidth="1"/>'
-        . '<col min="3" max="3" width="40" customWidth="1"/>'
-        . '<col min="4" max="4" width="22" customWidth="1"/>'
-        . '<col min="5" max="5" width="16" customWidth="1"/>'
-        . '<col min="6" max="6" width="28" customWidth="1"/>'
-        . '<col min="7" max="7" width="16" customWidth="1"/>'
-        . '<col min="8" max="8" width="28" customWidth="1"/>'
-        . '<col min="9" max="9" width="22" customWidth="1"/>'
-        . '<col min="10" max="10" width="14" customWidth="1"/>'
-        . '<col min="11" max="12" width="14" customWidth="1"/>'
-        . '<col min="13" max="13" width="12" customWidth="1"/>'
-        . '<col min="14" max="14" width="14" customWidth="1"/>'
-        . '<col min="15" max="16" width="14" customWidth="1"/>'
-        . '<col min="17" max="17" width="20" customWidth="1"/>'
+        . '<col min="2" max="2" width="40" customWidth="1"/>'
+        . '<col min="3" max="3" width="22" customWidth="1"/>'
+        . '<col min="4" max="5" width="28" customWidth="1"/>'
+        . '<col min="6" max="6" width="22" customWidth="1"/>'
+        . '<col min="7" max="7" width="14" customWidth="1"/>'
+        . '<col min="8" max="9" width="14" customWidth="1"/>'
+        . '<col min="10" max="10" width="12" customWidth="1"/>'
+        . '<col min="11" max="11" width="14" customWidth="1"/>'
+        . '<col min="12" max="12" width="14" customWidth="1"/>'
+        . '<col min="13" max="13" width="20" customWidth="1"/>'
         . '</cols>'
         . '<sheetData>' . $sheetRowsXml . '</sheetData>'
+        . '<autoFilter ref="A1:' . $lastColumn . $lastRow . '"/>'
         . '</worksheet>';
 
     $stylesXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
         . '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
-        . '<numFmts count="1">'
-        . '<numFmt numFmtId="164" formatCode="#,##0.00"/>'
-        . '</numFmts>'
-        . '<fonts count="1">'
-        . '<font><sz val="11"/><name val="Calibri"/></font>'
-        . '</fonts>'
-        . '<fills count="2">'
-        . '<fill><patternFill patternType="none"/></fill>'
-        . '<fill><patternFill patternType="gray125"/></fill>'
-        . '</fills>'
-        . '<borders count="1">'
-        . '<border><left/><right/><top/><bottom/><diagonal/></border>'
-        . '</borders>'
-        . '<cellStyleXfs count="1">'
-        . '<xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>'
-        . '</cellStyleXfs>'
+        . '<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0.00"/></numFmts>'
+        . '<fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>'
+        . '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>'
+        . '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+        . '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
         . '<cellXfs count="2">'
         . '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
         . '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
         . '</cellXfs>'
-        . '<cellStyles count="1">'
-        . '<cellStyle name="Normal" xfId="0" builtinId="0"/>'
-        . '</cellStyles>'
+        . '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
         . '</styleSheet>';
 
     $workbookXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
-        . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
-        . 'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
-        . '<sheets>'
-        . '<sheet name="Inadimplência Detalhada" sheetId="1" r:id="rId1"/>'
-        . '</sheets>'
+        . '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        . '<sheets><sheet name="Inadimplência Detalhada" sheetId="1" r:id="rId1"/></sheets>'
         . '</workbook>';
 
     $workbookRelsXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
@@ -226,7 +191,7 @@ function gerar_xlsx_titulos_detalhados(array $clientes): array
 
     $tmpFile = tempnam(sys_get_temp_dir(), 'inad_xlsx_');
     if ($tmpFile === false) {
-        throw new RuntimeException('Não foi possível criar arquivo temporário do XLSX.');
+        throw new RuntimeException('Não foi possível criar arquivo temporário.');
     }
 
     $finalPath = $tmpFile . '.xlsx';
@@ -257,98 +222,9 @@ function gerar_xlsx_titulos_detalhados(array $clientes): array
     }
 
     return [
-        'name' => 'inadimplencia_detalhada.xlsx',
+        'name' => $nomeArquivo,
         'contentBytes' => base64_encode($content),
         'contentType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    ];
-}
-
-function send_mail_graph_multi(
-    array $to,
-    array $cc,
-    string $subject,
-    string $html,
-    array $attachments = []
-): array {
-    $token = graph_get_token();
-
-    $url = 'https://graph.microsoft.com/v1.0/users/' . rawurlencode(GRAPH_SENDER_EMAIL) . '/sendMail';
-
-    $to = normalize_email_list($to);
-    $cc = normalize_email_list($cc);
-
-    $toRecipients = array_map(
-        static fn(string $email): array => [
-            'emailAddress' => [
-                'address' => $email,
-            ],
-        ],
-        $to
-    );
-
-    $ccRecipients = array_map(
-        static fn(string $email): array => [
-            'emailAddress' => [
-                'address' => $email,
-            ],
-        ],
-        $cc
-    );
-
-    $payload = [
-        'message' => [
-            'subject' => $subject,
-            'body' => [
-                'contentType' => 'HTML',
-                'content' => $html,
-            ],
-            'toRecipients' => $toRecipients,
-            'ccRecipients' => $ccRecipients,
-            'attachments' => $attachments,
-        ],
-        'saveToSentItems' => true,
-    ];
-
-    $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-    if ($jsonPayload === false) {
-        throw new RuntimeException('Falha ao montar payload do e-mail.');
-    }
-
-    $ch = curl_init($url);
-
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_HTTPHEADER => [
-            'Authorization: Bearer ' . $token,
-            'Content-Type: application/json',
-        ],
-        CURLOPT_POSTFIELDS => $jsonPayload,
-        CURLOPT_TIMEOUT => 60,
-    ]);
-
-    $response = curl_exec($ch);
-
-    if ($response === false) {
-        $err = curl_error($ch);
-        curl_close($ch);
-        throw new RuntimeException('Erro no cURL ao enviar e-mail: ' . $err);
-    }
-
-    $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    $decoded = json_decode($response, true);
-
-    if ($httpCode < 200 || $httpCode >= 300) {
-        throw new RuntimeException('Falha ao enviar e-mail via Graph (HTTP ' . $httpCode . '): ' . $response);
-    }
-
-    return [
-        'http_code' => $httpCode,
-        'response' => $response,
-        'decoded' => $decoded,
     ];
 }
 
@@ -357,11 +233,7 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
-        echo json_encode([
-            'ok' => false,
-            'message' => 'Método não permitido.',
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
+        exit('Método não permitido.');
     }
 
     $raw = file_get_contents('php://input');
@@ -371,60 +243,32 @@ try {
         throw new RuntimeException('Payload inválido.');
     }
 
-    $para = normalize_email_list((array) ($data['para'] ?? []));
-    $ccFinal = normalize_email_list((array) ($data['cc'] ?? []));
-
-    $assunto = trim((string) ($data['assunto'] ?? 'Aviso de inadimplência'));
-    $html = (string) ($data['html'] ?? '');
     $clientesPayload = is_array($data['clientes'] ?? null) ? $data['clientes'] : [];
-
-    if ($html === '') {
-        throw new RuntimeException('Conteúdo do e-mail não informado.');
+    if (!$clientesPayload) {
+        throw new RuntimeException('Nenhum cliente informado para exportação.');
     }
 
-    if (!$para) {
-        throw new RuntimeException('Informe ao menos um destinatário.');
+    $nomeArquivo = trim((string) ($data['nome_arquivo'] ?? 'inadimplencia_detalhada.xlsx'));
+    if ($nomeArquivo === '') {
+        $nomeArquivo = 'inadimplencia_detalhada.xlsx';
     }
 
-    $emails = array_merge($para, $ccFinal);
-    foreach ($emails as $email) {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            throw new RuntimeException('E-mail inválido: ' . $email);
-        }
+    $xlsx = gerar_xlsx_titulos_detalhados($clientesPayload, $nomeArquivo);
+    $binary = base64_decode($xlsx['contentBytes'], true);
+
+    if ($binary === false) {
+        throw new RuntimeException('Falha ao decodificar XLSX.');
     }
 
-    $attachments = [];
-
-    if ($clientesPayload) {
-        $xlsx = gerar_xlsx_titulos_detalhados($clientesPayload);
-
-        $attachments[] = [
-            '@odata.type' => '#microsoft.graph.fileAttachment',
-            'name' => $xlsx['name'],
-            'contentType' => $xlsx['contentType'],
-            'contentBytes' => $xlsx['contentBytes'],
-        ];
-    }
-
-    $result = send_mail_graph_multi($para, $ccFinal, $assunto, $html, $attachments);
-
-    echo json_encode([
-        'ok' => true,
-        'message' => 'E-mail enviado com sucesso.',
-        'graph_http_code' => $result['http_code'] ?? null,
-        'sender' => defined('GRAPH_SENDER_EMAIL') ? GRAPH_SENDER_EMAIL : null,
-        'para_final' => $para,
-        'cc_final' => $ccFinal,
-        'anexo_gerado' => !empty($attachments),
-        'anexo_nome' => $attachments[0]['name'] ?? null,
-    ], JSON_UNESCAPED_UNICODE);
+    header('Content-Type: ' . $xlsx['contentType']);
+    header('Content-Disposition: attachment; filename="' . basename($xlsx['name']) . '"');
+    header('Content-Length: ' . strlen($binary));
+    echo $binary;
     exit;
 
 } catch (Throwable $e) {
     http_response_code(400);
-    echo json_encode([
-        'ok' => false,
-        'message' => $e->getMessage(),
-    ], JSON_UNESCAPED_UNICODE);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo $e->getMessage();
     exit;
 }

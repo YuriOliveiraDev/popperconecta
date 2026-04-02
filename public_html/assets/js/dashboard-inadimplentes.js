@@ -1,3 +1,4 @@
+
 (function () {
   const state = {
     payload: null,
@@ -16,7 +17,8 @@
       dir: "desc",
     },
   };
-
+  let ccEditadoManual = false;
+  let paraEditadoManual = false;
   const $ = (sel) => document.querySelector(sel);
 
   const FAIXAS = ["1-30", "31-60", "61-90", "91-180", "180+"];
@@ -1493,6 +1495,7 @@
       "maila.moraes@popper.com.br",
     ];
 
+
     const emailSupervisor = getSupervisorEmailAtual();
     if (emailSupervisor) {
       emails.push(emailSupervisor);
@@ -1683,8 +1686,13 @@
   }
 
   function refreshEmailPreview() {
-    autoPreencherEnviarPara();
-    autoPreencherCc();
+    if (!paraEditadoManual) {
+      autoPreencherEnviarPara();
+    }
+
+    if (!ccEditadoManual) {
+      autoPreencherCc();
+    }
 
     const clientes = getClientesParaAviso();
     const mensagemExtra = $("#emailMensagemExtra")?.value || "";
@@ -1727,7 +1735,8 @@
     } catch (err) {
       console.error(err);
     }
-
+    ccEditadoManual = false;
+    paraEditadoManual = false;
     refreshEmailPreview();
 
     const modal = $("#modalAvisoEmail");
@@ -1746,7 +1755,101 @@
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
+  function slugArquivo(texto) {
+    return String(texto || "carteira_geral")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .replace(/_+/g, "_");
+  }
 
+  async function baixarRelatorioXlsx() {
+    const { clientes } = refreshEmailPreview();
+
+    if (!clientes.length) {
+      alert("Nenhum cliente inadimplente encontrado para exportação.");
+      return;
+    }
+
+    const supervisorAtual = getSupervisorAtual();
+    const supervisorEmailAtual = getSupervisorEmailAtual();
+    const vendedorContexto = getContextoEmail();
+    const nomeArquivo = `inadimplencia_vendedor_${slugArquivo(vendedorContexto)}.xlsx`;
+
+    const payload = {
+      nome_arquivo: nomeArquivo,
+      supervisor_codigo: supervisorAtual?.codigo || "",
+      supervisor_nome: supervisorAtual?.nome || "",
+      supervisor_email: supervisorEmailAtual || "",
+      clientes: clientes.map((cli) => ({
+        cliente: cli.cliente,
+        loja: cli.loja,
+        nome: cli.nome,
+        cnpj: cli.cnpj || "",
+        vendedor_codigo: cli.vendedor_codigo,
+        vendedor_nome: cli.vendedor_nome,
+        supervisor_codigo: cli.supervisor_codigo,
+        supervisor_nome: cli.supervisor_nome,
+        inad_total: toNumber(cli.inad_total),
+        inad_qtd_titulos: toNumber(cli.inad_qtd_titulos),
+        maior_atraso_dias: toNumber(cli.maior_atraso_dias),
+        titulos: (Array.isArray(cli.titulos) ? cli.titulos : []).map((t) => ({
+          titulo_composto: t.titulo_composto || "",
+          tipo: t.tipo || "",
+          emissao_fmt: t.emissao_fmt || "",
+          vencto_fmt: t.vencto_fmt || "",
+          dias_atraso: toNumber(t.dias_atraso),
+          faixa_atraso: t.faixa_atraso || "",
+          valor: toNumber(t.valor),
+          saldo: toNumber(t.saldo),
+          forma_pagamento: t.forma_pagamento || "",
+        })),
+      })),
+      filtros: {
+        vendedor: $("#filterVendedor")?.value || "",
+        supervisor: $("#filterSupervisor")?.value || "",
+        faixa: $("#filterFaixa")?.value || "",
+        valor_min: $("#filterValorMin")?.value || "",
+        date_from: $("#filterDateFrom")?.value || "",
+        date_to: $("#filterDateTo")?.value || "",
+      },
+    };
+
+    await withLoader(
+      async () => {
+        const resp = await fetch("/api/inadimplencia_exportar_xlsx.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!resp.ok) {
+          const txt = await resp.text();
+          throw new Error(txt || "Falha ao gerar arquivo XLSX.");
+        }
+
+        const blob = await resp.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = nomeArquivo;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      },
+      {
+        title: "Gerando XLSX…",
+        sub: "Preparando arquivo para download",
+      }
+    ).catch((err) => {
+      alert(err.message || "Erro ao baixar arquivo XLSX.");
+    });
+  }
   async function enviarAvisoEmail() {
     const para = parseEmails($("#emailDestinatario")?.value || "");
     const cc = parseEmails($("#emailCc")?.value || "");
@@ -1785,6 +1888,7 @@
         cliente: cli.cliente,
         loja: cli.loja,
         nome: cli.nome,
+        cnpj: cli.cnpj || "",
         vendedor_codigo: cli.vendedor_codigo,
         vendedor_nome: cli.vendedor_nome,
         supervisor_codigo: cli.supervisor_codigo,
@@ -1792,6 +1896,17 @@
         inad_total: toNumber(cli.inad_total),
         inad_qtd_titulos: toNumber(cli.inad_qtd_titulos),
         maior_atraso_dias: toNumber(cli.maior_atraso_dias),
+        titulos: (Array.isArray(cli.titulos) ? cli.titulos : []).map((t) => ({
+          titulo_composto: t.titulo_composto || "",
+          tipo: t.tipo || "",
+          emissao_fmt: t.emissao_fmt || "",
+          vencto_fmt: t.vencto_fmt || "",
+          dias_atraso: toNumber(t.dias_atraso),
+          faixa_atraso: t.faixa_atraso || "",
+          valor: toNumber(t.valor),
+          saldo: toNumber(t.saldo),
+          forma_pagamento: t.forma_pagamento || "",
+        })),
       })),
       filtros: {
         vendedor: $("#filterVendedor")?.value || "",
@@ -1838,7 +1953,13 @@
       alert(err.message || "Erro ao enviar e-mail.");
     });
   }
+  $("#emailCc")?.addEventListener("input", () => {
+    ccEditadoManual = true;
+  });
 
+  $("#emailDestinatario")?.addEventListener("input", () => {
+    paraEditadoManual = true;
+  });
   document.addEventListener("click", (e) => {
     const sortTh = e.target.closest(".th-sort");
     if (sortTh) {
@@ -1941,6 +2062,7 @@
   $("#btnOpenEmailModal")?.addEventListener("click", openEmailModal);
   $("#btnCloseEmailModal")?.addEventListener("click", closeEmailModal);
   $("#btnPreviewEmail")?.addEventListener("click", refreshEmailPreview);
+  $("#btnBaixarXlsxAviso")?.addEventListener("click", baixarRelatorioXlsx);
   $("#btnEnviarEmailAviso")?.addEventListener("click", enviarAvisoEmail);
 
   document.querySelectorAll("[data-close-email-modal]").forEach((el) => {

@@ -365,7 +365,7 @@ $extra_css = [
                             </div>
 
                             <div class="modal__actions">
-                                <button type="button" class="btn-clear" id="btnPreviewEmail">Atualizar prévia</button>
+                                <button type="button" class="btn-secondary" id="btnBaixarXlsxAviso">Baixar XLSX</button>
                                 <button type="button" class="btn-filter" id="btnEnviarEmailAviso">Enviar e-mail</button>
                             </div>
                         </div>
