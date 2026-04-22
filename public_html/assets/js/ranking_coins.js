@@ -1,14 +1,4 @@
 
-  const USE_DEFAULT_AVATAR_ICON = true;
-
-  function defaultAvatarIcon(size = 56) {
-    return `
-      <svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true" focusable="false">
-        <path fill="#94a3b8" d="M12 12a4.25 4.25 0 1 0 0-8.5A4.25 4.25 0 0 0 12 12Zm0 2c-4.42 0-8 2.24-8 5v.75c0 .41.34.75.75.75h14.5c.41 0 .75-.34.75-.75V19c0-2.76-3.58-5-8-5Z"/>
-      </svg>
-    `;
-  }
-
   (function () {
     const STORAGE_KEY = 'poppercoins-ranking-ui-v2';
 
@@ -195,12 +185,13 @@
 
     function avatarHtml(avatar, name, size = 56) {
       const nm = simpleName(name);
-      const icon = defaultAvatarIcon(size).replace(/'/g, "\\'");
+      const fallback = `<span class="avatar-fallback" aria-label="Sem foto">${esc(initials(nm))}</span>`;
       if (avatar) {
         return `<img src="${esc(avatar)}" alt="Foto de ${esc(nm)}"
-          onerror="this.remove(); this.parentNode.innerHTML='${USE_DEFAULT_AVATAR_ICON ? icon : esc(initials(nm))}';" />`;
+          onload="var r=this.naturalWidth/Math.max(this.naturalHeight,1); if(r>1.8||r<0.55){this.parentNode.innerHTML=this.parentNode.dataset.fallback;}"
+          onerror="this.parentNode.innerHTML=this.parentNode.dataset.fallback;" />`;
       }
-      return USE_DEFAULT_AVATAR_ICON ? defaultAvatarIcon(size) : esc(initials(nm));
+      return fallback;
     }
 
     function showCardsLoading() {
@@ -291,7 +282,7 @@
 
           card.innerHTML = `
             <div class="${badgeClass}">#${absoluteIndex + 1}</div>
-            <div class="avatar">${avatarHtml(it.avatar, it.name, 56)}</div>
+            <div class="avatar" data-fallback="${esc(`<span class="avatar-fallback" aria-label="Sem foto">${esc(initials(nm))}</span>`)}">${avatarHtml(it.avatar, it.name, 56)}</div>
             <div class="card-name" title="${esc(it.name)}">${esc(nm)}</div>
             <div class="card-sector" title="${esc(it.sector || '')}">${esc(it.sector || 'Sem setor')}</div>
             <div class="coin-pill">🪙 ${formatInt(it.coins)}</div>
@@ -339,7 +330,7 @@
 
         row.innerHTML = `
           ${leftHtml}
-          <div class="rank-avatar">${avatarHtml(it.avatar, it.name, 28)}</div>
+          <div class="rank-avatar" data-fallback="${esc(`<span class="avatar-fallback" aria-label="Sem foto">${esc(initials(nm))}</span>`)}">${avatarHtml(it.avatar, it.name, 28)}</div>
           <div style="min-width:0">
             <div class="rank-name" title="${esc(it.name)}">${esc(nm)}</div>
             <div class="bar"><span style="width:${pct.toFixed(0)}%"></span></div>

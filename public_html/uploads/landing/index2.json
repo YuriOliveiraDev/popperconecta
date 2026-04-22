@@ -32,17 +32,12 @@
     },
     "quick_links": {
         "title": "Acessos rápidos",
-        "subtitle": "Atalhos úteis para o dia a dia do time.",
+        "subtitle": "",
         "items": [
             {
                 "label": "Faturamento",
                 "url": "/dashboards/faturamento.php",
                 "description": "Dashboard Faturamento Comercial"
-            },
-            {
-                "label": "Executivo",
-                "url": "/dashboards/dashboard-executivo.php",
-                "description": "Dashboard Executivo Comercial"
             },
             {
                 "label": "TV",

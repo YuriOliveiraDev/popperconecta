@@ -791,9 +791,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <script src="/assets/js/header.js?v=<?= filemtime(__DIR__ . '/assets/js/header.js') ?>"></script>
   <script src="/assets/js/dropdowns.js?v=<?= filemtime(__DIR__ . '/assets/js/dropdowns.js') ?>"></script>
+  <script src="/assets/js/photo-cropper.js?v=<?= filemtime(__DIR__ . '/assets/js/photo-cropper.js') ?>"></script>
 
   <script>
     (function () {
+      if (window.PopperPhotoCropper && typeof window.PopperPhotoCropper.bind === 'function') {
+        window.PopperPhotoCropper.bind({
+          inputId: 'meProfilePhoto',
+          nameId: 'meProfilePhotoName',
+          imgId: 'mePhotoPreviewImg',
+          placeholderId: 'mePhotoEmoji',
+          removeSelector: 'input[name="remove_photo"]'
+        });
+        return;
+      }
+
       const input = document.getElementById('meProfilePhoto');
       const img = document.getElementById('mePhotoPreviewImg');
       const emoji = document.getElementById('mePhotoEmoji');

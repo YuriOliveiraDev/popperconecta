@@ -1,5 +1,10 @@
 (function () {
   function bindPhotoPreview(config) {
+    if (window.PopperPhotoCropper && typeof window.PopperPhotoCropper.bind === 'function') {
+      window.PopperPhotoCropper.bind(config);
+      return;
+    }
+
     const input = document.getElementById(config.inputId);
     const nameEl = document.getElementById(config.nameId);
     const img = document.getElementById(config.imgId);

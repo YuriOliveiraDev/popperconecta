@@ -619,5 +619,6 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
   <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
   <script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>" defer></script>
+  <script src="/assets/js/photo-cropper.js?v=<?= filemtime(APP_ROOT . '/assets/js/photo-cropper.js') ?>" defer></script>
   <script src="/assets/js/user-edit.js?v=<?= filemtime(APP_ROOT . '/assets/js/user-edit.js') ?>" defer></script>
   <script>
