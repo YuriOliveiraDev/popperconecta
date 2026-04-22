@@ -42,7 +42,6 @@ jobs:
             **/*.log
             **/tmp/**
             **/cache/**
-            **/uploads/**
             **/node_modules/**
             **/vendor/**
             logs/**
