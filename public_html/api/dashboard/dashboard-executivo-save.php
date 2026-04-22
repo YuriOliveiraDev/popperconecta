@@ -10,6 +10,7 @@ if (!function_exists('array_is_list')) {
 }
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_login();
 
 require_once APP_ROOT . '/app/config/config.php';
 require_once APP_ROOT . '/app/config/config-totvs.php';

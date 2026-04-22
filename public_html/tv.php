@@ -328,29 +328,12 @@ try {
     <img src="/assets/img/logo.png" alt="Popper">
   </div>
 
-  <!-- DEBUG VISÍVEL -->
-  <div id="tv-debug" style="
-    position:fixed;
-    left:12px;
-    bottom:12px;
-    z-index:99999;
-    background:rgba(0,0,0,.78);
-    color:#fff;
-    padding:10px 12px;
-    border-radius:10px;
-    font:12px/1.4 Arial,sans-serif;
-    max-width:520px;
-    display:none;
-    white-space:pre-wrap;
-  "></div>
-
   <script>
     (function () {
-      const dbg = document.getElementById('tv-debug');
       function showDebug(msg) {
-        if (!dbg) return;
-        dbg.style.display = 'block';
-        dbg.textContent += (dbg.textContent ? "\n" : "") + msg;
+        if (window.console && typeof window.console.warn === 'function') {
+          window.console.warn(msg);
+        }
       }
 
       window.__tvDebug = showDebug;

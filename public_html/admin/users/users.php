@@ -317,6 +317,11 @@ ksort($hierOptions);
               <input class="field__control" id="birth_date" name="birth_date" type="date" autocomplete="off" />
             </label>
 
+            <label class="field" for="start_date">
+              <span class="field__label">Data de In&iacute;cio</span>
+              <input class="field__control" id="start_date" name="start_date" type="date" autocomplete="off" />
+            </label>
+
             <label class="field" for="gender">
               <span class="field__label">Gênero</span>
               <select class="field__control" id="gender" name="gender" autocomplete="off">

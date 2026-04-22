@@ -5,6 +5,7 @@ date_default_timezone_set('America/Sao_Paulo');
 
 require_once __DIR__ . '/../bootstrap.php';
 require_login();
+require_dash_perm('dash.comex.importacoes');
 
 $u = current_user();
 $activePage = 'comex';

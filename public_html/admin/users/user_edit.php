@@ -37,10 +37,24 @@ function selected(string $a, string $b): string
   return $a === $b ? 'selected' : '';
 }
 
+function user_initials(string $name): string
+{
+  $name = trim(preg_replace('/\s+/', ' ', $name) ?? '');
+  if ($name === '') {
+    return 'US';
+  }
+
+  $parts = explode(' ', $name);
+  $first = substr($parts[0] ?? '', 0, 1);
+  $last = count($parts) > 1 ? substr($parts[count($parts) - 1], 0, 1) : '';
+
+  return strtoupper($first . $last);
+}
+
 function load_user_by_id(int $id): ?array
 {
   $stmt = db()->prepare('
-    SELECT id, name, email, phone, birth_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions
+    SELECT id, name, email, phone, birth_date, start_date, gender, profile_photo_path, role, setor, hierarquia, is_active, last_login_at, permissions
     FROM users
     WHERE id = ? LIMIT 1
   ');
@@ -156,6 +170,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
   $email = trim((string) ($_POST['email'] ?? ''));
   $phone = trim((string) ($_POST['phone'] ?? ''));
   $birth_date = trim((string) ($_POST['birth_date'] ?? ''));
+  $start_date = trim((string) ($_POST['start_date'] ?? ''));
   $gender = trim((string) ($_POST['gender'] ?? ''));
   $role = trim((string) ($_POST['role'] ?? 'user'));
   $setor = trim((string) ($_POST['setor'] ?? ''));
@@ -186,6 +201,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
     $error = 'Telefone muito longo.';
   } elseif ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date)) {
     $error = 'Data de nascimento inválida.';
+  } elseif ($start_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date)) {
+    $error = 'Data de início inválida.';
   } elseif ($gender !== '' && !in_array($gender, ['M', 'F', 'O', 'N'], true)) {
     $error = 'Gênero inválido.';
   } elseif (!in_array($role, ['user', 'admin'], true)) {
@@ -232,6 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
                 email = ?,
                 phone = ?,
                 birth_date = ?,
+                start_date = ?,
                 gender = ?,
                 profile_photo_path = ?,
                 role = ?,
@@ -248,6 +266,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
               $email,
               ($phone !== '' ? $phone : null),
               ($birth_date !== '' ? $birth_date : null),
+              ($start_date !== '' ? $start_date : null),
               ($gender !== '' ? $gender : null),
               $photoPath,
               $role,
@@ -266,6 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
                 email = ?,
                 phone = ?,
                 birth_date = ?,
+                start_date = ?,
                 gender = ?,
                 profile_photo_path = ?,
                 role = ?,
@@ -281,6 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') !== 'delet
               $email,
               ($phone !== '' ? $phone : null),
               ($birth_date !== '' ? $birth_date : null),
+              ($start_date !== '' ? $start_date : null),
               ($gender !== '' ? $gender : null),
               $photoPath,
               $role,
@@ -351,7 +372,7 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Editar Usuário — <?= h((string) APP_NAME) ?></title>
+  <title>Editar Usuário - <?= h((string) APP_NAME) ?></title>
 
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(APP_ROOT . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(APP_ROOT . '/assets/css/users.css') ?>" />
@@ -377,9 +398,9 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
           <div class="user-edit-card__identity">
             <div class="user-edit-card__avatar-mini">
               <?php if ($profilePhotoPath !== ''): ?>
-                <img src="<?= h($profilePhotoPath) ?>" alt="Foto do usuário">
+                <img src="<?= h($profilePhotoPath) ?>" alt="Foto do usu&aacute;rio">
               <?php else: ?>
-                <span>👤</span>
+                <span><?= h(user_initials((string) $user['name'])) ?></span>
               <?php endif; ?>
             </div>
 
@@ -413,11 +434,10 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
             <div class="photo-row">
               <?php if ($profilePhotoPath !== ''): ?>
                 <img class="avatar-lg" id="userPhotoPreviewImg" src="<?= h($profilePhotoPath) ?>" alt="Foto">
-                <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" style="display:none;" aria-label="Sem foto">👤
-                </div>
+                <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" style="display:none;" aria-label="Sem foto"><?= h(user_initials((string) $user['name'])) ?></div>
               <?php else: ?>
                 <img class="avatar-lg" id="userPhotoPreviewImg" alt="Foto" style="display:none;" />
-                <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" aria-label="Sem foto">👤</div>
+                <div class="avatar-lg avatar-lg--emoji" id="userPhotoEmoji" aria-label="Sem foto"><?= h(user_initials((string) $user['name'])) ?></div>
               <?php endif; ?>
 
               <div>
@@ -428,7 +448,7 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
 
                   <div class="file-meta">
                     <span class="file-name" id="userProfilePhotoName">Nenhum arquivo selecionado</span>
-                    <span class="file-hint">PNG/JPG/WEBP • Máx: 2MB</span>
+                    <span class="file-hint">PNG/JPG/WEBP - Máx: 2MB</span>
                   </div>
 
                   <?php if ($profilePhotoPath !== ''): ?> <label class="perm-item">
@@ -469,6 +489,12 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
             <label class="field__label" for="birth_date">Data de nascimento</label>
             <input class="field__control" id="birth_date" name="birth_date" type="date"
               value="<?= h((string) ($user['birth_date'] ?? '')) ?>" />
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="start_date">Data de In&iacute;cio</label>
+            <input class="field__control" id="start_date" name="start_date" type="date"
+              value="<?= h((string) ($user['start_date'] ?? '')) ?>" />
           </div>
 
           <div class="field">
@@ -553,7 +579,7 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
           </div>
 
           <div class="field field--full">
-            <div class="form-section-title">Segurança e status</div>
+            <div class="form-section-title">Seguran&ccedil;a e status</div>
           </div>
 
           <div class="field">
@@ -572,18 +598,18 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
 
           <div class="form-actions">
             <a class="link link--pill" href="/admin/users/users.php">Cancelar</a>
-            <button type="submit" class="btn btn--primary">Salvar alterações</button>
+            <button type="submit" class="btn btn--primary">Salvar altera&ccedil;&otilde;es</button>
           </div>
         </form>
 
         <form method="post" action="/admin/users/user_edit.php?id=<?= (int) $user['id'] ?>"
-          onsubmit="return confirm('Tem certeza que deseja excluir este usuário? Essa ação não pode ser desfeita.');"
+          onsubmit="return confirm('Tem certeza que deseja excluir este usu&aacute;rio? Essa a&ccedil;&atilde;o n&atilde;o pode ser desfeita.');"
           class="delete-form">
           <input type="hidden" name="action" value="delete">
 
           <button type="submit" class="btn btn--danger" <?= ((int) $me['id'] === (int) $user['id']) ? 'disabled' : '' ?>
-            title="<?= ((int) $me['id'] === (int) $user['id']) ? 'Você não pode excluir o seu próprio usuário.' : 'Excluir usuário' ?>">
-            Excluir usuário
+            title="<?= ((int) $me['id'] === (int) $user['id']) ? 'Voc&ecirc; n&atilde;o pode excluir o seu pr&oacute;prio usu&aacute;rio.' : 'Excluir usu&aacute;rio' ?>">
+            Excluir usu&aacute;rio
           </button>
         </form>
       </div>

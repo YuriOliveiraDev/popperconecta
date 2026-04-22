@@ -1,0 +1,69 @@
+{
+    "hero": {
+        "badge": "Popper Conecta",
+        "title": "Tudo o que importa no mês, em uma página só.",
+        "subtitle": "Centralize informações estratégicas, acompanhe resultados em tempo real e acesse rapidamente tudo o que move a Popper."
+    },
+    "popper_news": {
+        "eyebrow": "Popper News Abril",
+        "title": "",
+        "summary": ""
+    },
+    "notices": {
+        "title": "Avisos",
+        "subtitle": "",
+        "items": [
+            {
+                "label": "",
+                "title": "Manutenção Programada",
+                "detail": "Informamos que o sistema passará por uma manutenção programada hoje, às 22h, com previsão de retorno às 23h30. Durante esse período, algumas funcionalidades poderão ficar indisponíveis."
+            },
+            {
+                "label": "",
+                "title": "Atualização de Processos",
+                "detail": "Os fluxos de solicitação de compras foram atualizados. A partir de agora, todas as requisições devem ser realizadas exclusivamente via Pipefy, com preenchimento completo das informações."
+            },
+            {
+                "label": "",
+                "title": "Aniversariantes do Mês",
+                "detail": "Confira os aniversariantes deste mês no portal e não deixe de enviar uma mensagem especial! Vamos juntos valorizar nosso time e fortalecer o clima organizacional."
+            }
+        ]
+    },
+    "house_anniversaries": {
+        "title": "Aniversariantes de casa",
+        "subtitle": "Reconhecimentos e marcos internos destacados para o mês atual.",
+        "items": []
+    },
+    "quick_links": {
+        "title": "Acessos rápidos",
+        "subtitle": "Atalhos úteis para o dia a dia do time.",
+        "items": [
+            {
+                "label": "Faturamento",
+                "url": "/dashboards/faturamento.php",
+                "description": "Dashboard Faturamento Comercial"
+            },
+            {
+                "label": "Executivo",
+                "url": "/dashboards/dashboard-executivo.php",
+                "description": "Dashboard Executivo Comercial"
+            },
+            {
+                "label": "TV",
+                "url": "/tv.php",
+                "description": "Visão em tela ampliada"
+            },
+            {
+                "label": "PopperCoins",
+                "url": "/coins/coins.php",
+                "description": "Meus Popper Coins"
+            }
+        ]
+    },
+    "calendar": {
+        "title": "Calendário do mês",
+        "subtitle": "Agenda do mês atual com destaques e observações editáveis pela administração.",
+        "events": []
+    }
+}

@@ -3,6 +3,7 @@ declare(strict_types=1);
 date_default_timezone_set('America/Sao_Paulo');
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_login();
 
 header('Content-Type: application/json; charset=utf-8');
 

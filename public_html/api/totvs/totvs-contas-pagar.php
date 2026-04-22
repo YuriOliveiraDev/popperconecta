@@ -1,5 +1,6 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_login();
 
 header('Content-Type: application/json; charset=utf-8');
 

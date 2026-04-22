@@ -18,11 +18,11 @@ function json_out(array $payload, int $code = 200): void
   exit;
 }
 
-// ✅ listas permitidas
+// listas permitidas
 $allowedAdminPerms = array_keys(ADMIN_PERMISSION_CATALOG);
 $allowedDashPerms = array_keys(DASHBOARD_CATALOG);
 
-// ✅ Dashboards padrão
+// Dashboards padrão
 $defaultDashPerms = [
   'dash.comercial.faturamento',
   'dash.comercial.executivo',
@@ -98,6 +98,7 @@ $hierarquia = trim($_POST['hierarquia'] ?? 'Assistente');
 
 $phone = trim($_POST['phone'] ?? '');
 $birth_date = trim($_POST['birth_date'] ?? '');
+$start_date = trim($_POST['start_date'] ?? '');
 $gender = trim($_POST['gender'] ?? '');
 
 $permsAdmin = $_POST['perms_admin'] ?? [];
@@ -132,6 +133,8 @@ if ($phone !== '' && strlen($phone) > 20)
   $errors[] = 'Telefone muito longo.';
 if ($birth_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $birth_date))
   $errors[] = 'Data de nascimento inválida.';
+if ($start_date !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $start_date))
+  $errors[] = 'Data de início inválida.';
 if ($gender !== '' && !in_array($gender, ['M', 'F', 'O', 'N'], true))
   $errors[] = 'Gênero inválido.';
 
@@ -150,14 +153,15 @@ try {
     $hash = password_hash($pass, PASSWORD_DEFAULT);
 
     $stmt = db()->prepare(
-      'INSERT INTO users (name, email, phone, birth_date, gender, profile_photo_path, password_hash, role, setor, hierarquia, is_active, permissions)
-       VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 1, ?)'
+      'INSERT INTO users (name, email, phone, birth_date, start_date, gender, profile_photo_path, password_hash, role, setor, hierarquia, is_active, permissions)
+       VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, 1, ?)'
     );
     $stmt->execute([
       $name,
       $email,
       ($phone !== '' ? $phone : null),
       ($birth_date !== '' ? $birth_date : null),
+      ($start_date !== '' ? $start_date : null),
       ($gender !== '' ? $gender : null),
       $hash,
       $role,

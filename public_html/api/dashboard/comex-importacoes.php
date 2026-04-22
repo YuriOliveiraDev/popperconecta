@@ -8,13 +8,7 @@ header('Cache-Control: no-store');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php'; 
 require_once APP_ROOT . '/app/config/config-pipefy.php';
 
-// ✅ valida sessão SEM HTML
-$u = function_exists('current_user') ? current_user() : null;
-if (!$u || !is_array($u)) {
-  http_response_code(401);
-  echo json_encode(['ok'=>false,'error'=>'unauthorized'], JSON_UNESCAPED_UNICODE);
-  exit;
-}
+require_dash_perm('dash.comex.importacoes');
 
 // ===== CONFIG CACHE =====
 const CACHE_DIR = __DIR__ . '/../cache';

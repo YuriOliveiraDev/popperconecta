@@ -23,7 +23,7 @@ $adminItems = is_array($u) ? header_get_admin_items($u) : [];
 $dashboardGroups = is_array($u) ? header_get_dashboard_groups($u) : [];
 
 $coinsMenu = [
-    ['label' => 'Meus Poppercoins', 'url' => '/coins/coins.php'],
+    ['label' => 'Meus Popper Coins', 'url' => '/coins/coins.php'],
     ['label' => 'Loja', 'url' => '/coins/coins_resgatar.php'],
     ['label' => 'Ranking', 'url' => '/coins/ranking.php'],
     ['label' => 'Campanhas', 'url' => '/coins/coins_campanhas.php'],
