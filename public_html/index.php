@@ -75,8 +75,8 @@ function years_since_date(?string $date, DateTimeImmutable $now): string
     return '';
   }
 
-  $years = (int) $start->diff($now)->y;
-  return $years > 0 ? (string) $years : '1';
+  $years = (int) $now->format('Y') - (int) $start->format('Y');
+  return $years > 0 ? (string) $years : '';
 }
 
 function normalize_quick_links(array $items, bool $isAdmin): array
@@ -243,7 +243,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
 
     corporate_landing_save($updated);
-    header('Location: /index2.php?saved=1');
+    header('Location: /index.php?saved=1');
     exit;
   } catch (Throwable $e) {
     $error = 'Erro ao salvar: ' . $e->getMessage();
@@ -284,9 +284,10 @@ $houseAutoStmt = db()->prepare('
       AND start_date IS NOT NULL
       AND start_date <> ""
       AND MONTH(start_date) = ?
+      AND YEAR(start_date) < ?
     ORDER BY DAY(start_date) ASC, name ASC
 ');
-$houseAutoStmt->execute([$currentMonth]);
+$houseAutoStmt->execute([$currentMonth, $currentYear]);
 $autoHouseAnniversaries = array_map(
   static function (array $person) use ($now): array {
     $years = years_since_date((string) ($person['start_date'] ?? ''), $now);
@@ -719,6 +720,7 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
       color: var(--muted);
       line-height: 1.7;
       font-size: .94rem;
+      white-space: pre-wrap;
     }
 
     .list-grid {
@@ -970,8 +972,8 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
     }
 
     .repeater__item {
-      padding: 14px;
-      border-radius: 16px;
+      padding: 18px;
+      border-radius: 18px;
       border: 1px solid rgba(15, 23, 42, .08);
       background: linear-gradient(180deg, rgba(248, 250, 252, .82), rgba(255, 255, 255, 1));
     }
@@ -979,7 +981,7 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
     .repeater__grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
-      gap: 12px;
+      gap: 14px;
     }
 
     .span-12 {
@@ -1008,6 +1010,25 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
 
     .span-2 {
       grid-column: span 2;
+    }
+
+    .notice-form-grid {
+      grid-template-columns: 170px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .notice-form-grid .notice-title-field,
+    .notice-form-grid .notice-description-field {
+      grid-column: auto;
+    }
+
+    .notice-form-grid .notice-description-field {
+      grid-column: 1 / -1;
+    }
+
+    .notice-form-grid textarea {
+      min-height: 118px;
+      line-height: 1.55;
     }
 
     .item-actions {
@@ -1049,7 +1070,9 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
       .span-5,
       .span-4,
       .span-3,
-      .span-2 {
+      .span-2,
+      .notice-form-grid .notice-title-field,
+      .notice-form-grid .notice-description-field {
         grid-column: auto;
       }
 
@@ -1383,19 +1406,19 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
               <div class="repeater__list" id="notices-items-list">
                 <?php foreach (($noticesBlock['items'] ?? []) as $item): ?>
                   <div class="repeater__item" data-repeater-item>
-                    <div class="repeater__grid">
-                      <div class="field span-2">
+                    <div class="repeater__grid notice-form-grid">
+                      <div class="field notice-label-field">
                         <label>Etiqueta</label>
                         <input type="text" name="notice_item_label[]" placeholder="Ex.: Hoje, RH, Importante"
                           value="<?= h((string) ($item['label'] ?? '')) ?>">
                       </div>
-                      <div class="field span-10">
+                      <div class="field notice-title-field">
                         <label>T&iacute;tulo</label>
                         <input type="text" name="notice_item_title[]" value="<?= h((string) ($item['title'] ?? '')) ?>">
                       </div>
-                      <div class="field span-12">
+                      <div class="field notice-description-field">
                         <label>Descri&ccedil;&atilde;o</label>
-                        <input type="text" name="notice_item_detail[]" value="<?= h((string) ($item['detail'] ?? '')) ?>">
+                        <textarea name="notice_item_detail[]" rows="4"><?= h((string) ($item['detail'] ?? '')) ?></textarea>
                       </div>
                     </div>
                     <div class="item-actions">
@@ -1406,18 +1429,18 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
               </div>
               <template id="notices-items-list-template">
                 <div class="repeater__item" data-repeater-item>
-                  <div class="repeater__grid">
-                    <div class="field span-2">
+                  <div class="repeater__grid notice-form-grid">
+                    <div class="field notice-label-field">
                       <label>Etiqueta</label>
                       <input type="text" name="notice_item_label[]" placeholder="Ex.: Hoje, RH, Importante" value="">
                     </div>
-                    <div class="field span-10">
+                    <div class="field notice-title-field">
                       <label>T&iacute;tulo</label>
                       <input type="text" name="notice_item_title[]" value="">
                     </div>
-                    <div class="field span-12">
+                    <div class="field notice-description-field">
                       <label>Descri&ccedil;&atilde;o</label>
-                      <input type="text" name="notice_item_detail[]" value="">
+                      <textarea name="notice_item_detail[]" rows="4"></textarea>
                     </div>
                   </div>
                   <div class="item-actions">
