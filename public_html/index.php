@@ -16,6 +16,7 @@ $u = current_user();
 $activePage = 'home';
 $isAdmin = (($u['role'] ?? '') === 'admin');
 $userName = header_user_value($u, 'name', 'Usuário');
+$mobileAvatarUrl = header_normalize_asset_path(header_user_value($u, 'profile_photo_path'));
 $mobileInitials = header_build_initials($userName);
 $mobileAdminItems = is_array($u) ? header_get_admin_items($u) : [];
 $mobileDashboardGroups = is_array($u) ? header_get_dashboard_groups($u) : [];
@@ -1148,6 +1149,25 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
         font-size: .82rem;
         font-weight: 900;
         letter-spacing: .04em;
+        overflow: hidden;
+      }
+
+      .mobile-homebar__avatar,
+      .mobile-homebar__fallback {
+        width: 100%;
+        height: 100%;
+        border-radius: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mobile-homebar__avatar {
+        object-fit: cover;
+      }
+
+      .mobile-homebar__fallback {
+        background: rgba(255, 255, 255, .08);
       }
 
       .mobile-homenav-backdrop {
@@ -1438,7 +1458,11 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
       </a>
 
       <a class="mobile-homebar__profile" href="/me.php" aria-label="Meus dados">
-        <?= h($mobileInitials) ?>
+        <?php if ($mobileAvatarUrl !== ''): ?>
+          <img class="mobile-homebar__avatar" src="<?= h($mobileAvatarUrl) ?>" alt="Foto de perfil">
+        <?php else: ?>
+          <span class="mobile-homebar__fallback" aria-hidden="true"><?= h($mobileInitials) ?></span>
+        <?php endif; ?>
       </a>
     </div>
 
