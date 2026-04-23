@@ -687,3 +687,85 @@ main.container.dashboard-exec {
   font-size:18px;
   color:#0f172a;
 }
+
+@media (max-width: 860px) {
+  body.mobile-dashboard-enabled .dashboard-exec.container,
+  body.mobile-dashboard-enabled main.container.dashboard-exec,
+  body.mobile-dashboard-enabled .container.dashboard-exec {
+    width: min(100% - 20px, 100%) !important;
+    padding: 16px 0 24px !important;
+  }
+
+  body.mobile-dashboard-enabled .dashboard-grid--exec {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  body.mobile-dashboard-enabled .exec-filter,
+  body.mobile-dashboard-enabled .chart-card,
+  body.mobile-dashboard-enabled .data-table-card,
+  body.mobile-dashboard-enabled .top-card,
+  body.mobile-dashboard-enabled .kpi-hero,
+  body.mobile-dashboard-enabled .d5-sector,
+  body.mobile-dashboard-enabled .d5-subcard {
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  body.mobile-dashboard-enabled .exec-filter__row,
+  body.mobile-dashboard-enabled .exec-filter__top,
+  body.mobile-dashboard-enabled .exec-chart__head,
+  body.mobile-dashboard-enabled .d5-sector__head,
+  body.mobile-dashboard-enabled .d5-subhead {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+
+  body.mobile-dashboard-enabled .exec-filter__dates,
+  body.mobile-dashboard-enabled .exec-filter__actions,
+  body.mobile-dashboard-enabled .exec-filter__chips {
+    width: 100%;
+  }
+
+  body.mobile-dashboard-enabled .exec-filter__dates-group,
+  body.mobile-dashboard-enabled .exec-filter__actions .chip,
+  body.mobile-dashboard-enabled .exec-filter__actions button.chip,
+  body.mobile-dashboard-enabled .exec-filter__chips .chip {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+
+  body.mobile-dashboard-enabled .rank-meta,
+  body.mobile-dashboard-enabled .tops-row,
+  body.mobile-dashboard-enabled .rankings-grid,
+  body.mobile-dashboard-enabled .d5-grid,
+  body.mobile-dashboard-enabled .kpi-hero .kpi-subgrid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.mobile-dashboard-enabled .chart-box,
+  body.mobile-dashboard-enabled .dashboard-exec .chart-box {
+    height: 250px !important;
+  }
+
+  body.mobile-dashboard-enabled .top-list,
+  body.mobile-dashboard-enabled .mini-list {
+    max-height: 280px !important;
+  }
+
+  body.mobile-dashboard-enabled .top-item,
+  body.mobile-dashboard-enabled .mini-row {
+    grid-template-columns: 28px 1fr !important;
+  }
+
+  body.mobile-dashboard-enabled .top-val,
+  body.mobile-dashboard-enabled .mini-amt {
+    grid-column: 2 / 3;
+    white-space: normal !important;
+  }
+
+  body.mobile-dashboard-enabled .kpi-hero .kpi-value {
+    font-size: 2rem !important;
+  }
+}

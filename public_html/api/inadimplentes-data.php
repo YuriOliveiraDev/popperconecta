@@ -203,6 +203,11 @@ try {
 
     function clienteKey(string $codigo, string $loja, string $vendedor = ''): string
     {
+        return trim($codigo) . '|' . trim($loja);
+    }
+
+    function clienteKeyComVendedor(string $codigo, string $loja, string $vendedor = ''): string
+    {
         $vend = trim($vendedor) !== '' ? trim($vendedor) : 'SEM_VENDEDOR';
         return trim($codigo) . '|' . trim($loja) . '|' . $vend;
     }
@@ -291,7 +296,7 @@ try {
         return [
             'cliente' => $codCliente,
             'loja' => $loja,
-            'cliente_key' => clienteKey($codCliente, $loja, $vend1),
+            'cliente_key' => clienteKey($codCliente, $loja),
             'nome' => $nome,
             'cnpj' => $cnpj,
             'vendedor_codigo' => $vend1,
@@ -675,7 +680,7 @@ try {
             $diasAtraso = 0;
         }
 
-        $key = clienteKey($codCliente, $loja, $vend1);
+        $key = clienteKey($codCliente, $loja);
 
         if (!isset($clientes[$key])) {
             $clientes[$key] = criarClienteBase(
@@ -813,7 +818,7 @@ try {
             continue;
         }
 
-        $key = clienteKey($codCliente, $loja, $vend1);
+        $key = clienteKey($codCliente, $loja);
 
         if (!isset($fatPorCliente[$key])) {
             $fatPorCliente[$key] = criarClienteBase(

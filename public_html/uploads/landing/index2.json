@@ -37,17 +37,22 @@
             {
                 "label": "Faturamento",
                 "url": "/dashboards/faturamento.php",
-                "description": "Dashboard Faturamento Comercial"
+                "description": ""
             },
             {
                 "label": "TV",
                 "url": "/tv.php",
-                "description": "Visão em tela ampliada"
+                "description": ""
             },
             {
                 "label": "PopperCoins",
                 "url": "/coins/coins.php",
-                "description": "Meus Popper Coins"
+                "description": ""
+            },
+            {
+                "label": "Comunicados",
+                "url": "/admin/comunicados.php",
+                "description": ""
             }
         ]
     },

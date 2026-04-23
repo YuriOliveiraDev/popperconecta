@@ -175,7 +175,7 @@ $comunicados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <body class="page">
 
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container comunicados">
     <h2 class="page-title">Gerenciar Comunicados</h2>

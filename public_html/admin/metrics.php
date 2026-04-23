@@ -286,7 +286,7 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
 <link rel="stylesheet" href="/assets/css/loader.css?v=<?= filemtime(APP_ROOT . '/assets/css/loader.css') ?>" /></head>
 
 <body class="page metrics">
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container metrics metrics--fullwidth metrics--two-col">
     <h2 class="page-title">Configuração de Métricas de <?= h($dashboardName) ?></h2>

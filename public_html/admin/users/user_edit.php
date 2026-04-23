@@ -381,7 +381,7 @@ foreach (DASHBOARD_CATALOG as $perm => $meta) {
 </head>
 
 <body class="page">
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container user-edit">
     <section class="user-edit-hero">

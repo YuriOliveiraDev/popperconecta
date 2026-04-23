@@ -30,6 +30,15 @@ $html_class = (isset($html_class) && is_string($html_class))
 
 $extra_css = (isset($extra_css) && is_array($extra_css)) ? $extra_css : [];
 $extra_js_head = (isset($extra_js_head) && is_array($extra_js_head)) ? $extra_js_head : [];
+$layout_embed = !empty($layout_embed);
+
+$scriptPath = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+$mobile_shell_enabled =
+    str_starts_with($scriptPath, '/dashboards/')
+    || str_starts_with($scriptPath, '/coins/')
+    || str_starts_with($scriptPath, '/admin/')
+    || $scriptPath === '/me.php';
+$body_classes = trim($html_class . ($mobile_shell_enabled ? ' mobile-dashboard-enabled' : ''));
 
 $headerCssBase = '/assets/css/header.css';
 $headerCssNotif = '/assets/css/notifications.css';
@@ -41,6 +50,7 @@ $extra_js_head[] = '/assets/js/view-detect.js?v=' . (@filemtime(APP_ROOT . '/ass
 $extra_css = array_values(array_unique($extra_css));
 $extra_js_head = array_values(array_unique($extra_js_head));
 ?>
+<?php if (!$layout_embed): ?>
 <!doctype html>
 <html lang="pt-BR" class="<?= header_e($html_class) ?>">
 
@@ -66,7 +76,17 @@ $extra_js_head = array_values(array_unique($extra_js_head));
     <?php endforeach; ?>
 </head>
 
-<body class="<?= header_e($html_class) ?>">
+<body class="<?= header_e($body_classes) ?>">
+<?php endif; ?>
+
+    <?php if ($mobile_shell_enabled): ?>
+        <script>
+            document.documentElement.classList.add('mobile-dashboard-enabled');
+            if (document.body) {
+                document.body.classList.add('mobile-dashboard-enabled');
+            }
+        </script>
+    <?php endif; ?>
 
     <?php require APP_ROOT . '/app/partials/topbar.php'; ?>
 
@@ -74,7 +94,7 @@ $extra_js_head = array_values(array_unique($extra_js_head));
         <span> ⚠ Este sistema está em fase de testes (BETA).<br>
             Algumas funcionalidades podem sofrer alterações.</span>
     </div>
-    <div id="mobile-block" aria-hidden="true">
+    <div id="mobile-block" aria-hidden="true"<?= $mobile_shell_enabled ? ' style="display:none !important; visibility:hidden !important; pointer-events:none !important;"' : '' ?>>
         <div class="mobile-block__box">
             <div class="mobile-block__loader" aria-hidden="true"></div>
 

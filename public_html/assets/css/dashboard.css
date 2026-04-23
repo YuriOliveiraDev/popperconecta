@@ -377,3 +377,91 @@
     text-align: left;
   }
 }
+
+@media (max-width: 860px) {
+  body.mobile-dashboard-enabled .container {
+    width: min(100% - 20px, 100%) !important;
+    padding: 16px 0 24px !important;
+  }
+
+  body.mobile-dashboard-enabled .dash-topbar,
+  body.mobile-dashboard-enabled .dash-topbar__left {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.mobile-dashboard-enabled .page-title {
+    font-size: 1.35rem;
+    line-height: 1.15;
+  }
+
+  body.mobile-dashboard-enabled .dash-subtitle {
+    font-size: .92rem;
+    line-height: 1.45;
+  }
+
+  body.mobile-dashboard-enabled .dashboard-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  body.mobile-dashboard-enabled .grid-col-span-2,
+  body.mobile-dashboard-enabled .grid-col-span-3 {
+    grid-column: auto !important;
+  }
+
+  body.mobile-dashboard-enabled .kpi-card,
+  body.mobile-dashboard-enabled .chart-card,
+  body.mobile-dashboard-enabled .data-table-card {
+    min-height: auto !important;
+    padding: 14px !important;
+    border-radius: 18px !important;
+  }
+
+  body.mobile-dashboard-enabled .kpi-value {
+    font-size: 1.7rem !important;
+  }
+
+  body.mobile-dashboard-enabled .chart-box {
+    height: 260px !important;
+  }
+
+  body.mobile-dashboard-enabled .table-wrap {
+    overflow-x: auto !important;
+  }
+
+  body.mobile-dashboard-enabled .table {
+    min-width: 680px;
+  }
+
+  body.mobile-dashboard-enabled.faturamento-page,
+  body.mobile-dashboard-enabled.faturamento-page .container,
+  body.mobile-dashboard-enabled.faturamento-page .dash-topbar,
+  body.mobile-dashboard-enabled.faturamento-page .dash-topbar__left,
+  body.mobile-dashboard-enabled.faturamento-page .dashboard-grid,
+  body.mobile-dashboard-enabled.faturamento-page .chart-card,
+  body.mobile-dashboard-enabled.faturamento-page .data-table-card {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body.mobile-dashboard-enabled.faturamento-page .table-wrap {
+    overflow-x: hidden !important;
+  }
+
+  body.mobile-dashboard-enabled.faturamento-page .table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  body.mobile-dashboard-enabled.faturamento-page .table th,
+  body.mobile-dashboard-enabled.faturamento-page .table td {
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  body.mobile-dashboard-enabled.faturamento-page .chart-box canvas {
+    max-width: 100% !important;
+  }
+}

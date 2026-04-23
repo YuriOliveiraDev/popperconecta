@@ -135,7 +135,7 @@ foreach ($campaigns as $item) {
 
 <body class="page">
 
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container campaign-page">
     <div class="campaign-header">

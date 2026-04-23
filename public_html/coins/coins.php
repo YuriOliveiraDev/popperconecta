@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../bootstrap.php';
+require_once APP_ROOT . '/app/integrations/pipefy-rh.php';
 
 require_login();
 
@@ -263,6 +264,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['redeem_reward
       VALUES (?, ?, ?, ?, 'pending', ?, NOW())
     ");
     $stmt->execute([$userId, $rewardId, $cost, $qty, ($userNote !== '' ? $userNote : null)]);
+    $redemptionId = (int) $db->lastInsertId();
 
     $rhUsers = $db->query("
       SELECT id
@@ -284,6 +286,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && isset($_POST['redeem_reward
     }
 
     $db->commit();
+
+    pipefy_try_create_rh_redemption_card([
+      'user' => $u,
+      'reward_title' => $title,
+      'qty' => $qty,
+      'cost' => $cost,
+      'user_note' => $userNote,
+      'redemption_id' => $redemptionId,
+    ]);
 
     $_SESSION['redeem_token'] = bin2hex(random_bytes(16));
     header('Location: /coins.php?ok=redeem');

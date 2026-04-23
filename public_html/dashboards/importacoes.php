@@ -26,7 +26,6 @@ try {
 $extra_css = [
     '/assets/css/loader.css?v=' . (@filemtime(APP_ROOT . '/assets/css/loader.css') ?: time()),
     '/assets/css/base.css?v=' . (@filemtime(APP_ROOT . '/assets/css/base.css') ?: time()),
-    '/assets/css/dropdowns.css?v=' . (@filemtime(APP_ROOT . '/assets/css/dropdowns.css') ?: time()),
     '/assets/css/header.css?v=' . (@filemtime(APP_ROOT . '/assets/css/header.css') ?: time()),
     '/assets/css/importacoes.css?v=' . (@filemtime(APP_ROOT . '/assets/css/importacoes.css') ?: time()),
 ];

@@ -45,6 +45,9 @@ html, body {
   padding: 0 16px;
   text-align: center;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 /* Topbar adjustments for dashboard */

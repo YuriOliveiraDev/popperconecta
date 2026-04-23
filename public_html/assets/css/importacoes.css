@@ -615,3 +615,64 @@ body.comex-importacoes .comex-modal .btn{
   padding: 10px 14px;
 }
 
+@media (max-width: 860px){
+  body.mobile-dashboard-enabled.comex-importacoes main.container.comex-importacoes,
+  body.comex-importacoes main.container.comex-importacoes{
+    padding: 16px 10px 24px !important;
+  }
+
+  body.comex-importacoes .page__head,
+  body.comex-importacoes .toolbar{
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  body.comex-importacoes .toolbar__left,
+  body.comex-importacoes .toolbar__right,
+  body.comex-importacoes .chips {
+    width: 100%;
+  }
+
+  body.comex-importacoes .field {
+    min-width: 100%;
+  }
+
+  body.comex-importacoes .chips {
+    justify-content: flex-start;
+  }
+
+  body.comex-importacoes .chip,
+  body.comex-importacoes .btn {
+    min-height: 42px;
+  }
+
+  body.comex-importacoes .kpis {
+    grid-template-columns: 1fr;
+  }
+
+  body.comex-importacoes #board,
+  body.comex-importacoes .board {
+    grid-template-columns: 1fr;
+  }
+
+  body.comex-importacoes .statuscard__list {
+    max-height: none;
+  }
+
+  body.comex-importacoes .itcard__top,
+  body.comex-importacoes .itcard__dates {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  body.comex-importacoes .comex-modal {
+    padding: 10px;
+  }
+
+  body.comex-importacoes .comex-modal .modal__card {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+}
+

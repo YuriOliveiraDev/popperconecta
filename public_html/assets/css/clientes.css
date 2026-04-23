@@ -421,3 +421,89 @@ canvas.chart{
   text-align:center;
   padding:20px;
 }
+
+@media (max-width: 860px){
+  body.mobile-dashboard-enabled.clientes-page,
+  body.mobile-dashboard-enabled.clientes-page html {
+    overflow: auto !important;
+  }
+
+  body.mobile-dashboard-enabled .wrap {
+    height: auto !important;
+    overflow: visible !important;
+    padding: 14px 10px 24px !important;
+  }
+
+  body.mobile-dashboard-enabled .pageHead {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  body.mobile-dashboard-enabled .headTop,
+  body.mobile-dashboard-enabled .headBottom,
+  body.mobile-dashboard-enabled .rowInline {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  body.mobile-dashboard-enabled .title {
+    min-width: 0;
+  }
+
+  body.mobile-dashboard-enabled .meta {
+    gap: 6px;
+  }
+
+  body.mobile-dashboard-enabled .meta .dot {
+    display: none;
+  }
+
+  body.mobile-dashboard-enabled .monthBar,
+  body.mobile-dashboard-enabled .rowInline {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  body.mobile-dashboard-enabled .select,
+  body.mobile-dashboard-enabled .btn {
+    width: 100%;
+    min-width: 0;
+  }
+
+  body.mobile-dashboard-enabled .grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  body.mobile-dashboard-enabled .span-4,
+  body.mobile-dashboard-enabled .span-8,
+  body.mobile-dashboard-enabled .span-12 {
+    grid-column: auto;
+  }
+
+  body.mobile-dashboard-enabled .card {
+    min-height: auto;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  body.mobile-dashboard-enabled canvas.chart,
+  body.mobile-dashboard-enabled .chart-matrix,
+  body.mobile-dashboard-enabled .chart-empty {
+    height: 240px !important;
+  }
+
+  body.mobile-dashboard-enabled .listRank {
+    height: 280px;
+  }
+
+  body.mobile-dashboard-enabled .rankItem {
+    align-items: flex-start;
+  }
+
+  body.mobile-dashboard-enabled .rankName,
+  body.mobile-dashboard-enabled .rankValue {
+    white-space: normal;
+  }
+}

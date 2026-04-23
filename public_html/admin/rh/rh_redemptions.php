@@ -160,7 +160,7 @@ $logs = db()->query("
 </head>
 <body class="page">
 
-<?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+<?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
 <main class="container rh-redemptions">
   <h2 class="page-title">RH · Aprovações de Resgate (Popper Coins)</h2>

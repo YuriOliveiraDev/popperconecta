@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 require_once APP_ROOT . '/app/services/popper_news.php';
 require_once APP_ROOT . '/app/services/corporate_landing.php';
+require_once APP_ROOT . '/app/helpers/header_helper.php';
 
 require_login();
 
@@ -14,6 +15,16 @@ header('Expires: 0');
 $u = current_user();
 $activePage = 'home';
 $isAdmin = (($u['role'] ?? '') === 'admin');
+$userName = header_user_value($u, 'name', 'Usuário');
+$mobileInitials = header_build_initials($userName);
+$mobileAdminItems = is_array($u) ? header_get_admin_items($u) : [];
+$mobileDashboardGroups = is_array($u) ? header_get_dashboard_groups($u) : [];
+$mobileCoinsMenu = [
+  ['label' => 'Meus Popper Coins', 'url' => '/coins/coins.php'],
+  ['label' => 'Loja', 'url' => '/coins/coins_resgatar.php'],
+  ['label' => 'Ranking', 'url' => '/coins/ranking.php'],
+  ['label' => 'Campanhas', 'url' => '/coins/coins_campanhas.php'],
+];
 $popperNewsPdfUrl = popper_news_public_url();
 $popperNewsImageFiles = glob(APP_ROOT . '/uploads/popper-news/current/*.{jpg,jpeg,png,webp}', GLOB_BRACE) ?: [];
 natsort($popperNewsImageFiles);
@@ -343,6 +354,12 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
 
     .corp-page {
       padding: 24px 0 42px;
+    }
+
+    .mobile-homebar,
+    .mobile-homenav,
+    .mobile-homenav-backdrop {
+      display: none;
     }
 
     .corp-shell {
@@ -1037,6 +1054,249 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
       margin-top: 10px;
     }
 
+    @media (max-width: 860px) {
+      .corp-home #mobile-block {
+        display: none !important;
+      }
+
+      .corp-home,
+      .corp-home html,
+      .corp-home body {
+        overflow: auto !important;
+      }
+
+      .corp-home .topbar.topbar--site,
+      .corp-home .beta-corner {
+        display: none !important;
+      }
+
+      .mobile-homebar {
+        position: sticky;
+        top: 0;
+        z-index: 3001;
+        display: grid;
+        gap: 12px;
+        padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 14px;
+        background: linear-gradient(180deg, rgba(92, 44, 140, .98), rgba(72, 31, 114, .96));
+        color: #fff;
+        box-shadow: 0 16px 36px rgba(51, 19, 78, .28);
+      }
+
+      .mobile-homebar__row {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .mobile-homebar__menu,
+      .mobile-homenav__close {
+        appearance: none;
+        border: 0;
+        background: rgba(255, 255, 255, .14);
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .mobile-homebar__menu {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+
+      .mobile-homebar__menu span {
+        width: 18px;
+        height: 2px;
+        border-radius: 999px;
+        background: currentColor;
+      }
+
+      .mobile-homebar__brand {
+        min-width: 0;
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .mobile-homebar__brand-title {
+        display: block;
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: .02em;
+      }
+
+      .mobile-homebar__brand-subtitle,
+      .mobile-homebar__greeting,
+      .mobile-homebar__quicklinks {
+        display: none !important;
+      }
+
+      .mobile-homebar__profile {
+        width: 40px;
+        height: 40px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: #fff;
+        background: rgba(255, 255, 255, .16);
+        font-size: .82rem;
+        font-weight: 900;
+        letter-spacing: .04em;
+      }
+
+      .mobile-homenav-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 3002;
+        background: rgba(15, 23, 42, .45);
+      }
+
+      .mobile-homenav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 3003;
+        width: min(88vw, 360px);
+        background: #fbf7fd;
+        color: #231c2a;
+        border-right: 1px solid rgba(92, 44, 140, .12);
+        box-shadow: 0 20px 60px rgba(15, 23, 42, .20);
+        transform: translateX(-100%);
+        transition: transform .24s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .mobile-homenav.is-open {
+        transform: translateX(0);
+      }
+
+      .mobile-homenav__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px 16px;
+        border-bottom: 1px solid rgba(92, 44, 140, .10);
+        background: linear-gradient(180deg, rgba(92, 44, 140, .08), rgba(92, 44, 140, 0));
+      }
+
+      .mobile-homenav__eyebrow {
+        font-size: .72rem;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #7a3db1;
+      }
+
+      .mobile-homenav__title {
+        margin-top: 4px;
+        font-size: 1.1rem;
+        font-weight: 900;
+        color: #1f1727;
+      }
+
+      .mobile-homenav__close {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(92, 44, 140, .10);
+        color: #5c2c8c;
+        font-size: 1.6rem;
+        line-height: 1;
+      }
+
+      .mobile-homenav__content {
+        flex: 1;
+        overflow: auto;
+        padding: 18px;
+        display: grid;
+        gap: 18px;
+      }
+
+      .mobile-homenav__section {
+        display: grid;
+        gap: 10px;
+      }
+
+      .mobile-homenav__label {
+        font-size: .74rem;
+        font-weight: 900;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #7c6b8b;
+      }
+
+      .mobile-homenav__group {
+        display: grid;
+        gap: 8px;
+      }
+
+      .mobile-homenav__group-title {
+        font-size: .88rem;
+        font-weight: 800;
+        color: #5c2c8c;
+        margin-top: 2px;
+      }
+
+      .mobile-homenav__link {
+        min-height: 44px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        text-decoration: none;
+        color: #231c2a;
+        font-weight: 700;
+        background: rgba(255, 255, 255, .92);
+        border: 1px solid rgba(92, 44, 140, .10);
+      }
+
+      .corp-page {
+        padding-top: 18px;
+      }
+
+      .corp-shell {
+        width: min(100% - 24px, 720px);
+        gap: 16px;
+      }
+
+      .section-card {
+        border-radius: 24px;
+      }
+
+      .hero-card {
+        padding-top: 22px;
+      }
+
+      .card-head {
+        padding-top: 18px;
+      }
+
+      .hero-card p,
+      .card-head p,
+      .notice-card__detail,
+      .quick-link span,
+      .people-card__meta,
+      .empty-note {
+        line-height: 1.55;
+      }
+
+      .news-preview__stage,
+      .news-preview__image {
+        min-height: 46vh;
+      }
+
+      .people-card {
+        align-items: flex-start;
+      }
+    }
+
     @media (max-width: 1080px) {
       .layout-grid {
         grid-template-columns: 1fr;
@@ -1077,11 +1337,15 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
       }
 
       .news-preview__stage {
-        min-height: 54vh;
+        min-height: 42vh;
       }
 
-      .news-preview__image {
-        min-height: 54vh;
+      .news-preview__image,
+      .news-preview__slide {
+        min-height: 42vh;
+        object-fit: contain;
+        object-position: center center;
+        background: #fff;
       }
 
       .news-preview__nav {
@@ -1104,11 +1368,137 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
         gap: 7px;
       }
     }
+
+    @media (max-width: 560px) {
+      .mobile-homebar__quicklinks {
+        grid-template-columns: 1fr;
+      }
+
+      .corp-shell {
+        width: min(100% - 16px, 100%);
+      }
+
+      .hero-card,
+      .card-head,
+      .card-body {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .card-head {
+        gap: 10px;
+      }
+
+      .card-head h2 {
+        font-size: 1.2rem;
+      }
+
+      .eyebrow {
+        font-size: .68rem;
+      }
+
+      .news-preview__stage,
+      .news-preview__image,
+      .news-preview__slide {
+        min-height: 32vh;
+      }
+
+      .news-preview__dots {
+        bottom: 8px;
+        gap: 6px;
+        padding: 7px 10px;
+      }
+
+      .people-card {
+        flex-direction: column;
+      }
+
+      .people-card__date {
+        min-width: 0;
+      }
+    }
   </style>
 </head>
 
-<body>
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+<body class="corp-home">
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
+
+  <div class="mobile-homebar" data-mobile-homebar>
+    <div class="mobile-homebar__row">
+      <button class="mobile-homebar__menu" type="button" data-mobile-nav-toggle aria-expanded="false"
+        aria-controls="mobileHomeNav" aria-label="Abrir menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <a class="mobile-homebar__brand" href="/index.php">
+        <span class="mobile-homebar__brand-title">Popper Conecta</span>
+        <span class="mobile-homebar__brand-subtitle">Início</span>
+      </a>
+
+      <a class="mobile-homebar__profile" href="/me.php" aria-label="Meus dados">
+        <?= h($mobileInitials) ?>
+      </a>
+    </div>
+
+  </div>
+
+  <div class="mobile-homenav-backdrop" data-mobile-nav-close hidden></div>
+  <aside class="mobile-homenav" id="mobileHomeNav" data-mobile-homenav aria-hidden="true">
+    <div class="mobile-homenav__header">
+      <div>
+        <div class="mobile-homenav__eyebrow">Navegação</div>
+        <div class="mobile-homenav__title">Acesso rápido</div>
+      </div>
+      <button class="mobile-homenav__close" type="button" data-mobile-nav-close aria-label="Fechar menu">&times;</button>
+    </div>
+
+    <div class="mobile-homenav__content">
+      <nav class="mobile-homenav__section">
+        <div class="mobile-homenav__label">Principal</div>
+        <a class="mobile-homenav__link" href="/index.php">Início</a>
+        <a class="mobile-homenav__link" href="/me.php">Meus dados</a>
+        <a class="mobile-homenav__link" href="/logout.php">Sair</a>
+      </nav>
+
+      <?php if ($mobileDashboardGroups !== []): ?>
+        <div class="mobile-homenav__section">
+          <div class="mobile-homenav__label">Dashboards</div>
+          <?php foreach ($mobileDashboardGroups as $group): ?>
+            <div class="mobile-homenav__group">
+              <div class="mobile-homenav__group-title"><?= h((string) ($group['label'] ?? '')) ?></div>
+              <?php foreach ((array) ($group['items'] ?? []) as $item): ?>
+                <a class="mobile-homenav__link" href="<?= h((string) ($item['url'] ?? '#')) ?>">
+                  <?= h((string) ($item['label'] ?? '')) ?>
+                </a>
+              <?php endforeach; ?>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
+      <div class="mobile-homenav__section">
+        <div class="mobile-homenav__label">Popper Coins</div>
+        <?php foreach ($mobileCoinsMenu as $item): ?>
+          <a class="mobile-homenav__link" href="<?= h((string) $item['url']) ?>">
+            <?= h((string) $item['label']) ?>
+          </a>
+        <?php endforeach; ?>
+      </div>
+
+      <?php if ($mobileAdminItems !== []): ?>
+        <div class="mobile-homenav__section">
+          <div class="mobile-homenav__label">Administração</div>
+          <?php foreach ($mobileAdminItems as $item): ?>
+            <a class="mobile-homenav__link" href="<?= h((string) ($item['url'] ?? '#')) ?>">
+              <?= h((string) ($item['label'] ?? '')) ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
+  </aside>
 
   <main class="corp-page">
     <div class="corp-shell">
@@ -1539,6 +1929,55 @@ $houseAnniversaries = normalize_house_anniversaries($autoHouseAnniversaries);
   <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
   <script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>"></script>
+  <script>
+    (function () {
+      const nav = document.querySelector('[data-mobile-homenav]');
+      const toggle = document.querySelector('[data-mobile-nav-toggle]');
+      const backdrop = document.querySelector('.mobile-homenav-backdrop');
+      const closeButtons = document.querySelectorAll('[data-mobile-nav-close]');
+
+      if (!nav || !toggle || !backdrop) {
+        return;
+      }
+
+      function setOpen(state) {
+        nav.classList.toggle('is-open', state);
+        nav.setAttribute('aria-hidden', state ? 'false' : 'true');
+        toggle.setAttribute('aria-expanded', state ? 'true' : 'false');
+        backdrop.hidden = !state;
+        document.body.classList.toggle('mobile-home-nav-open', state);
+        document.body.style.overflow = state ? 'hidden' : '';
+      }
+
+      toggle.addEventListener('click', function () {
+        setOpen(!nav.classList.contains('is-open'));
+      });
+
+      closeButtons.forEach(function (button) {
+        button.addEventListener('click', function () {
+          setOpen(false);
+        });
+      });
+
+      nav.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () {
+          setOpen(false);
+        });
+      });
+
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          setOpen(false);
+        }
+      });
+
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 860) {
+          setOpen(false);
+        }
+      });
+    })();
+  </script>
   <script>
     (function () {
       const viewer = document.querySelector('[data-news-viewer]');

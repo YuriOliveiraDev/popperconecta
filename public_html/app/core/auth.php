@@ -12,12 +12,25 @@ require_once APP_ROOT . '/app/config/config.php';
 
 $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
 $isTVBox = (bool)preg_match('/\bSTV-|Android TV|SMART-TV|SmartTV|HbbTV|AFT|BRAVIA|MiTV|TV Box|Tizen|Web0S\b/i', $userAgent);
+$scriptPath = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+$mobileRouteAllowed =
+  $scriptPath === '/index.php'
+  || $scriptPath === '/login.php'
+  || $scriptPath === '/logout.php'
+  || $scriptPath === '/esqueci-senha.php'
+  || $scriptPath === '/reset-password.php'
+  || str_starts_with($scriptPath, '/dashboards/')
+  || str_starts_with($scriptPath, '/coins/')
+  || str_starts_with($scriptPath, '/admin/')
+  || $scriptPath === '/me.php'
+  || $scriptPath === '/notifications_read.php'
+  || str_starts_with($scriptPath, '/api/');
 
 // cookie setado pelo JS
 $view  = $_COOKIE['pc_view'] ?? '';
 $allow = $_COOKIE['pc_allow_mobile'] ?? '';
 
-if (!$isTVBox && $allow !== '1' && $view === 'mobile') {
+if (!$mobileRouteAllowed && !$isTVBox && $allow !== '1' && $view === 'mobile') {
   header('Content-Type: text/html; charset=UTF-8');
   ?>
   <!doctype html>

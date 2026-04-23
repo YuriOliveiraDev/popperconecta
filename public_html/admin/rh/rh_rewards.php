@@ -167,7 +167,7 @@ $rewards = db()->query("SELECT id, title, description, cost, inventory, is_activ
 
 <body class="page">
 
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container rh-rewards">
     <h2 class="page-title">RH · Recompensas (Popper Coins)</h2>

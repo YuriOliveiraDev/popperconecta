@@ -34,7 +34,7 @@ $current_dash = 'executivo';
 
 <body class="page">
 
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container rh">
     <h2 class="page-title">RH</h2>
@@ -102,7 +102,7 @@ $current_dash = 'executivo';
   <?php require_once APP_ROOT . '/app/layout/footer.php'; ?>
 
   <script src="/assets/js/header.js?v=<?= filemtime(APP_ROOT . '/assets/js/header.js') ?>" defer></script>
-  <script src="/assets/js/dropdowns.js?v=<?= filemtime(APP_ROOT . '/assets/js/dropdowns.js') ?>" defer></script> defer>
+  <script src="/assets/js/dropdowns.js?v=<?= filemtime(APP_ROOT . '/assets/js/dropdowns.js') ?>" defer></script>
 </body>
 
 </html>

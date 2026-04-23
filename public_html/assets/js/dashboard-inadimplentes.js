@@ -41,6 +41,22 @@
     return new Intl.NumberFormat("pt-BR").format(Number(v || 0));
   }
 
+  function compactMoney(value) {
+    const n = Number(value || 0);
+    const abs = Math.abs(n);
+    if (abs >= 1000000) {
+      const scaled = n / 1000000;
+      const digits = Math.abs(scaled) >= 10 ? 0 : 1;
+      return `${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: digits }).format(scaled)}m`;
+    }
+    if (abs >= 1000) {
+      const scaled = n / 1000;
+      const digits = Math.abs(scaled) >= 100 ? 0 : 1;
+      return `${new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: digits }).format(scaled)}k`;
+    }
+    return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 }).format(n);
+  }
+
   function esc(str) {
     return String(str ?? "")
       .replace(/&/g, "&amp;")
@@ -408,6 +424,7 @@
           },
           datalabels: {
             display(context) {
+              if (window.innerWidth <= 860) return false;
               return context.datasetIndex === 0;
             },
             clamp: true,
@@ -422,7 +439,7 @@
             },
             formatter(value) {
               const n = Number(value || 0);
-              return brl(n);
+              return compactMoney(n);
             },
           },
           tooltip: {
@@ -464,7 +481,7 @@
               padding: 8,
               callback(value) {
                 const n = Number(value || 0);
-                return `R$ ${(n / 1000).toFixed(0)} mil`;
+                return compactMoney(n);
               },
             },
           },
@@ -900,11 +917,11 @@
             ? cli.nome
             : `Cliente ${cli.cliente || "-"}`;
 
-        return `
+return `
         <button type="button"
                 class="ranking-item ranking-item--fat ${esc(
-          riskClass(pctInad, inad, cli.maior_atraso_dias)
-        )}"
+                  riskClass(pctInad, inad, cli.maior_atraso_dias)
+                )}"
                 data-key="${esc(cli.cliente_key)}">
           <div class="ranking-left">
             <span class="ranking-pos">${idx + 1}</span>
@@ -913,7 +930,6 @@
               <div class="fat-extra">
                 <span class="fat-chip">Inad.: ${brl(inad)}</span>
                 <span class="fat-chip fat-chip--pct">% Inad.: ${pct(pctInad)}%</span>
-                <span class="fat-chip">${esc(getRiskMeta(cli).label)}</span>
               </div>
             </div>
           </div>
@@ -1096,7 +1112,6 @@
           <td>${brl(cli.inad_total)}</td>
           <td>${brl(cli.faturado_periodo)}</td>
           <td>${pct(cli.indice_inadimplencia_pct)}%</td>
-          <td>${pct(cli.participacao_total_pct)}%</td>
           <td>${num(cli.inad_qtd_titulos)}</td>
           <td>${num(cli.maior_atraso_dias)} dias</td>
           <td>

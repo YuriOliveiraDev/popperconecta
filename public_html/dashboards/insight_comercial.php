@@ -537,7 +537,6 @@ require_once APP_ROOT . '/app/layout/header.php';
 <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/../assets/css/header.css') ?>" />
 <link rel="stylesheet"
   href="/assets/css/dashboard-executivo.css?v=<?= filemtime(__DIR__ . '/../assets/css/dashboard-executivo.css') ?>" />
-<link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/../assets/css/dropdowns.css') ?>" />
 <link rel="stylesheet" href="/assets/css/index.css?v=<?= filemtime(__DIR__ . '/../assets/css/index.css') ?>" />
 <link rel="stylesheet"
   href="/assets/css/insight_comercial.css?v=<?= filemtime(__DIR__ . '/../assets/css/insight_comercial.css') ?>" />

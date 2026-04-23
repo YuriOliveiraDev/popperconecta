@@ -36,7 +36,6 @@ $extra_css = [
     '/assets/css/base.css?v=' . @filemtime(APP_ROOT . '/assets/css/base.css'),
     '/assets/css/users.css?v=' . @filemtime(APP_ROOT . '/assets/css/users.css'),
     '/assets/css/dashboard.css?v=' . @filemtime(APP_ROOT . '/assets/css/dashboard.css'),
-    '/assets/css/dropdowns.css?v=' . @filemtime(APP_ROOT . '/assets/css/dropdowns.css'),
     '/assets/css/rh_rewards.css?v=' . @filemtime(APP_ROOT . '/assets/css/rh_rewards.css'),
     '/assets/css/header.css?v=' . @filemtime(APP_ROOT . '/assets/css/header.css'),
     '/assets/css/util.css?v=' . @filemtime(APP_ROOT . '/assets/css/util.css'),

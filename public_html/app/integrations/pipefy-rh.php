@@ -111,3 +111,52 @@ GQL;
 
     return $card;
 }
+
+function pipefy_try_create_rh_redemption_card(array $data): ?array
+{
+    $user = is_array($data['user'] ?? null) ? $data['user'] : [];
+    $solicitante = trim((string) ($user['name'] ?? ''));
+    $email = trim((string) ($user['email'] ?? ''));
+    $setor = trim((string) ($user['setor'] ?? ''));
+    $rewardTitle = trim((string) ($data['reward_title'] ?? ''));
+    $qty = (int) ($data['qty'] ?? 1);
+    $cost = (int) ($data['cost'] ?? 0);
+    $userNote = trim((string) ($data['user_note'] ?? ''));
+    $redemptionId = (int) ($data['redemption_id'] ?? 0);
+
+    if ($solicitante === '') {
+        $solicitante = 'Colaborador';
+    }
+
+    if ($rewardTitle === '') {
+        $rewardTitle = 'Recompensa';
+    }
+
+    $info =
+        "Solicitante: " . $solicitante . "\n" .
+        "Email: " . ($email !== '' ? $email : '-') . "\n" .
+        "Setor: " . ($setor !== '' ? $setor : '-') . "\n" .
+        "Item solicitado: " . $rewardTitle . "\n" .
+        "Quantidade: " . $qty . "\n" .
+        "Custo: " . $cost . " Popper Coins\n" .
+        "Data/Hora da solicitacao: " . date('d/m/Y H:i') . "\n";
+
+    if ($redemptionId > 0) {
+        $info .= "ID do pedido: " . $redemptionId . "\n";
+    }
+
+    if ($userNote !== '') {
+        $info .= "Observacao do colaborador: " . $userNote . "\n";
+    }
+
+    try {
+        return pipefy_create_rh_redemption_card([
+            'title' => 'Troca Popper Coins - ' . $solicitante . ' - ' . $rewardTitle,
+            'descricao' => 'Resgate de Popper Coins pelo Popper Conecta',
+            'informacoes_adicionais' => $info,
+        ]);
+    } catch (Throwable $e) {
+        error_log('[PIPEFY_RH_REDEMPTION] ' . $e->getMessage());
+        return null;
+    }
+}

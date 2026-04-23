@@ -32,7 +32,6 @@ try {
 // =========================================================
 $extra_css = [
   '/assets/css/base.css?v=' . @filemtime(APP_ROOT . '/assets/css/base.css'),
-  '/assets/css/dropdowns.css?v=' . @filemtime(APP_ROOT . '/assets/css/dropdowns.css'),
   '/assets/css/carousel.css?v=' . @filemtime(APP_ROOT . '/assets/css/carousel.css'),
   '/assets/css/index.css?v=' . @filemtime(APP_ROOT . '/assets/css/index.css'),
   '/assets/css/header.css?v=' . @filemtime(APP_ROOT . '/assets/css/header.css'),

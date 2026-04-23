@@ -214,7 +214,7 @@ foreach ($rows as $r) {
 
 <body class="page">
 
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container rh-coins-page">
     <div class="coins-page-head">

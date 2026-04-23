@@ -236,7 +236,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   <link rel="stylesheet" href="/assets/css/base.css?v=<?= filemtime(__DIR__ . '/assets/css/base.css') ?>" />
   <link rel="stylesheet" href="/assets/css/users.css?v=<?= filemtime(__DIR__ . '/assets/css/users.css') ?>" />
-  <link rel="stylesheet" href="/assets/css/dropdowns.css?v=<?= filemtime(__DIR__ . '/assets/css/dropdowns.css') ?>" />
   <link rel="stylesheet" href="/assets/css/header.css?v=<?= filemtime(__DIR__ . '/assets/css/header.css') ?>" />
 
   <?php if (file_exists(__DIR__ . '/assets/css/user_edit.css')): ?>
@@ -636,8 +635,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </style>
 </head>
 
-<body class="page">
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+<body class="page mobile-dashboard-enabled me-mobile-page">
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="container me-page">
     <section class="me-hero">

@@ -552,3 +552,26 @@
     justify-content: space-between;
   }
 }
+
+@media (max-width: 860px) {
+  body.mobile-dashboard-enabled .dashboard-exec .rank-meta,
+  body.mobile-dashboard-enabled .dashboard-exec .rankings-grid,
+  body.mobile-dashboard-enabled .dashboard-exec .d5-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  body.mobile-dashboard-enabled .dashboard-exec .mini-list {
+    max-height: 260px !important;
+  }
+
+  body.mobile-dashboard-enabled .dashboard-exec .mini-row {
+    grid-template-columns: 26px 1fr !important;
+    align-items: start !important;
+  }
+
+  body.mobile-dashboard-enabled .dashboard-exec .mini-amt {
+    grid-column: 2 / 3;
+    margin-top: 4px;
+    white-space: normal;
+  }
+}

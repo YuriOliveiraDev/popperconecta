@@ -28,6 +28,13 @@ $coinsMenu = [
     ['label' => 'Ranking', 'url' => '/coins/ranking.php'],
     ['label' => 'Campanhas', 'url' => '/coins/coins_campanhas.php'],
 ];
+
+$mobilePageLabel = trim((string) ($page_title ?? 'Dashboard'));
+$mobileHomeLinks = [
+    ['label' => 'Início', 'url' => '/index.php'],
+    ['label' => 'Meus dados', 'url' => '/me.php'],
+    ['label' => 'Sair', 'url' => '/logout.php'],
+];
 ?>
 
 <header class="topbar topbar--site">
@@ -220,3 +227,89 @@ $coinsMenu = [
         </div>
     </div>
 </header>
+
+<?php if (!empty($mobile_shell_enabled)): ?>
+    <div class="mobile-dashboardbar" data-mobile-dashboardbar>
+        <div class="mobile-dashboardbar__row">
+            <button
+                class="mobile-dashboardbar__menu"
+                type="button"
+                data-mobile-dash-toggle
+                aria-expanded="false"
+                aria-controls="mobileDashNav"
+                aria-label="Abrir navegação"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <a class="mobile-dashboardbar__brand" href="/index.php">
+                <span class="mobile-dashboardbar__brand-title"><?= header_e(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta') ?></span>
+            </a>
+
+            <a class="mobile-dashboardbar__profile" href="/me.php" aria-label="Meus dados">
+                <?= header_e($initials) ?>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="mobile-dashnav-backdrop" data-mobile-dash-close hidden></div>
+    <aside class="mobile-dashnav" id="mobileDashNav" data-mobile-dashnav aria-hidden="true">
+        <div class="mobile-dashnav__header">
+            <div>
+                <div class="mobile-dashnav__eyebrow">Navegação</div>
+                <div class="mobile-dashnav__title"><?= header_e($mobilePageLabel) ?></div>
+            </div>
+            <button class="mobile-dashnav__close" type="button" data-mobile-dash-close aria-label="Fechar menu">&times;</button>
+        </div>
+
+        <div class="mobile-dashnav__content">
+            <div class="mobile-dashnav__section">
+                <div class="mobile-dashnav__label">Principal</div>
+                <?php foreach ($mobileHomeLinks as $item): ?>
+                    <a class="mobile-dashnav__link" href="<?= header_e($item['url']) ?>">
+                        <?= header_e($item['label']) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
+            <?php if (!empty($dashboardGroups)): ?>
+                <div class="mobile-dashnav__section">
+                    <div class="mobile-dashnav__label">Dashboards</div>
+                    <?php foreach ($dashboardGroups as $group): ?>
+                        <div class="mobile-dashnav__group">
+                            <div class="mobile-dashnav__group-title"><?= header_e((string) ($group['label'] ?? '')) ?></div>
+                            <?php foreach ((array) ($group['items'] ?? []) as $item): ?>
+                                <a class="mobile-dashnav__link" href="<?= header_e((string) ($item['url'] ?? '#')) ?>">
+                                    <?= header_e((string) ($item['label'] ?? '')) ?>
+                                </a>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+
+            <div class="mobile-dashnav__section">
+                <div class="mobile-dashnav__label">Popper Coins</div>
+                <?php foreach ($coinsMenu as $item): ?>
+                    <a class="mobile-dashnav__link" href="<?= header_e((string) $item['url']) ?>">
+                        <?= header_e((string) $item['label']) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+
+            <?php if (!empty($adminItems)): ?>
+                <div class="mobile-dashnav__section">
+                    <div class="mobile-dashnav__label">Administração</div>
+                    <?php foreach ($adminItems as $item): ?>
+                        <a class="mobile-dashnav__link" href="<?= header_e((string) ($item['url'] ?? '#')) ?>">
+                            <?= header_e((string) ($item['label'] ?? '')) ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+    </aside>
+<?php endif; ?>

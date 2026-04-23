@@ -201,7 +201,7 @@ $currentPdfUrl = popper_news_public_url();
   </style>
 </head>
 <body class="page">
-  <?php require_once APP_ROOT . '/app/layout/header.php'; ?>
+  <?php $layout_embed = true; require_once APP_ROOT . '/app/layout/header.php'; ?>
 
   <main class="pn-admin">
     <div class="pn-card">
