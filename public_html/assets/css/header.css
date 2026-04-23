@@ -993,6 +993,25 @@ body.corp-home #mobile-block {
     font-size: .82rem;
     font-weight: 900;
     letter-spacing: .04em;
+    overflow: hidden;
+  }
+
+  body.mobile-dashboard-enabled .mobile-dashboardbar__avatar,
+  body.mobile-dashboard-enabled .mobile-dashboardbar__fallback {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  body.mobile-dashboard-enabled .mobile-dashboardbar__avatar {
+    object-fit: cover;
+  }
+
+  body.mobile-dashboard-enabled .mobile-dashboardbar__fallback {
+    background: rgba(255, 255, 255, .08);
   }
 
   body.mobile-dashboard-enabled .mobile-dashnav-backdrop {

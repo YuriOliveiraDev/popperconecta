@@ -6,7 +6,7 @@ $userEmail = header_user_value($u, 'email');
 $userRole = header_user_value($u, 'role');
 $userSetor = header_user_value($u, 'setor');
 $userHierarquia = header_user_value($u, 'hierarquia');
-$avatarUrl = header_user_value($u, 'profile_photo_path');
+$avatarUrl = header_normalize_asset_path(header_user_value($u, 'profile_photo_path'));
 
 $initials = header_build_initials($userName);
 $greeting = header_get_greeting();
@@ -249,7 +249,11 @@ $mobileHomeLinks = [
             </a>
 
             <a class="mobile-dashboardbar__profile" href="/me.php" aria-label="Meus dados">
-                <?= header_e($initials) ?>
+                <?php if ($avatarUrl !== ''): ?>
+                    <img class="mobile-dashboardbar__avatar" src="<?= header_e($avatarUrl) ?>" alt="Foto de perfil">
+                <?php else: ?>
+                    <span class="mobile-dashboardbar__fallback" aria-hidden="true"><?= header_e($initials) ?></span>
+                <?php endif; ?>
             </a>
         </div>
 

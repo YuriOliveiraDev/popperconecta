@@ -625,11 +625,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       }
 
       .form-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         justify-content: stretch;
+        gap: 10px;
       }
 
       .form-actions > * {
-        flex: 1 1 100%;
+        flex: initial;
+        width: auto !important;
+        min-width: 0;
+      }
+
+      .form-actions .link--pill,
+      .form-actions .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        font-size: .92rem;
       }
     }
   </style>
