@@ -8,6 +8,11 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
 require_once APP_ROOT . '/app/config/config-totvs.php';
 require_once APP_ROOT . '/app/services/totvs_agent.php';
 
+$secretsFile = APP_ROOT . '/app/config/config-secrets.php';
+if (is_file($secretsFile)) {
+    require_once $secretsFile;
+}
+
 header('Content-Type: application/json; charset=utf-8');
 
 function agent_totvs_read_json_body(): array
@@ -30,7 +35,10 @@ function agent_totvs_header(string $name): string
 
 function agent_totvs_access_context(array $requiredPerms): array
 {
-    $expectedToken = trim((string) getenv('POPPER_INTERNAL_AGENT_TOKEN'));
+    $expectedToken = trim((string) (
+        getenv('POPPER_INTERNAL_AGENT_TOKEN')
+        ?: (defined('POPPER_INTERNAL_AGENT_TOKEN') ? POPPER_INTERNAL_AGENT_TOKEN : '')
+    ));
     $providedToken = agent_totvs_header('X-Internal-Agent-Token');
 
     if ($providedToken === '') {
