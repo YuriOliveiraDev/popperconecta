@@ -199,13 +199,13 @@ final class TotvsAgentService
                 ],
                 [
                     'action' => 'faturamento_total_empresa',
-                    'descricao' => 'Retorna total da empresa para hoje, mes ou ano.',
-                    'params' => ['periodo', 'force'],
+                    'descricao' => 'Retorna total da empresa para uma data especifica, mes ou ano.',
+                    'params' => ['periodo', 'date', 'force'],
                 ],
                 [
                     'action' => 'faturamento_hoje',
-                    'descricao' => 'Retorna o faturado da empresa hoje.',
-                    'params' => ['force'],
+                    'descricao' => 'Retorna o faturado da empresa em uma data especifica. Sem date, usa o dia atual.',
+                    'params' => ['date', 'force'],
                 ],
                 [
                     'action' => 'faturamento_mes_atual',
@@ -668,8 +668,18 @@ final class TotvsAgentService
 
     public static function faturamentoTotalEmpresa(array $params): array
     {
-        $executivo = self::buildExecutivoDataset($params);
         $periodo = strtolower(trim((string) ($params['periodo'] ?? 'mes')));
+        if (in_array($periodo, ['dia', 'data'], true)) {
+            $diario = self::buildFaturamentoDiarioEmpresa($params);
+            return [
+                'periodo' => 'dia',
+                'date' => $diario['date'],
+                'valor' => $diario['valor'],
+                'updated_at' => $diario['updated_at'],
+            ];
+        }
+
+        $executivo = self::buildExecutivoDataset($params);
         $map = [
             'hoje' => 'hoje_faturado',
             'mes' => 'mes_faturado',
@@ -691,8 +701,7 @@ final class TotvsAgentService
 
     public static function faturamentoHoje(array $params): array
     {
-        $executivo = self::buildExecutivoDataset($params);
-        return ['valor' => (float) ($executivo['values']['hoje_faturado'] ?? 0.0), 'updated_at' => $executivo['updated_at'] ?? null];
+        return self::buildFaturamentoDiarioEmpresa($params);
     }
 
     public static function faturamentoMesAtual(array $params): array
@@ -2186,6 +2195,71 @@ GQL;
         }
 
         return [$from, $to];
+    }
+
+    private static function buildFaturamentoDiarioEmpresa(array $params): array
+    {
+        $rawDate = trim((string) ($params['date'] ?? ''));
+        $date = self::normalizeAgentDate($rawDate);
+        if ($rawDate !== '' && $date === null) {
+            throw new InvalidArgumentException('Informe a data no formato YYYY-MM-DD.');
+        }
+        if ($date === null) {
+            $date = date('Y-m-d');
+        }
+
+        $targetYmd = str_replace('-', '', $date);
+        $rows = self::fetchConsultaRows('000070', !empty($params['force']));
+        $valor = 0.0;
+        $qtdNfs = 0;
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $emissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
+            if ($emissao !== $targetYmd) {
+                continue;
+            }
+
+            $valorItem = self::toFloatBr(self::pickFirst($row, ['VALOR', 'VALOR_PEDIDO', 'VALOR_TOTAL', 'TOTAL'], 0));
+            if ($valorItem <= 0) {
+                continue;
+            }
+
+            $valor += $valorItem;
+            $qtdNfs++;
+        }
+
+        return [
+            'date' => $date,
+            'valor' => round($valor, 2),
+            'qtd_nfs' => $qtdNfs,
+            'updated_at' => date('d/m/Y, H:i'),
+        ];
+    }
+
+    private static function normalizeAgentDate(string $date): ?string
+    {
+        $date = trim($date);
+        if ($date === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{8}$/', $date)) {
+            $y = (int) substr($date, 0, 4);
+            $m = (int) substr($date, 4, 2);
+            $d = (int) substr($date, 6, 2);
+            return checkdate($m, $d, $y) ? sprintf('%04d-%02d-%02d', $y, $m, $d) : null;
+        }
+
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            [$y, $m, $d] = array_map('intval', explode('-', $date));
+            return checkdate($m, $d, $y) ? sprintf('%04d-%02d-%02d', $y, $m, $d) : null;
+        }
+
+        return null;
     }
 
     private static function fetchDashboardMetrics(string $dashboardSlug): array
