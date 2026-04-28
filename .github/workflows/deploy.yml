@@ -6,25 +6,35 @@ on:
 
 jobs:
   deploy:
-    name: Deploy
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: FTP Deploy
+      - name: Deploy to FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
+          protocol: ftp
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          local-dir: public_html/
+          port: ${{ secrets.FTP_PORT }}
+
+          # destino correto do site
           server-dir: /public_html/
-          state-name: .ftp-state-v2.json
+
+          # somente arquivos do site
+          local-dir: ./public_html/
+
+          # 🔥 IMPORTANTE — evita erro 550 da Locaweb
           dangerous-clean-slate: false
+
+          # evita deletar arquivos do servidor
+          state-name: .ftp-state-v2.json
+
+          log-level: verbose
+
           exclude: |
             **/.git*
             **/.github/**
@@ -35,9 +45,3 @@ jobs:
             **/node_modules/**
             **/vendor/**
             logs/**
-            CLAUDE.md
-            agents.md
-            DOCUMENTACAO.txt
-            .agents/**
-            uploads/**
-            admin/uploads/**
