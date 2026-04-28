@@ -7,6 +7,13 @@ if (!defined('APP_ROOT')) {
 
 date_default_timezone_set('America/Sao_Paulo');
 
+// Carrega segredos do arquivo local (gitignored). Deve vir antes de qualquer config.
+$_envFile = APP_ROOT . '/app/config/env.php';
+if (is_file($_envFile)) {
+    require_once $_envFile;
+}
+unset($_envFile);
+
 require_once APP_ROOT . '/app/core/helpers.php';
 require_once APP_ROOT . '/app/core/db.php';
 require_once APP_ROOT . '/app/core/auth.php';

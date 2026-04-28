@@ -18,18 +18,11 @@ define('TOTVS_CONSULTAS', [
     'kpi_contasapagar' => '000072',
     'kpi_pedidos'     => '000070',
     // 'kpi_outra'     => '000040',
-    ''
 ]);
 
-// Credenciais (recomendado: variáveis de ambiente no servidor)
-// Windows (PowerShell):
-//   setx TOTVS_API_USER "YURI.YANG"
-//   setx TOTVS_API_PASS "SUA_SENHA"
-// Linux:
-//   export TOTVS_API_USER="YURI.YANG"
-//   export TOTVS_API_PASS="SUA_SENHA"
-define('TOTVS_API_USER', getenv('TOTVS_API_USER') ?: 'YURI.YANG');
-define('TOTVS_API_PASS', getenv('TOTVS_API_PASS') ?: 'Tufflog@2026');
+// Credenciais via variáveis de ambiente (definidas em app/config/env.php)
+define('TOTVS_API_USER', (string) getenv('TOTVS_API_USER'));
+define('TOTVS_API_PASS', (string) getenv('TOTVS_API_PASS'));
 define('TOTVS_DISABLE_SSL', true);
 
 // =========================

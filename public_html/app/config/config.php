@@ -5,7 +5,7 @@ define('APP_NAME', 'Popper Conecta');
 |--------------------------------------------------------------------------
 | Ambiente atual
 |--------------------------------------------------------------------------
-| dev  = ambiente de desenvolvimento na Locaweb
+| dev  = ambiente de desenvolvimento local
 | prod = ambiente de produção na Locaweb
 |--------------------------------------------------------------------------
 */
@@ -30,8 +30,8 @@ define('APP_URL', APP_ENV === 'dev'
 define('DB_HOST_DEV', 'popper_dev.mysql.dbaas.com.br');
 define('DB_PORT_DEV', 3306);
 define('DB_NAME_DEV', 'popper_dev');
-define('DB_USER_DEV', 'popper_dev');
-define('DB_PASS_DEV', 'Ab@26462126');
+define('DB_USER_DEV', (string) getenv('DB_USER_DEV'));
+define('DB_PASS_DEV', (string) getenv('DB_PASS_DEV'));
 
 /*
 |--------------------------------------------------------------------------
@@ -41,22 +41,15 @@ define('DB_PASS_DEV', 'Ab@26462126');
 define('DB_HOST_PROD', 'popperconecta.mysql.dbaas.com.br');
 define('DB_PORT_PROD', 3306);
 define('DB_NAME_PROD', 'popperconecta');
-define('DB_USER_PROD', 'popperconecta');
-define('DB_PASS_PROD', 'Ab@26462126');
-
-define('PIPEFY_TOKEN', 'SEU_TOKEN_OU_SERVICE_ACCOUNT');
-define('PIPEFY_PIPE_ID_RH', 123456789);
-
+define('DB_USER_PROD', (string) getenv('DB_USER_PROD'));
+define('DB_PASS_PROD', (string) getenv('DB_PASS_PROD'));
 
 /*
 |--------------------------------------------------------------------------
-| email
+| E-mail (Microsoft Graph)
 |--------------------------------------------------------------------------
 */
-define('GRAPH_TENANT_ID', 'c9617533-25d4-4f27-a17f-cf9b7593999c');
-
-define('GRAPH_CLIENT_ID', 'ee898022-f9fe-483a-b4fd-f28143b35ed9');
-
-define('GRAPH_CLIENT_SECRET', 'a038Q~_RzMEhnX2Nw7qNHUvOum80zUNCY83~TaKS');
-
-define('GRAPH_SENDER_EMAIL', 'no-reply@popper.com.br');
+define('GRAPH_TENANT_ID',     (string) getenv('GRAPH_TENANT_ID'));
+define('GRAPH_CLIENT_ID',     (string) getenv('GRAPH_CLIENT_ID'));
+define('GRAPH_CLIENT_SECRET', (string) getenv('GRAPH_CLIENT_SECRET'));
+define('GRAPH_SENDER_EMAIL',  'no-reply@popper.com.br');

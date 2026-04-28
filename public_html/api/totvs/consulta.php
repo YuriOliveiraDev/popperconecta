@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 
-$TOKEN = getenv('POPPER_API_TOKEN') ?: '26462126';
+$TOKEN = (string) getenv('POPPER_API_TOKEN');
 if (($_SERVER['HTTP_X_TOKEN'] ?? '') !== $TOKEN) {
   http_response_code(401);
   echo json_encode(['error' => 'unauthorized']);
@@ -35,9 +35,9 @@ if (is_file($cacheFile) && (time() - filemtime($cacheFile) < $ttl)) {
 $base = 'https://tuffloglogistica122016.protheus.cloudtotvs.com.br:4050';
 $url  = $base . "/api/wscmrelaut/v1/Consulta/{$consulta}";
 
-// Credenciais TOTVS (não deixar hardcoded se puder)
-$user = getenv('TOTVS_API_USER') ?: 'YURI.YANG';
-$pass = getenv('TOTVS_API_PASS') ?: 'Tufflog@2026';
+// Credenciais TOTVS via variáveis de ambiente (app/config/env.php)
+$user = (string) getenv('TOTVS_API_USER');
+$pass = (string) getenv('TOTVS_API_PASS');
 
 if ($pass === '') {
   http_response_code(500);

@@ -1,0 +1,21 @@
+# Segredos — nunca versionar
+/app/config/env.php
+
+# Dependências
+/vendor/
+
+# Cache gerado em runtime
+/cache/
+/app/cache/
+/dashboards/cache/
+
+# Logs
+/logs/*.log
+
+# Uploads gerados pelo sistema (opcional — remova se quiser versionar)
+# /uploads/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini

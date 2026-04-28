@@ -5,7 +5,7 @@ date_default_timezone_set('America/Sao_Paulo');
 
 const SOLIDES_BASE_URL = 'https://app.solides.com/{locale}/api/v1';
 const SOLIDES_LOCALE   = 'pt-BR';
-const SOLIDES_TOKEN    = 'ead350b9100ebb4ea205ea936318265bae165580984148ba0daa';
+define('SOLIDES_TOKEN', (string) getenv('SOLIDES_TOKEN'));
 
 function solides_base_url(): string
 {
