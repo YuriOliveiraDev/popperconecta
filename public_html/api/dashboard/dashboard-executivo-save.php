@@ -86,7 +86,6 @@ if (!$resp['success'] || !is_array($resp['data'])) {
     'diario_mes'    => [],
     'top_produtos'  => [],
     'top_vendedores'=> [],
-    'debug_count'   => 0,
     '_totvs_error'  => $resp['info']['error'] ?? 'falha',
   ], JSON_UNESCAPED_UNICODE);
   exit;
@@ -94,7 +93,6 @@ if (!$resp['success'] || !is_array($resp['data'])) {
 
 $data = $resp['data'];
 
-// tenta achar lista de itens
 $items = null;
 foreach (['items','Itens','itens','data','DATA','result','results','Resultado','retorno','value'] as $k) {
   if (isset($data[$k]) && is_array($data[$k])) { $items = $data[$k]; break; }
@@ -102,9 +100,8 @@ foreach (['items','Itens','itens','data','DATA','result','results','Resultado','
 if ($items === null && array_is_list($data)) $items = $data;
 if (!is_array($items)) $items = [];
 
-// ✅ Se seus campos do 000070 forem diferentes, ajuste estes nomes:
-$KEY_EMISSAO  = 'EMISAO';       // YYYYMMDD
-$KEY_VALOR    = 'VALOR';        // float
+$KEY_EMISSAO  = 'EMISAO';
+$KEY_VALOR    = 'VALOR';
 $KEY_NF       = 'NF';
 $KEY_CLIENTE  = 'COD_CLIENTE';
 $KEY_LOJA     = 'LOJA_CLIENTE';
@@ -115,28 +112,18 @@ $kpi = [
   'success' => true,
   'ym' => $ym,
   'updated_at' => date('Y-m-d H:i:s'),
-
-  // KPIs
   'hoje' => 0.0,
   'mes'  => 0.0,
   'ano'  => 0.0,
-
-  // ✅ ajustes (expostos p/ debug)
   'ajuste_hoje' => 0.0,
   'ajuste_mes'  => 0.0,
   'ajuste_ano'  => 0.0,
-
   'qtd_nf_hoje' => 0,
   'qtd_nf_mes'  => 0,
   'clientes_mes' => 0,
-
-  // outputs
   'diario_mes' => [],
   'top_produtos' => [],
   'top_vendedores' => [],
-
-  // debug
-  'debug_count' => count($items),
 ];
 
 $nfsHoje = [];

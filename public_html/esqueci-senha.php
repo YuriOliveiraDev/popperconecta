@@ -39,94 +39,88 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $stmt->execute([':email' => $email]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user) {
-                if ((int) ($user['is_active'] ?? 0) !== 1) {
-                    $error = 'Existe um cadastro com este e-mail, mas a conta está inativa. Procure o administrador.';
-                } else {
-                    $token = bin2hex(random_bytes(32));
-                    $tokenHash = password_hash($token, PASSWORD_DEFAULT);
-                    $expiresAt = (new DateTime('+30 minutes'))->format('Y-m-d H:i:s');
-                    $ip = $_SERVER['REMOTE_ADDR'] ?? null;
-                    $ua = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            if ($user && (int) ($user['is_active'] ?? 0) === 1) {
+                $token = bin2hex(random_bytes(32));
+                $tokenHash = password_hash($token, PASSWORD_DEFAULT);
+                $expiresAt = (new DateTime('+30 minutes'))->format('Y-m-d H:i:s');
+                $ip = $_SERVER['REMOTE_ADDR'] ?? null;
+                $ua = $_SERVER['HTTP_USER_AGENT'] ?? null;
 
-                    $pdo->beginTransaction();
+                $pdo->beginTransaction();
 
-                    $invalidateOld = $pdo->prepare("
-            UPDATE password_resets
-            SET used_at = NOW()
-            WHERE user_id = :user_id
-              AND used_at IS NULL
-        ");
-                    $invalidateOld->execute([
-                        ':user_id' => (int) $user['id'],
-                    ]);
+                $invalidateOld = $pdo->prepare("
+                    UPDATE password_resets
+                    SET used_at = NOW()
+                    WHERE user_id = :user_id
+                      AND used_at IS NULL
+                ");
+                $invalidateOld->execute([
+                    ':user_id' => (int) $user['id'],
+                ]);
 
-                    $insert = $pdo->prepare("
-            INSERT INTO password_resets (
-                user_id,
-                email,
-                token_hash,
-                expires_at,
-                request_ip,
-                request_user_agent
-            ) VALUES (
-                :user_id,
-                :email,
-                :token_hash,
-                :expires_at,
-                :request_ip,
-                :request_user_agent
-            )
-        ");
-                    $insert->execute([
-                        ':user_id' => (int) $user['id'],
-                        ':email' => (string) $user['email'],
-                        ':token_hash' => $tokenHash,
-                        ':expires_at' => $expiresAt,
-                        ':request_ip' => $ip,
-                        ':request_user_agent' => $ua,
-                    ]);
+                $insert = $pdo->prepare("
+                    INSERT INTO password_resets (
+                        user_id,
+                        email,
+                        token_hash,
+                        expires_at,
+                        request_ip,
+                        request_user_agent
+                    ) VALUES (
+                        :user_id,
+                        :email,
+                        :token_hash,
+                        :expires_at,
+                        :request_ip,
+                        :request_user_agent
+                    )
+                ");
+                $insert->execute([
+                    ':user_id' => (int) $user['id'],
+                    ':email' => (string) $user['email'],
+                    ':token_hash' => $tokenHash,
+                    ':expires_at' => $expiresAt,
+                    ':request_ip' => $ip,
+                    ':request_user_agent' => $ua,
+                ]);
 
-                    $pdo->commit();
+                $pdo->commit();
 
-                    $resetLink = APP_URL . '/reset-password.php?token=' . urlencode($token);
+                $resetLink = APP_URL . '/reset-password.php?token=' . urlencode($token);
 
-                    $subject = 'Redefinição de senha - Popper Conecta';
+                $subject = 'Redefinição de senha - Popper Conecta';
 
-                    $html = '
-        <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1f2937">
-          <h2 style="margin:0 0 16px">Redefinição de senha</h2>
-          <p>Olá, ' . h((string) ($user['name'] ?? 'usuário')) . '.</p>
-          <p>Recebemos uma solicitação para redefinir sua senha no <strong>Popper Conecta</strong>.</p>
-          <p>Clique no botão abaixo para criar uma nova senha:</p>
-          <p style="margin:24px 0">
-            <a href="' . h($resetLink) . '" style="background:#22c55e;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;display:inline-block;font-weight:700">
-              Redefinir minha senha
-            </a>
-          </p>
-          <p>Se preferir, copie e cole este link no navegador:</p>
-          <p><a href="' . h($resetLink) . '">' . h($resetLink) . '</a></p>
-          <p>Este link expira em 30 minutos.</p>
-          <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
-        </div>';
+                $html = '
+                    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1f2937">
+                      <h2 style="margin:0 0 16px">Redefinição de senha</h2>
+                      <p>Olá, ' . h((string) ($user['name'] ?? 'usuário')) . '.</p>
+                      <p>Recebemos uma solicitação para redefinir sua senha no <strong>Popper Conecta</strong>.</p>
+                      <p>Clique no botão abaixo para criar uma nova senha:</p>
+                      <p style="margin:24px 0">
+                        <a href="' . h($resetLink) . '" style="background:#22c55e;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;display:inline-block;font-weight:700">
+                          Redefinir minha senha
+                        </a>
+                      </p>
+                      <p>Se preferir, copie e cole este link no navegador:</p>
+                      <p><a href="' . h($resetLink) . '">' . h($resetLink) . '</a></p>
+                      <p>Este link expira em 30 minutos.</p>
+                      <p>Se você não solicitou essa alteração, ignore este e-mail.</p>
+                    </div>';
 
-                    send_mail_graph(
-                        (string) $user['email'],
-                        $subject,
-                        $html
-                    );
-
-                    $success = 'Encontramos um cadastro com este e-mail. O link de redefinição foi enviado com sucesso.';
-                    $emailValue = '';
-                }
-            } else {
-                $error = 'Nenhum cadastro foi encontrado com este e-mail.';
+                send_mail_graph(
+                    (string) $user['email'],
+                    $subject,
+                    $html
+                );
             }
+
+            $success = 'Se o e-mail estiver vinculado a uma conta ativa, você receberá uma mensagem com o link para redefinir sua senha.';
+            $emailValue = '';
         } catch (Throwable $e) {
             if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            $error = 'Erro ao processar: ' . $e->getMessage();
+            $error = 'Não foi possível processar sua solicitação no momento. Tente novamente em instantes.';
         }
     }
 }
@@ -146,66 +140,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
     <link rel="icon" type="image/png" href="/assets/img/favicon.ico" />
 
-    <link rel="stylesheet" type="text/css" href="/assets/vendor/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="/assets/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/vendor/animate/animate.css">
-    <link rel="stylesheet" type="text/css" href="/assets/vendor/css-hamburgers/hamburgers.min.css">
-    <link rel="stylesheet" type="text/css" href="/assets/vendor/select2/select2.min.css">
 
     <link rel="stylesheet" type="text/css" href="/assets/css/util.css">
     <link rel="stylesheet" type="text/css" href="/assets/css/auth.css">
     <link rel="stylesheet" href="/assets/css/base.css?v=<?= @filemtime(__DIR__ . '/assets/css/base.css') ?: time() ?>">
-    <link rel="stylesheet"
-        href="/assets/css/auth-split.css?v=<?= @filemtime(__DIR__ . '/assets/css/auth-split.css') ?: time() ?>">
-
-    <style>
-        .auth-note {
-            margin-top: 18px;
-            padding: 14px 16px;
-            border-radius: 14px;
-            font-size: 13px;
-            line-height: 1.55;
-            background: #f6f8fb;
-            border: 1px solid #e6ebf2;
-            color: #445065;
-        }
-
-        .auth-note strong {
-            color: #1f2a37;
-        }
-
-        .auth-success {
-            margin-bottom: 18px;
-            padding: 14px 16px;
-            border-radius: 14px;
-            background: rgba(28, 184, 65, .10);
-            border: 1px solid rgba(28, 184, 65, .20);
-            color: #177a32;
-            font-size: 14px;
-            line-height: 1.6;
-            word-break: break-word;
-        }
-
-        .auth-links-stack {
-            margin-top: 18px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .auth-card__desc--small {
-            max-width: 360px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @media (max-width: 991px) {
-
-            .auth-note,
-            .auth-success {
-                font-size: 13px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/assets/css/auth-split.css?v=<?= @filemtime(__DIR__ . '/assets/css/auth-split.css') ?: time() ?>">
+    <link rel="stylesheet" href="/assets/css/esqueci-senha.css?v=<?= @filemtime(__DIR__ . '/assets/css/esqueci-senha.css') ?: time() ?>">
 </head>
 
 <body class="page auth-split">
@@ -288,10 +229,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         </section>
     </main>
 
-    <script src="/assets/vendor/jquery/jquery-3.2.1.min.js"></script>
-    <script src="/assets/vendor/bootstrap/js/popper.js"></script>
-    <script src="/assets/vendor/bootstrap/js/bootstrap.min.js"></script>
-    <script src="/assets/vendor/select2/select2.min.js"></script>
 </body>
 
 </html>

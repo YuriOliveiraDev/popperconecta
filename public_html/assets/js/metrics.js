@@ -114,6 +114,19 @@
     });
   }
 
+  const bulkAjusteForm = document.getElementById('bulkAjusteForm');
+  if (bulkAjusteForm) {
+    bulkAjusteForm.addEventListener('submit', () => {
+      loaderShow('Processando…', 'Montando pré-visualização da importação');
+    });
+  }
+
+  document.querySelectorAll('form[data-bulk-confirm]').forEach((f) => {
+    f.addEventListener('submit', () => {
+      loaderShow('Importando…', 'Gravando ajustes em massa');
+    });
+  });
+
   document.querySelectorAll('form[data-ajuste-delete]').forEach((f) => {
     f.addEventListener('submit', () => {
       loaderShow('Removendo…', 'Excluindo ajuste manual');

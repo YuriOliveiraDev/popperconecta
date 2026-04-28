@@ -1,0 +1,36 @@
+- main [ref=e2]:
+  - generic [ref=e3]:
+    - complementary [ref=e4]:
+      - generic [ref=e5]:
+        - heading [level=1] [ref=e6]: Bem-vindo de volta!
+        - paragraph [ref=e7]: Plataforma interna Popper Conecta. Conectando pessoas, processos e resultados.
+    - generic [ref=e11]:
+      - img "Popper" [ref=e13]
+      - generic [ref=e14]:
+        - heading "Login" [level=2] [ref=e15]
+        - paragraph [ref=e16]: Entre com seu e-mail e senha corporativo.
+      - alert [ref=e17]:
+        - generic [ref=e18]: 
+        - generic [ref=e19]: E-mail ou senha inválidos.
+      - generic [ref=e20]:
+        - generic [ref=e21]:
+          - generic [ref=e22]: E-mail
+          - generic [ref=e23]:
+            - generic [ref=e24]: 
+            - textbox "E-mail" [ref=e25]:
+              - /placeholder: seuemail@popper.com.br
+        - generic [ref=e26]:
+          - generic [ref=e27]: Senha
+          - generic [ref=e28]:
+            - generic [ref=e29]: 
+            - textbox "Senha" [ref=e30]:
+              - /placeholder: ••••••••
+        - generic [ref=e31]:
+          - generic [ref=e32]:
+            - checkbox "Lembrar de mim" [ref=e33]
+            - generic [ref=e34]: Lembrar de mim
+          - link "Primeiro Acesso / Esqueci minha senha" [ref=e35] [cursor=pointer]:
+            - /url: /esqueci-senha.php
+        - button "Entrar" [ref=e36] [cursor=pointer]:
+          - generic [ref=e37]: Entrar
+        - generic [ref=e39]: Transformando celebrações em resultados extraordinários.

@@ -1,10 +1,10 @@
 {
     "ok": true,
     "pipe_id": 304022726,
-    "total": 146,
+    "total": 149,
     "pageInfo": {
         "hasNextPage": false,
-        "endCursor": "WyIyMDI2LTA0LTEwIDE3OjAyOjIwLjUwNDE1MDAwMCBVVEMiLCIxLjAiLDEzMzM4NDM5MTBd"
+        "endCursor": "WyIyMDI2LTA0LTI0IDE1OjUwOjAwLjUxMjY0NjAwMCBVVEMiLCIxLjAiLDEzNDExODczNDZd"
     },
     "items": [
         {
@@ -859,12 +859,12 @@
             "container": "B02.2026 LATAS",
             "fase": "EM TRÂNSITO",
             "previsao_embarque_etd": "25\/04\/2026",
-            "previsao_entrega_eta": null
+            "previsao_entrega_eta": "31\/05\/2026 05:00"
         },
         {
             "card_id": "1234263099",
             "container": "PO06.2025 FUMAÇA DUO",
-            "fase": "DESEMBARAÇO",
+            "fase": "ENTREGA",
             "previsao_embarque_etd": "10\/03\/2026",
             "previsao_entrega_eta": "16\/04\/2026 05:00"
         },
@@ -1004,7 +1004,7 @@
         {
             "card_id": "1328071827",
             "container": "PO02.2026 GÁS HÉLIO",
-            "fase": "COTAÇÃO FRETE INTERNACIONAL",
+            "fase": "EMBARQUE",
             "previsao_embarque_etd": null,
             "previsao_entrega_eta": null
         },
@@ -1028,7 +1028,28 @@
             "fase": "EM PRODUÇÃO",
             "previsao_embarque_etd": null,
             "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1341183611",
+            "container": "B03.2026 LATAS",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1341185186",
+            "container": "B04.2026 BUZZI",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
+        },
+        {
+            "card_id": "1341187346",
+            "container": "B05.2026 LATAS + BUZZI",
+            "fase": "EM PRODUÇÃO",
+            "previsao_embarque_etd": null,
+            "previsao_entrega_eta": null
         }
     ],
-    "cached_at": "2026-04-23T14:22:29-03:00"
+    "cached_at": "2026-04-28T10:40:55-03:00"
 }

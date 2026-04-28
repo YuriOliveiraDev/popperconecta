@@ -220,7 +220,6 @@ $out = [
   'top_produtos' => $top_produtos,
   'top_vendedores' => $top_vendedores,
 
-  // debug leve (pra você ajustar se necessário)
   'debug' => [
     'cache_min' => $cacheMinutes,
     'forced' => $force,

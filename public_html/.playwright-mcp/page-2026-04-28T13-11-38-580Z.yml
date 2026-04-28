@@ -1,0 +1,138 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Popper Conecta" [ref=e4] [cursor=pointer]:
+        - /url: /index.php
+      - link "Início" [ref=e5] [cursor=pointer]:
+        - /url: /index.php
+      - button "Administração" [ref=e7] [cursor=pointer]
+      - button "Dashboard" [ref=e9] [cursor=pointer]
+      - button "Popper Coins" [ref=e11] [cursor=pointer]
+    - generic [ref=e12]:
+      - button "Notificações" [ref=e14] [cursor=pointer]:
+        - img [ref=e16]
+      - generic "Saudação" [ref=e18]: Ótimo Dia , Yuri de oliveira yang!
+      - button "Foto de perfil" [ref=e20] [cursor=pointer]:
+        - img "Foto de perfil" [ref=e21]
+  - generic:
+    - generic:
+      - text: ⚠ Este sistema está em fase de testes (BETA).
+      - text: Algumas funcionalidades podem sofrer alterações.
+  - main [ref=e22]:
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - button "Editar topo" [ref=e25] [cursor=pointer]: ✎
+        - generic [ref=e26]: Popper Conecta
+        - paragraph [ref=e27]: Centralize informações estratégicas, acompanhe resultados em tempo real e acesse rapidamente tudo o que move a Popper.
+        - generic [ref=e28]:
+          - article [ref=e29]:
+            - generic [ref=e30]: Faturamento do Mês
+            - strong [ref=e31]: R$ 2.318.532,46
+            - generic [ref=e32]: "Atualizado: 28/04/2026, 10:11"
+          - article [ref=e33]:
+            - generic [ref=e34]: Meta do Mês
+            - strong [ref=e35]: R$ 3.800.000,00
+            - generic [ref=e36]: Meta comercial vigente
+          - article [ref=e37]:
+            - generic [ref=e38]: Atingimento
+            - strong [ref=e39]: 61,0%
+            - generic [ref=e40]: Comparado ao mês atual
+          - article [ref=e41]:
+            - generic [ref=e42]: Faturado Hoje
+            - strong [ref=e43]: R$ 46.078,61
+            - generic [ref=e44]: 2,0% do faturamento do mês
+      - generic [ref=e45]:
+        - generic [ref=e46]:
+          - generic [ref=e47]:
+            - generic [ref=e48]:
+              - generic [ref=e49]:
+                - generic [ref=e50]: Popper News Abril
+                - heading [level=2]
+                - paragraph
+              - button "Editar Popper News" [ref=e51] [cursor=pointer]: ✎
+            - generic [ref=e54]:
+              - button "Página anterior" [ref=e55] [cursor=pointer]: ←
+              - button "Próxima página" [ref=e56] [cursor=pointer]: →
+              - img "Visualização do Popper News" [ref=e57]
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - generic [ref=e71]: Abril de 2026
+                - heading "Avisos" [level=2] [ref=e72]
+                - paragraph
+              - button "Editar avisos" [ref=e73] [cursor=pointer]: ✎
+            - generic [ref=e75]:
+              - article [ref=e76]:
+                - heading "Cultura Organizacional" [level=3] [ref=e77]
+                - generic [ref=e78]: "Abrimos o treinamento do mês de abril: Cultura Organizacional. O prazo para conclusão é até 07/05. Acesse pela plataforma e não deixe para a última hora."
+              - article [ref=e79]:
+                - generic [ref=e80]: RH
+                - heading "Sólides" [level=3] [ref=e81]
+                - generic [ref=e82]: "O app da Sólides está passando por atualizações e, em breve, teremos o Sólides RH e o Sólides Ponto em um único aplicativo. Enquanto isso, quem quiser acompanhar o ponto pode acessar a versão anterior seguindo este passo a passo: Abra o app Vá no menu e clique em “Sair do aplicativo” Faça login novamente usando o código do empregador: 4QHK1 Insira o PIN de acesso enviado para o seu e-mail pessoal na admissão Se alguém não tiver o PIN ou precisar de ajuda, pode me chamar no privado que eu reenvio 😊 É importante que todos tenham acesso às duas formas: • Pelo e-mail corporativo: para responder pesquisas, ver feedbacks e acessar o PDI • Pelo Sólides Ponto: para acompanhar o ponto, banco de horas e enviar atestados ou declarações médicas. Qualquer dúvida, estou à disposição! 💬"
+        - generic [ref=e83]:
+          - generic [ref=e84]:
+            - generic [ref=e86]:
+              - generic [ref=e87]: Pessoas
+              - heading "Aniversariantes do mês" [level=2] [ref=e88]
+              - paragraph [ref=e89]: Lista automática baseada na data de nascimento cadastrada nos usuários ativos.
+            - generic [ref=e91]:
+              - article [ref=e92]:
+                - generic [ref=e93]:
+                  - generic [ref=e94]: Rafaella Franceschini Back
+                  - generic [ref=e95]: MARKETING
+                - generic [ref=e96]: 06/04
+              - article [ref=e97]:
+                - generic [ref=e98]:
+                  - generic [ref=e99]: Giovane Sabin
+                  - generic [ref=e100]: MARKETING
+                - generic [ref=e101]: 16/04
+              - article [ref=e102]:
+                - generic [ref=e103]:
+                  - generic [ref=e104]: Andrey Cesar Simao Da Silva
+                  - generic [ref=e105]: LOGISTICA
+                - generic [ref=e106]: 18/04
+          - generic [ref=e107]:
+            - generic [ref=e109]:
+              - generic [ref=e110]: Reconhecimento
+              - heading "Aniversariantes de casa" [level=2] [ref=e111]
+              - paragraph [ref=e112]: Reconhecimentos e marcos internos destacados para o mês atual.
+            - generic [ref=e114]:
+              - article [ref=e115]:
+                - generic [ref=e116]:
+                  - generic [ref=e117]: Larissa Pereira de Gouveia Fronza
+                  - generic [ref=e118]: 2 ano(s) - Tempo de casa - RH
+                - generic [ref=e119]: 01/04
+              - article [ref=e120]:
+                - generic [ref=e121]:
+                  - generic [ref=e122]: Letícia Radulski
+                  - generic [ref=e123]: 1 ano(s) - Tempo de casa - MARKETING
+                - generic [ref=e124]: 30/04
+          - generic [ref=e125]:
+            - generic [ref=e126]:
+              - generic [ref=e127]:
+                - generic [ref=e128]: Atalhos
+                - heading "Acessos rápidos" [level=2] [ref=e129]
+                - paragraph
+              - button "Editar acessos rápidos" [ref=e130] [cursor=pointer]: ✎
+            - generic [ref=e132]:
+              - link "Faturamento Acesso rápido ao módulo" [ref=e133] [cursor=pointer]:
+                - /url: /dashboards/faturamento.php
+                - strong [ref=e134]: Faturamento
+                - generic [ref=e135]: Acesso rápido ao módulo
+              - link "TV Acesso rápido ao módulo" [ref=e136] [cursor=pointer]:
+                - /url: /tv.php
+                - strong [ref=e137]: TV
+                - generic [ref=e138]: Acesso rápido ao módulo
+              - link "PopperCoins Acesso rápido ao módulo" [ref=e139] [cursor=pointer]:
+                - /url: /coins/coins.php
+                - strong [ref=e140]: PopperCoins
+                - generic [ref=e141]: Acesso rápido ao módulo
+              - link "Comunicados Acesso rápido ao módulo" [ref=e142] [cursor=pointer]:
+                - /url: /admin/comunicados.php
+                - strong [ref=e143]: Comunicados
+                - generic [ref=e144]: Acesso rápido ao módulo
+  - contentinfo [ref=e145]:
+    - generic [ref=e147]:
+      - text: POPPER BRASIL 2026 desenvolvido por
+      - link "Yuri Yang" [ref=e148] [cursor=pointer]:
+        - /url: https://www.linkedin.com/in/yuri-oliveira-yang/

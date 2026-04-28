@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1);
 
-date_default_timezone_set('America/Sao_Paulo');
+http_response_code(404);
+exit;
 
 $dir = __DIR__ . '/../logs';
 if (!is_dir($dir)) {

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
-require_admin(); // Troque para require_login() se quiser testar sem ser admin
+require_admin();
 
 $u = current_user();
 $activePage = 'admin'; // destaca no header

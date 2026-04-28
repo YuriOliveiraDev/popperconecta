@@ -166,11 +166,6 @@ try {
     }
 
     $access = agent_totvs_access_context(agent_totvs_perms_for_action($action));
-    // --- DEBUG TEMPORARIO ---
-    error_log('TOTVS FILE: ' . __FILE__);
-    error_log('TOTVS APP_ROOT: ' . (defined('APP_ROOT') ? APP_ROOT : 'NOT DEFINED'));
-    error_log('TOTVS PARAMS: ' . json_encode($params, JSON_UNESCAPED_UNICODE));
-    // ------------------------
     $data = TotvsAgentService::execute($action, $params);
 
     echo json_encode([

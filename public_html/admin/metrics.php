@@ -119,6 +119,123 @@ function h(string $s): string {
   return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
 }
 
+function parse_ptbr_date_to_iso(string $raw, int $defaultYear): ?string {
+  $value = trim(mb_strtolower($raw, 'UTF-8'));
+  if ($value === '') return null;
+
+  if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $value, $m)) {
+    $day = (int)$m[1];
+    $month = (int)$m[2];
+    $year = (int)$m[3];
+    return checkdate($month, $day, $year) ? sprintf('%04d-%02d-%02d', $year, $month, $day) : null;
+  }
+
+  if (preg_match('/^(\d{1,2})\/(\d{1,2})$/', $value, $m)) {
+    $day = (int)$m[1];
+    $month = (int)$m[2];
+    return checkdate($month, $day, $defaultYear) ? sprintf('%04d-%02d-%02d', $defaultYear, $month, $day) : null;
+  }
+
+  if (preg_match('/^(\d{1,2})\/([a-zç]{3,})$/u', $value, $m)) {
+    $months = [
+      'jan' => 1, 'fev' => 2, 'mar' => 3, 'abr' => 4, 'mai' => 5, 'jun' => 6,
+      'jul' => 7, 'ago' => 8, 'set' => 9, 'out' => 10, 'nov' => 11, 'dez' => 12,
+    ];
+    $day = (int)$m[1];
+    $monthKey = substr($m[2], 0, 3);
+    $month = $months[$monthKey] ?? null;
+    if ($month === null) return null;
+    return checkdate($month, $day, $defaultYear) ? sprintf('%04d-%02d-%02d', $defaultYear, $month, $day) : null;
+  }
+
+  return null;
+}
+
+function pick_bulk_amount_index(array $amounts, string $strategy): ?int {
+  if ($amounts === []) return null;
+
+  return match ($strategy) {
+    'second' => isset($amounts[1]) ? 1 : 0,
+    'third' => isset($amounts[2]) ? 2 : array_key_last($amounts),
+    'last' => array_key_last($amounts),
+    default => 0,
+  };
+}
+
+function parse_bulk_ajustes_payload(string $raw, string $strategy, int $defaultYear): array {
+  $normalized = str_replace(["\r\n", "\r", "\t"], "\n", $raw);
+  $lines = array_values(array_filter(array_map(
+    static fn(string $line): string => trim($line),
+    explode("\n", $normalized)
+  ), static fn(string $line): bool => $line !== ''));
+
+  $blocks = [];
+  $current = [];
+
+  foreach ($lines as $line) {
+    if (parse_ptbr_date_to_iso($line, $defaultYear) !== null && $current !== []) {
+      $blocks[] = $current;
+      $current = [$line];
+      continue;
+    }
+    $current[] = $line;
+  }
+  if ($current !== []) $blocks[] = $current;
+
+  $items = [];
+  $errors = [];
+
+  foreach ($blocks as $idx => $block) {
+    $label = 'Bloco ' . ($idx + 1);
+    $dateIso = parse_ptbr_date_to_iso((string)($block[0] ?? ''), $defaultYear);
+    if ($dateIso === null) {
+      $errors[] = $label . ': data inválida ou ausente em "' . (string)($block[0] ?? '') . '".';
+      continue;
+    }
+
+    $orderCode = trim((string)($block[1] ?? ''));
+    $client = trim((string)($block[2] ?? ''));
+    $seller = trim((string)($block[3] ?? ''));
+
+    $amountCandidates = [];
+    $amountRawLines = [];
+    foreach (array_slice($block, 4) as $line) {
+      $value = parse_ptbr_number($line);
+      if ($value === null) continue;
+      $amountCandidates[] = $value;
+      $amountRawLines[] = $line;
+    }
+
+    $pickedIdx = pick_bulk_amount_index($amountCandidates, $strategy);
+    if ($pickedIdx === null || !isset($amountCandidates[$pickedIdx])) {
+      $errors[] = $label . ': nenhum valor numérico utilizável encontrado.';
+      continue;
+    }
+
+    $value = (float)$amountCandidates[$pickedIdx];
+    if (abs($value) < 0.00001) {
+      $errors[] = $label . ': valor selecionado não pode ser zero.';
+      continue;
+    }
+
+    $parts = array_values(array_filter([$orderCode, $client, $seller], static fn(string $v): bool => $v !== ''));
+    $motivo = $parts !== [] ? 'Importação em massa: ' . implode(' | ', $parts) : 'Importação em massa';
+
+    $items[] = [
+      'ref_date' => $dateIso,
+      'order_code' => $orderCode,
+      'client' => $client,
+      'seller' => $seller,
+      'amount' => $value,
+      'amount_raw' => (string)$amountRawLines[$pickedIdx],
+      'amount_candidates' => $amountRawLines,
+      'motivo' => $motivo,
+    ];
+  }
+
+  return [$items, $errors];
+}
+
 /* =========================================================
    REGRAS: CAMPOS MANUAIS (somente estes são editáveis)
 ========================================================= */
@@ -135,6 +252,80 @@ $manualKeys = array_flip($manualKeysByDash[$dashboard_slug] ?? []);
 ========================================================= */
 $ajOk = false;
 $ajMsg = '';
+$bulkPreviewItems = [];
+$bulkPreviewErrors = [];
+$bulkImportRaw = '';
+$bulkImportStrategy = 'first';
+$bulkImportYear = (int)date('Y');
+
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' &&
+  $dashboard_slug === 'executivo' &&
+  (($_POST['aj_action'] ?? '') === 'preview_bulk_ajustes')
+) {
+  $bulkImportRaw = trim((string)($_POST['aj_bulk_raw'] ?? ''));
+  $bulkImportStrategy = (string)($_POST['aj_bulk_value_strategy'] ?? 'first');
+  $bulkImportYear = (int)($_POST['aj_bulk_year'] ?? date('Y'));
+
+  if (!in_array($bulkImportStrategy, ['first', 'second', 'third', 'last'], true)) {
+    $bulkImportStrategy = 'first';
+  }
+  if ($bulkImportYear < 2020 || $bulkImportYear > 2100) {
+    $bulkImportYear = (int)date('Y');
+  }
+
+  if ($bulkImportRaw === '') {
+    $bulkPreviewErrors[] = 'Cole os dados antes de gerar a pré-visualização.';
+  } else {
+    [$bulkPreviewItems, $bulkPreviewErrors] = parse_bulk_ajustes_payload($bulkImportRaw, $bulkImportStrategy, $bulkImportYear);
+    if ($bulkPreviewItems === [] && $bulkPreviewErrors === []) {
+      $bulkPreviewErrors[] = 'Nenhum registro válido foi encontrado no bloco colado.';
+    }
+  }
+}
+
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' &&
+  $dashboard_slug === 'executivo' &&
+  (($_POST['aj_action'] ?? '') === 'confirm_bulk_ajustes')
+) {
+  try {
+    $uid = (int)($u['id'] ?? 0);
+    $payload = (string)($_POST['aj_bulk_payload'] ?? '');
+    if ($payload === '') throw new Exception('Pré-visualização ausente. Gere a lista novamente.');
+
+    $decoded = json_decode(base64_decode($payload, true) ?: '', true);
+    if (!is_array($decoded) || $decoded === []) {
+      throw new Exception('Carga inválida para importação em massa.');
+    }
+
+    $stmtBulk = db()->prepare('
+      INSERT INTO dashboard_faturamento_ajustes (dash_slug, ref_date, valor, motivo, created_by)
+      VALUES (?, ?, ?, ?, ?)
+    ');
+
+    $inserted = 0;
+    foreach ($decoded as $row) {
+      $ref = (string)($row['ref_date'] ?? '');
+      $amount = (float)($row['amount'] ?? 0);
+      $motivo = trim((string)($row['motivo'] ?? 'Importação em massa'));
+
+      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $ref)) continue;
+      if (abs($amount) < 0.00001) continue;
+
+      $stmtBulk->execute([$dashboard_slug, $ref, $amount, $motivo, $uid]);
+      $inserted++;
+    }
+
+    if ($inserted <= 0) throw new Exception('Nenhum ajuste válido foi importado.');
+    flash_set('success', $inserted . ' ajuste(s) importado(s) em massa.');
+  } catch (Throwable $e) {
+    flash_set('error', 'Erro ao importar em massa: ' . $e->getMessage());
+  }
+
+  header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
+  exit;
+}
 
 if (
   $_SERVER['REQUEST_METHOD'] === 'POST' &&
@@ -359,6 +550,100 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
 
             <button class="btn btn--primary" type="submit">Adicionar</button>
           </form>
+
+          <div class="metrics-bulk-import">
+            <div class="metrics-bulk-import__head">
+              <div>
+                <div class="group__title" style="font-size:13px;margin-bottom:6px;border-bottom:none;padding-bottom:0;">Importação em massa</div>
+                <div class="hint" style="margin:0;">
+                  Cole o bloco vindo do Excel, gere a pré-visualização e confirme antes de gravar.
+                </div>
+              </div>
+            </div>
+
+            <form method="post" class="metrics-bulk-form" id="bulkAjusteForm">
+              <input type="hidden" name="aj_action" value="preview_bulk_ajustes" />
+
+              <div class="field metrics-bulk-form__raw">
+                <label class="field__label" for="aj_bulk_raw">Bloco colado</label>
+                <textarea
+                  class="field__control metrics-bulk-textarea"
+                  id="aj_bulk_raw"
+                  name="aj_bulk_raw"
+                  placeholder="Ex: 22/abr&#10;20930&#10;EMBAFEST COMERCIO&#10;LUIS LIMA&#10;8.095,28&#10;7.291,35&#10;6.549,26"><?= h($bulkImportRaw) ?></textarea>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="aj_bulk_value_strategy">Valor a usar de cada bloco</label>
+                <select class="field__control" id="aj_bulk_value_strategy" name="aj_bulk_value_strategy">
+                  <option value="first" <?= $bulkImportStrategy === 'first' ? 'selected' : '' ?>>1º valor numérico</option>
+                  <option value="second" <?= $bulkImportStrategy === 'second' ? 'selected' : '' ?>>2º valor numérico</option>
+                  <option value="third" <?= $bulkImportStrategy === 'third' ? 'selected' : '' ?>>3º valor numérico</option>
+                  <option value="last" <?= $bulkImportStrategy === 'last' ? 'selected' : '' ?>>Último valor numérico</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="field__label" for="aj_bulk_year">Ano padrão para datas sem ano</label>
+                <input class="field__control" id="aj_bulk_year" name="aj_bulk_year" type="number" min="2020" max="2100"
+                  value="<?= h((string)$bulkImportYear) ?>" />
+              </div>
+
+              <button class="btn btn--primary" type="submit">Gerar pré-visualização</button>
+            </form>
+
+            <?php if ($bulkPreviewErrors !== []): ?>
+              <div class="metrics-bulk-errors">
+                <?php foreach ($bulkPreviewErrors as $msg): ?>
+                  <div class="metrics-alert metrics-alert--error" role="alert">
+                    <span class="metrics-alert__icon">❌</span>
+                    <div class="metrics-alert__text"><?= h($msg) ?></div>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+
+            <?php if ($bulkPreviewItems !== []): ?>
+              <div class="metrics-bulk-preview">
+                <div class="group__title" style="font-size:13px;margin-bottom:8px;border-bottom:none;padding-bottom:0;">
+                  Pré-visualização (<?= (int)count($bulkPreviewItems) ?> registro(s))
+                </div>
+
+                <div class="metrics-bulk-table-wrap">
+                  <table class="metrics-bulk-table">
+                    <thead>
+                      <tr>
+                        <th>Data</th>
+                        <th>Pedido</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Valor usado</th>
+                        <th>Valores lidos</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <?php foreach ($bulkPreviewItems as $row): ?>
+                        <tr>
+                          <td><?= h(date('d/m/Y', strtotime((string)$row['ref_date']))) ?></td>
+                          <td><?= h((string)$row['order_code']) ?></td>
+                          <td><?= h((string)$row['client']) ?></td>
+                          <td><?= h((string)$row['seller']) ?></td>
+                          <td style="font-weight:800;"><?= h(brl((float)$row['amount'])) ?></td>
+                          <td><?= h(implode(' | ', (array)$row['amount_candidates'])) ?></td>
+                        </tr>
+                      <?php endforeach; ?>
+                    </tbody>
+                  </table>
+                </div>
+
+                <form method="post" class="metrics-bulk-confirm" data-bulk-confirm>
+                  <input type="hidden" name="aj_action" value="confirm_bulk_ajustes" />
+                  <input type="hidden" name="aj_bulk_payload" value="<?= h(base64_encode(json_encode($bulkPreviewItems, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))) ?>" />
+                  <button class="btn btn--primary" type="submit">Confirmar e importar</button>
+                </form>
+              </div>
+            <?php endif; ?>
+          </div>
 
           <div style="margin-top:14px;">
             <div class="group__title" style="font-size:13px;margin-bottom:8px;">Histórico</div>

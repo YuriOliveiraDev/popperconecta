@@ -1,0 +1,689 @@
+================================================================================
+POPPER CONECTA — DOCUMENTAÇÃO TÉCNICA
+Versão: Beta 1.0
+Data: 2026-04-28
+================================================================================
+
+ÍNDICE
+------
+1.  Visão Geral
+2.  Arquitetura
+3.  Estrutura de Diretórios
+4.  Configuração e Variáveis de Ambiente
+5.  Banco de Dados
+6.  Autenticação e Autorização
+7.  Páginas Principais
+8.  APIs REST Internas
+9.  Integrações Externas
+10. Sistema de Popper Coins
+11. Assets e Build
+12. Cache
+13. Fluxos Principais
+14. Segurança
+15. Observações para o Lançamento Beta
+
+
+================================================================================
+1. VISÃO GERAL
+================================================================================
+
+Popper Conecta é uma intranet corporativa e plataforma de business intelligence
+para a empresa Popper. Desenvolvida em PHP (sem framework), MySQL e JavaScript
+vanilla, integra com sistemas ERP (TOTVS), RH (Solides), workflows (Pipefy) e
+e-mail corporativo (Microsoft Graph).
+
+URL de produção: https://popperconecta.com.br
+Ambiente atual:  prod (definido em app/config/config.php)
+
+
+================================================================================
+2. ARQUITETURA
+================================================================================
+
+Padrão:
+- PHP tradicional (sem framework MVC)
+- Cada página carrega bootstrap.php que inicializa sessão, DB e helpers
+- Autenticação via sessão PHP + remember-me por cookie
+- APIs internas retornam JSON
+- Frontend: HTML + CSS customizado + JavaScript vanilla (sem React/Vue)
+- Fontes externas: Bootstrap, Chart.js, Leaflet, Select2, Font Awesome
+
+Fluxo de carregamento de uma página:
+1. Página PHP chama  require_once bootstrap.php
+2. bootstrap.php carrega config, DB, helpers, autenticação
+3. Página chama require_login() ou require_admin() para verificar acesso
+4. Página renderiza HTML com dados do DB e de APIs externas
+5. JavaScript do cliente busca dados adicionais via fetch() em /api/
+
+
+================================================================================
+3. ESTRUTURA DE DIRETÓRIOS
+================================================================================
+
+/
+├── bootstrap.php               Ponto de entrada — carregado por todas as páginas
+├── index.php                   Home / landing corporativa
+├── login.php                   Tela de login
+├── logout.php                  Handler de logout
+├── me.php                      Perfil do usuário
+├── esqueci-senha.php           Recuperação de senha
+├── reset-password.php          Redefinição de senha
+├── tv.php                      Modo display (TV / totem)
+├── notifications_read.php      Marca notificações como lidas (AJAX)
+├── bkpindex.php                Backup da landing antiga (protegido por login)
+│
+├── admin/                      Páginas de administração (require_admin)
+│   ├── users/
+│   │   ├── users.php           Gestão de usuários
+│   │   ├── users_create.php    Criação de usuário
+│   │   └── user_edit.php       Edição de usuário
+│   ├── rh/
+│   │   ├── rh.php              Hub de RH
+│   │   ├── rh_coins.php        Gerenciamento de saldo de coins
+│   │   ├── rh_rewards.php      Catálogo de recompensas
+│   │   ├── rh_campaigns.php    Campanhas de coins
+│   │   └── rh_redemptions.php  Fila de aprovação de resgates
+│   ├── comunicados.php         Gerenciamento de comunicados
+│   ├── popper_news.php         Upload de edição do Popper News
+│   ├── metrics.php             Configuração de métricas dos dashboards
+│   └── db_dump_schema.php      Export do schema do banco (admin only)
+│
+├── api/                        Endpoints JSON internos
+│   ├── dashboard/
+│   │   ├── dashboard-data.php          KPIs para o hero da home
+│   │   ├── dashboard-daily-save.php    Salva dados diários de faturamento
+│   │   ├── dashboard-executivo-save.php Salva dados do dashboard executivo
+│   │   ├── clientes_insights.php       Insights de clientes
+│   │   └── comex-importacoes.php       Dados de importação/exportação
+│   ├── coins/
+│   │   ├── popper-coins-total.php      Saldo de coins do usuário
+│   │   └── popper-coins-ranking.php    Ranking de coins
+│   ├── totvs/
+│   │   ├── agent.php                   Roteador principal TOTVS
+│   │   ├── consulta.php                Consulta direta TOTVS
+│   │   ├── totvs-contas-pagar.php      Contas a pagar
+│   │   └── totvs-realizado-000070.php  Métricas de realizado
+│   ├── solides/
+│   │   ├── processar_solides_webhooks.php  Receptor de webhooks do Solides
+│   │   └── teste_solides_colaboradores.php  Consulta colaboradores (admin only)
+│   ├── comunicados-feed.php            Feed de comunicados
+│   ├── inadimplentes-data.php          Dados de inadimplência
+│   ├── inadimplencia_enviar_email.php  Envio de e-mail de cobrança
+│   ├── inadimplencia_exportar_xlsx.php Export Excel de inadimplência
+│   └── sectors.php                     Listagem de setores
+│
+├── dashboards/                 Páginas de dashboards
+│   ├── dashboard-executivo.php Executivo (receita, metas, tops)
+│   ├── faturamento.php         Faturamento e billing
+│   ├── inadimplencia.php       Inadimplência e recebíveis
+│   ├── insight_comercial.php   Insights comerciais
+│   ├── clientes.php            Análise de clientes
+│   ├── importacoes.php         Comex / importações
+│   └── dashboardContasP.php    Contas a pagar
+│
+├── coins/                      Módulo Popper Coins
+│   ├── coins.php               Saldo e extrato
+│   ├── coins_campanhas.php     Participar em campanhas
+│   ├── coins_resgatar.php      Resgatar coins por recompensas
+│   └── ranking.php             Ranking de usuários
+│
+├── app/                        Código da aplicação
+│   ├── config/
+│   │   ├── config.php          Config principal (DB, sessão, URLs)
+│   │   ├── config-totvs.php    Config TOTVS (URL, mapeamentos)
+│   │   ├── config-pipefy.php   Config Pipefy (tokens, pipe IDs)
+│   │   ├── env.example.php     Exemplo de variáveis de ambiente
+│   │   └── config-secrets.php  Segredos (ignorado pelo git)
+│   ├── core/
+│   │   ├── auth.php            Login, logout, remember-me, sessão
+│   │   ├── db.php              Conexão PDO (singleton)
+│   │   ├── permissions.php     Verificação e catálogo de permissões
+│   │   ├── helpers.php         Funções globais utilitárias
+│   │   ├── notifications.php   Sistema de notificações
+│   │   └── calendario.php      Feriados e datas especiais
+│   ├── integrations/
+│   │   ├── mail_graph.php      Microsoft Graph — envio de e-mail
+│   │   ├── pipefy-rh.php       Pipefy GraphQL — RH workflows
+│   │   └── solides.php         Solides HR API
+│   ├── services/
+│   │   ├── totvs_agent.php     Serviço TOTVS (classe grande, 100+ métodos)
+│   │   ├── poppers_coins.php   Lógica de coins (carteira, ledger)
+│   │   ├── popper_news.php     Gerenciamento do Popper News
+│   │   ├── corporate_landing.php  Conteúdo editável da home
+│   │   └── fornecedores.php    Catálogo de fornecedores
+│   ├── helpers/
+│   │   └── header_helper.php   Helpers para o componente de header
+│   ├── layout/
+│   │   ├── header.php          Header / navbar (carregado por todas as páginas)
+│   │   └── footer.php          Footer
+│   └── partials/
+│       └── topbar.php          Barra de topo com notificações
+│
+├── assets/
+│   ├── css/                    Estilos — 1 arquivo por página/módulo
+│   ├── js/                     Scripts — 1 arquivo por página/módulo
+│   ├── img/                    Imagens e logos
+│   ├── fonts/                  Poppins, Montserrat, Font Awesome 4.7
+│   └── vendor/                 Bibliotecas de terceiros (Bootstrap, Chart.js, etc.)
+│
+├── uploads/
+│   ├── profile_photos/         Fotos de perfil dos usuários
+│   ├── popper-news/current/    Imagens da edição atual do Popper News
+│   └── landing/                Uploads da landing page
+│
+├── cache/                      Cache em arquivo JSON
+└── logs/                       Logs da aplicação
+
+
+================================================================================
+4. CONFIGURAÇÃO E VARIÁVEIS DE AMBIENTE
+================================================================================
+
+Arquivo principal: app/config/config.php
+Segredos: app/config/config-secrets.php  (não commitado — use env.example.php)
+
+Variáveis de ambiente necessárias:
+
+-- Banco de Dados --
+DB_USER_DEV       Usuário do banco de desenvolvimento
+DB_PASS_DEV       Senha do banco de desenvolvimento
+DB_USER_PROD      Usuário do banco de produção
+DB_PASS_PROD      Senha do banco de produção
+
+-- Microsoft Graph (E-mail) --
+GRAPH_TENANT_ID       ID do tenant Azure AD
+GRAPH_CLIENT_ID       Client ID do app registrado
+GRAPH_CLIENT_SECRET   Client Secret do app
+
+-- TOTVS ERP --
+TOTVS_API_USER    Usuário da API TOTVS
+TOTVS_API_PASS    Senha da API TOTVS
+
+-- Pipefy --
+PIPEFY_TOKEN_RH       Token de acesso GraphQL — pipe de RH
+PIPEFY_TOKEN_COMEX    Token de acesso GraphQL — pipe de Comex
+
+-- Solides HR --
+SOLIDES_TOKEN     Token de acesso à API Solides
+
+-- Segurança Interna --
+POPPER_INTERNAL_AGENT_TOKEN   Token para chamadas internas à API /api/totvs/agent.php
+
+Ambientes:
+- dev:  banco popper_dev   | cookie POPPERSESSID_DEV
+- prod: banco popperconecta | cookie POPPERSESSID
+Configurado em: app/config/config.php — constante APP_ENV
+
+
+================================================================================
+5. BANCO DE DADOS
+================================================================================
+
+Host dev:  popper_dev.mysql.dbaas.com.br  | banco: popper_dev
+Host prod: popperconecta.mysql.dbaas.com.br | banco: popperconecta
+
+Conexão: PDO com charset utf8mb4 (singleton em app/core/db.php)
+
+Tabelas principais:
+
+users
+  id, name, email, password_hash, phone, birth_date, start_date, gender,
+  role (admin|user), setor, hierarquia, is_active (0|1), permissions (JSON),
+  profile_photo_path, last_login_at
+
+user_remember_tokens
+  id, user_id, selector, token_hash, expires_at, last_used_at, user_agent, ip_address
+
+password_resets
+  user_id, email, token_hash, expires_at, request_ip, request_user_agent, used_at
+
+notifications
+  id, user_id, type, module, title, message, link, is_read, created_at, read_at
+
+dashboards
+  slug, name, icon, is_active, sort_order
+
+metrics
+  dashboard_slug, metric_key, metric_value_num, metric_value_text, updated_at
+
+Popper Coins:
+  popper_coin_wallets      user_id, balance
+  popper_coin_ledger       user_id, amount, action_type, reason, created_by, created_at
+  popper_coin_rewards      id, name, description, cost, is_active
+  popper_coin_campaigns    id, name, action_type, amount, is_active
+  popper_coin_redemptions  id, user_id, reward_id, status, created_at, approved_at
+
+Outros:
+  dashboard_faturamento_ajustes   Ajustes manuais nos valores de faturamento
+  approval_log                     Log de aprovações
+
+
+================================================================================
+6. AUTENTICAÇÃO E AUTORIZAÇÃO
+================================================================================
+
+--- Autenticação ---
+
+Fluxo de login (app/core/auth.php):
+1. POST /login.php → login($email, $pass, $remember)
+2. Busca usuário ativo por email
+3. Valida senha com password_verify()
+4. Regenera session_id()
+5. Armazena usuário na sessão ($_SESSION['user'])
+6. Se remember=true: gera token selector:validator, salva hash na tabela
+   user_remember_tokens com expiração de 30 dias
+
+Cookie de sessão: POPPERSESSID (prod) / POPPERSESSID_DEV (dev)
+  - HttpOnly, SameSite=Lax, Secure (em HTTPS)
+
+Remember-me:
+  - Cookie remember_me = selector:validator (texto plano)
+  - DB guarda hash(validator) — pattern industry-standard
+  - Rotacionado a cada uso (previne session fixation)
+  - Expira em 30 dias
+
+Recuperação de senha:
+  1. POST /esqueci-senha.php → gera token de 32 bytes, armazena hash + expiry 30min
+  2. Envia link por e-mail via Microsoft Graph
+  3. GET /reset-password.php?token=... → valida e permite nova senha
+
+--- Autorização ---
+
+Roles:
+  admin   Acesso total
+  (outro) Acesso por permissões granulares
+
+Permissões (app/core/permissions.php):
+  admin.users           Gestão de usuários
+  admin.comunicados     Gestão de comunicados
+  admin.rh              Módulo de RH
+  admin.metrics         Configuração de métricas
+  dash.comercial.executivo    Dashboard executivo
+  dash.comercial.faturamento  Dashboard de faturamento
+  dash.comercial.clientes     Dashboard de clientes
+  dash.financeiro.inadimplencia    Dashboard de inadimplência
+  dash.financeiro.contasp     Dashboard contas a pagar
+  dash.comex.importacoes      Dashboard de importações
+
+Funções de verificação:
+  require_login()             Redireciona para /login.php se não autenticado
+  require_admin()             Exige role=admin
+  require_admin_perm($perm)   Exige admin + permissão específica
+  require_dash_perm($perm)    Exige permissão de dashboard
+  user_can($perm, $user)      Retorna bool — verifica permissão
+
+Bloqueio de mobile:
+  - Dispositivos móveis redirecionados para tela de bloqueio
+  - Exceções: home, coins, dashboards, admin (mobile_shell_enabled)
+  - Controlado em app/core/auth.php via User-Agent
+
+
+================================================================================
+7. PÁGINAS PRINCIPAIS
+================================================================================
+
+/index.php — Home corporativa
+  - KPIs de faturamento carregados via AJAX (/api/dashboard/dashboard-data.php)
+  - Carrossel do Popper News (imagens de /uploads/popper-news/current/)
+  - Painel de avisos editável por admins
+  - Aniversariantes do mês (nascimento + tempo de casa)
+  - Acessos rápidos configuráveis por admins
+  - Conteúdo editável salvo em JSON via corporate_landing_save()
+
+/login.php — Login
+  - Formulário email + senha
+  - "Lembrar de mim" (30 dias)
+  - Link para recuperação de senha
+
+/me.php — Perfil do usuário
+  - Edição de nome, email, telefone, data de nascimento, gênero
+  - Alteração de senha
+  - Upload de foto de perfil (crop disponível)
+
+/tv.php — Modo display
+  - Exibição de slides para telas de TV / totem
+  - Sem expiração de sessão
+
+/esqueci-senha.php — Recuperação de senha
+  - Gera token com validade de 30 minutos
+  - Envia e-mail com link de redefinição via Microsoft Graph
+
+/reset-password.php — Redefinição de senha
+  - Valida token, permite nova senha, invalida token
+
+
+================================================================================
+8. APIs REST INTERNAS
+================================================================================
+
+Todas as APIs requerem sessão autenticada, exceto onde indicado.
+
+GET /api/dashboard/dashboard-data.php?dash=executivo
+  - Retorna KPIs: mes_total, meta_mes, atingimento_mes_pct, hoje_total
+  - Cache de 2 min em arquivo /tmp/
+  - Fallback na tabela metrics se TOTVS indisponível
+  Resposta: { values: {...}, updated_at: "..." }
+
+GET /api/dashboard/dashboard-daily-save.php
+  - Salva e retorna dados diários de faturamento
+  - Inclui top_produtos, top_vendedores, diario_mes
+
+GET /api/dashboard/dashboard-executivo-save.php
+  - Agrega dados do TOTVS para o dashboard executivo
+
+GET /api/dashboard/clientes_insights.php
+  - Métricas de clientes
+
+GET /api/dashboard/comex-importacoes.php
+  - Dados de importação / exportação COMEX
+
+GET /api/coins/popper-coins-total.php
+  - Saldo atual de coins do usuário autenticado
+
+GET /api/coins/popper-coins-ranking.php
+  - Top usuários por saldo de coins
+
+POST /api/totvs/agent.php
+  - Roteador principal para consultas ao TOTVS ERP
+  - Auth: sessão + permissão OU header X-Internal-Agent-Token
+  - Parâmetros: action (string), + params específicos da action
+  Actions disponíveis:
+    catalogo, executivo_resumo, executivo_tops,
+    top_clientes_faturamento, top_clientes_inadimplentes,
+    faturamento_por_vendedor, faturamento_por_supervisor,
+    faturamento_total_empresa, faturamento_hoje, faturamento_mes_atual,
+    realizado_hoje, realizado_mes_atual, realizado_ano_atual,
+    buscar_cliente_documento, buscar_cliente_nome, resumo_cliente,
+    historico_compras_cliente, ultima_compra_cliente, vendedor_do_cliente,
+    clientes_dashboard, insight_comercial,
+    contas_pagar_resumo, contas_pagar_proximos, contas_pagar_rankings,
+    comex_importacoes_resumo, comex_importacoes_lista,
+    comparativo_faturado_inadimplente,
+    cliente_com_mais_titulos_em_atraso, vendedor_com_maior_inadimplencia,
+    clientes_inadimplentes_por_vendedor, total_inadimplente_por_supervisor
+
+GET /api/inadimplentes-data.php
+  - Lista de clientes inadimplentes com filtros
+  - Requer permissão dash.financeiro.inadimplencia
+
+POST /api/inadimplencia_enviar_email.php
+  - Envia e-mail de cobrança para cliente via Microsoft Graph
+
+GET /api/inadimplencia_exportar_xlsx.php
+  - Exporta dados de inadimplência em planilha Excel
+
+POST /api/solides/processar_solides_webhooks.php
+  - Receptor de webhooks do Solides HR
+  - Sincroniza dados de colaboradores com a tabela users
+
+GET /api/comunicados-feed.php
+  - Feed de comunicados ativos
+
+GET /api/sectors.php
+  - Lista de setores/departamentos
+
+
+================================================================================
+9. INTEGRAÇÕES EXTERNAS
+================================================================================
+
+--- TOTVS ERP ---
+Arquivo de config: app/config/config-totvs.php
+Serviço: app/services/totvs_agent.php (classe TotvsAgentService)
+
+URL base: https://tuffloglogistica122016.protheus.cloudtotvs.com.br:4050/api/wscmrelaut/v1/Consulta/
+Auth: Basic (TOTVS_API_USER:TOTVS_API_PASS via env)
+SSL: verificação desativada (TOTVS_DISABLE_SSL = true)
+Consultas principais:
+  000070 = Vendas/faturamento
+  000072 = Contas a pagar
+
+Dados extraídos: receita, vendas por vendedor, inadimplência, clientes, produtos
+Mapeamentos: centros de custo → departamentos (em config-totvs.php)
+
+--- Microsoft Graph (E-mail) ---
+Arquivo: app/integrations/mail_graph.php
+
+Auth: OAuth 2.0 Client Credentials
+  Endpoint: https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/token
+  Vars env: GRAPH_TENANT_ID, GRAPH_CLIENT_ID, GRAPH_CLIENT_SECRET
+
+Remetente: no-reply@popper.com.br
+Usado para: recuperação de senha, notificações de inadimplência
+
+--- Pipefy ---
+Arquivo: app/integrations/pipefy-rh.php
+Config: app/config/config-pipefy.php
+
+API: GraphQL — https://api.pipefy.com/graphql
+Auth: Bearer token (PIPEFY_TOKEN_RH, PIPEFY_TOKEN_COMEX)
+Pipes:
+  304330870 = RH (resgates de coins)
+  304022726 = Comex
+
+Uso: Cria cards de workflow para aprovação de resgates de Popper Coins
+
+--- Solides HR ---
+Arquivo: app/integrations/solides.php
+
+API REST: https://app.solides.com/pt-BR/api/v1
+Auth: Token (SOLIDES_TOKEN via env)
+Endpoint principal: /colaboradores
+
+Webhook: POST /api/solides/processar_solides_webhooks.php
+  - Recebe atualizações de colaboradores do Solides
+  - Sincroniza dados com a tabela users local
+
+
+================================================================================
+10. SISTEMA DE POPPER COINS
+================================================================================
+
+O sistema de fidelidade interno permite que colaboradores acumulem e resgatem
+coins por participar de campanhas e atividades.
+
+Componentes:
+  app/services/poppers_coins.php   Lógica principal
+  coins/coins.php                  Saldo e extrato do usuário
+  coins/coins_campanhas.php        Participação em campanhas
+  coins/coins_resgatar.php         Solicitação de resgate
+  coins/ranking.php                Ranking de colaboradores
+  admin/rh/rh_coins.php            Gestão admin de saldo
+  admin/rh/rh_rewards.php          Catálogo de recompensas
+  admin/rh/rh_campaigns.php        Criação de campanhas
+  admin/rh/rh_redemptions.php      Aprovação de resgates
+
+Fluxo de resgate:
+  1. Usuário acessa /coins/coins_resgatar.php
+  2. Escolhe recompensa do catálogo
+  3. Submete com token anti-duplicata (armazenado em sessão)
+  4. Sistema cria registro em popper_coin_redemptions (status: pendente)
+  5. Cria card no Pipefy via GraphQL para aprovação
+  6. Admin aprova em /admin/rh/rh_redemptions.php
+  7. Saldo debitado via apply_ledger() na carteira do usuário
+  8. Usuário notificado via sistema de notificações
+
+
+================================================================================
+11. ASSETS E BUILD
+================================================================================
+
+Não há processo de build (sem webpack/vite). Assets servidos diretamente.
+
+Cache-busting: filemtime() no atributo ?v= de cada link/script
+  Exemplo: /assets/css/base.css?v=1745862400
+
+CSS — um arquivo por página/módulo:
+  base.css            Reset global, tipografia, utilitários
+  header.css          Navbar e topbar
+  index-home.css      Página home (extraído do inline de index.php)
+  auth.css            Formulários de autenticação
+  auth-split.css      Layout split da tela de login
+  dashboard.css       Layout geral de dashboards
+  dashboard-executivo.css  Dashboard executivo
+  coins.css           Módulo de coins
+  [outros por feature]
+
+JavaScript — um arquivo por página/módulo:
+  main.js             Utilitários globais
+  header.js           Interações do header
+  loader.js           Spinner de carregamento (window.PopperLoading)
+  view-detect.js      Detecção de dispositivo (mobile/desktop)
+  index-mobile-nav.js     Menu de navegação mobile da home
+  index-news-carousel.js  Carrossel do Popper News
+  index-hero-kpis.js      KPIs do hero (fetch + cache localStorage)
+  index-admin-modals.js   Modais de edição da home (admin only)
+  login.js            Submit do formulário de login com loader
+  [outros por feature]
+
+Bibliotecas de terceiros (em assets/vendor/):
+  Bootstrap 4         Grid e componentes base
+  Chart.js            Gráficos dos dashboards
+  Leaflet             Mapa geográfico de vendas
+  Select2             Dropdowns com busca
+  jQuery 3.2.1        Usado por Bootstrap e Select2
+  Font Awesome 4.7    Ícones
+  Animate.css         Animações de entrada
+
+Fontes (autohosted em assets/fonts/):
+  Poppins             Fonte principal do produto
+  Montserrat          Fonte secundária
+
+Fontes adicionais carregadas via Google Fonts CDN na tela de login:
+  Poppins, Inter
+
+
+================================================================================
+12. CACHE
+================================================================================
+
+Três níveis de cache:
+
+1. localStorage (cliente)
+   - KPIs do hero da home
+   - Chave: index2:hero-kpis:v1
+   - TTL: 5 minutos
+   - Fallback: usa cache expirado se API falhar
+
+2. Cache em arquivo /tmp/ (servidor)
+   - Dados TOTVS (dashboards executivo, faturamento, etc.)
+   - TTL: 2 minutos
+   - Padrão de nome: /tmp/totvs_exec_*.json
+   - Forçar refresh: ?force=1 na query string
+
+3. Cache em arquivo JSON (servidor, persistente)
+   - Catálogo de fornecedores: app/cache/fornecedores.json
+   - Dados COMEX: cache/comex-importacoes.json
+   - Rankings mensais: dashboards/cache/dash_rankings_*.json
+
+
+================================================================================
+13. FLUXOS PRINCIPAIS
+================================================================================
+
+--- Carregamento dos KPIs da Home ---
+1. Usuário acessa /index.php (autenticado)
+2. PHP renderiza página com placeholders "R$ --"
+3. JS lê localStorage (index2:hero-kpis:v1) — se fresco (< 5 min), exibe
+4. Se cache expirado: fetch GET /api/dashboard/dashboard-data.php?dash=executivo
+5. API verifica cache /tmp/ (2 min) ou consulta TOTVS via TotvsAgentService
+6. Retorna { values: {mes_total, meta_mes, atingimento_mes_pct, hoje_total}, updated_at }
+7. JS formata como moeda BRL e atualiza DOM
+8. Armazena no localStorage
+
+--- Fluxo de Recuperação de Senha ---
+1. Usuário acessa /esqueci-senha.php, digita e-mail
+2. Sistema verifica se usuário existe e está ativo
+3. Gera 32 bytes aleatórios → token em texto claro, hash armazenado
+4. Link: https://popperconecta.com.br/reset-password.php?token=TOKEN
+5. E-mail enviado via Microsoft Graph (remetente: no-reply@popper.com.br)
+6. Usuário clica no link dentro de 30 minutos
+7. /reset-password.php valida token (hash_equals, não expirado, não usado)
+8. Usuário define nova senha → password_hash() armazenado
+9. Token marcado como usado (used_at)
+
+--- Upload do Popper News ---
+1. Admin acessa /admin/popper_news.php
+2. Faz upload de PDF ou imagens da edição
+3. Arquivos salvos em /uploads/popper-news/current/
+4. Home (/index.php) lê automaticamente as imagens dessa pasta
+5. Exibe carrossel com autoplay de 4,2 segundos
+
+--- Resgate de Popper Coins ---
+1. Usuário acessa /coins/coins_resgatar.php
+2. Visualiza catálogo (popper_coin_rewards)
+3. Verifica saldo em popper_coin_wallets
+4. Submete resgate com token anti-duplicata
+5. Registro criado em popper_coin_redemptions (status: pendente)
+6. Card criado no Pipefy via GraphQL
+7. Admin aprova em /admin/rh/rh_redemptions.php
+8. Coins debitados da carteira via ledger
+9. Notificação enviada ao usuário
+
+
+================================================================================
+14. SEGURANÇA
+================================================================================
+
+Práticas implementadas:
+  - Prepared statements PDO em todas as queries (SQL injection prevenido)
+  - htmlspecialchars(ENT_QUOTES, UTF-8) em toda saída HTML (XSS prevenido)
+  - password_hash(PASSWORD_DEFAULT) para senhas
+  - Session ID regenerado no login (session fixation prevenido)
+  - Cookies HttpOnly + SameSite=Lax + Secure (em HTTPS)
+  - Token de recuperação de senha com validade de 30 minutos
+  - Token remember-me com hash no banco (selector:validator pattern)
+  - display_errors desabilitado em produção
+  - Controle de acesso por role + permissões granulares
+  - Token interno (POPPER_INTERNAL_AGENT_TOKEN) para chamadas entre serviços
+
+Pontos de atenção para próximas versões:
+  - Verificação SSL do TOTVS desabilitada (TOTVS_DISABLE_SSL = true)
+    Risco: MITM. Solução: habilitar SSL no endpoint TOTVS ou usar gateway
+  - Ausência de rate limiting no login (risco de brute force)
+    Solução: implementar throttle por IP / e-mail
+  - Ausência de tokens CSRF nos formulários admin
+    Risco: CSRF em ações de escrita
+  - Webhook do Solides sem validação de assinatura
+    Solução: validar HMAC/header-secret enviado pelo Solides
+
+
+================================================================================
+15. OBSERVAÇÕES PARA O LANÇAMENTO BETA
+================================================================================
+
+Estado atual (2026-04-28):
+  - APP_ENV = 'prod'
+  - Banner beta ativo: "Este sistema está em fase de testes (BETA)"
+  - Banco de produção ativo (popperconecta.mysql.dbaas.com.br)
+
+Correções realizadas antes do lançamento:
+  [x] CSS e JS extraídos de index.php para arquivos externos
+      - assets/css/index-home.css (era inline em index.php)
+      - assets/js/index-mobile-nav.js
+      - assets/js/index-news-carousel.js
+      - assets/js/index-hero-kpis.js
+      - assets/js/index-admin-modals.js
+  [x] JS extraído de login.php para assets/js/login.js
+  [x] Código de debug removido de login.php ($info array não utilizado)
+  [x] Comentários HTML internos de desenvolvimento removidos de login.php
+  [x] Bloco de debug removido de api/totvs/agent.php (error_log temporário)
+  [x] Comentários internos de desenvolvimento removidos de admin/comunicados.php
+  [x] Comentários internos de desenvolvimento removidos de admin/rh/rh.php
+  [x] Comentário de debug removido de api/dashboard/dashboard-daily-save.php
+  [x] debug_count e comentários de debug removidos de dashboard-executivo-save.php
+  [x] api/solides/webhook_probe.php desativado (retorna 404 — sem autenticação)
+  [x] api/solides/teste_solides_colaboradores.php protegido com require_admin()
+
+Pendências recomendadas antes de escala:
+  [ ] Habilitar SSL na conexão com TOTVS ERP
+  [ ] Implementar rate limiting no endpoint de login
+  [ ] Adicionar tokens CSRF nos formulários de escrita
+  [ ] Validar assinatura nos webhooks do Solides
+  [ ] Configurar backups automáticos do banco de dados
+  [ ] Configurar monitoramento de uptime
+
+
+================================================================================
+FIM DA DOCUMENTAÇÃO
+================================================================================

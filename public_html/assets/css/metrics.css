@@ -203,6 +203,12 @@ main.metrics.metrics--two-col .btn.btn--primary{
   main.metrics.metrics--two-col .group{
     grid-template-columns: 1fr !important;
   }
+  .metrics .metrics-bulk-form{
+    grid-template-columns: 1fr;
+  }
+  .metrics .metrics-bulk-form__raw{
+    grid-row: auto;
+  }
 }
 
 /* =========================
@@ -353,6 +359,77 @@ main.metrics.metrics--two-col .group > .metrics-alert{
 /* E o form do ajuste manual também deve ocupar as 2 colunas */
 main.metrics.metrics--two-col .group > form#ajusteForm{
   grid-column: 1 / -1 !important;
+}
+
+.metrics .metrics-bulk-import{
+  grid-column: 1 / -1;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(92,44,140,.18);
+  display: grid;
+  gap: 12px;
+}
+
+.metrics .metrics-bulk-form{
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 220px 180px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.metrics .metrics-bulk-form__raw{
+  grid-row: span 2;
+}
+
+.metrics .metrics-bulk-textarea{
+  min-height: 220px;
+  height: auto;
+  padding: 12px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.metrics .metrics-bulk-errors{
+  display: grid;
+  gap: 8px;
+}
+
+.metrics .metrics-bulk-preview{
+  display: grid;
+  gap: 10px;
+}
+
+.metrics .metrics-bulk-table-wrap{
+  overflow: auto;
+  border: 1px solid var(--m-border);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.metrics .metrics-bulk-table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.metrics .metrics-bulk-table th,
+.metrics .metrics-bulk-table td{
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(15,23,42,.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.metrics .metrics-bulk-table th{
+  background: rgba(92,44,140,.06);
+  color: rgba(15,23,42,.82);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.metrics .metrics-bulk-confirm{
+  display: flex;
+  justify-content: flex-end;
 }
 /* =========================
    FIX Avatar coluna Foto

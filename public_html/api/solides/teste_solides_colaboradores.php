@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_admin();
 require_once APP_ROOT . '/app/integrations/solides.php';
 
 header('Content-Type: application/json; charset=utf-8');

@@ -45,7 +45,10 @@
 }
 
 .notif__menu {
+  box-sizing: border-box;
   width: 320px;
+  min-width: 320px;
+  min-height: 0;
   max-height: 380px;
   display: flex;
   flex-direction: column;
