@@ -6,6 +6,11 @@ public_html/CLAUDE.md
 public_html/agents.md
 public_html/.agents/
 
+# Uploads gerados em runtime — ficam só no servidor
+public_html/uploads/comunicados/
+public_html/uploads/profile_photos/
+public_html/admin/uploads/
+
 # Temporários / cache
 public_html/logs/
 public_html/tmp/

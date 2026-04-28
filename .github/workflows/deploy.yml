@@ -50,5 +50,7 @@ jobs:
             CLAUDE.md
             agents.md
             .agents/**
+            uploads/**
+            admin/uploads/**
 
           
