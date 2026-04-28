@@ -47,5 +47,8 @@ jobs:
             **/node_modules/**
             **/vendor/**
             logs/**
+            CLAUDE.md
+            agents.md
+            .agents/**
 
           

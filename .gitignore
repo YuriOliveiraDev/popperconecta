@@ -1,0 +1,13 @@
+# Secrets — nunca versionar
+public_html/app/config/env.php
+
+# Claude Code — não vai para produção
+public_html/CLAUDE.md
+public_html/agents.md
+public_html/.agents/
+
+# Temporários / cache
+public_html/logs/
+public_html/tmp/
+public_html/cache/
+*.log
