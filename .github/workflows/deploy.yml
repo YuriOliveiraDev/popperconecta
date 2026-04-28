@@ -12,45 +12,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install lftp
+        run: sudo apt-get update && sudo apt-get install -y lftp
+
       - name: Deploy to FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          protocol: ftp
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-
-          # destino correto do site
-          server-dir: /public_html/
-
-          # somente arquivos do site
-          local-dir: ./public_html/
-
-          # 🔥 IMPORTANTE — evita erro 550 da Locaweb
-          dangerous-clean-slate: false
-
-          # evita deletar arquivos do servidor
-          state-name: .ftp-state-v2.json
-
-          timeout: 180000
-
-          log-level: verbose
-          security: loose
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/.env*
-            **/*.log
-            **/tmp/**
-            **/cache/**
-            **/node_modules/**
-            **/vendor/**
-            logs/**
-            CLAUDE.md
-            agents.md
-            .agents/**
-            uploads/**
-            admin/uploads/**
-
-          
+        env:
+          FTP_SERVER: ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "ftp://$FTP_SERVER:21" <<'EOF'
+          set ftp:ssl-allow no
+          set ftp:passive-mode true
+          set net:timeout 30
+          set net:max-retries 10
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-max 60
+          set xfer:clobber on
+          set cmd:fail-exit yes
+          mirror --reverse --verbose --only-newer --parallel=2 \
+            --exclude-glob .git* \
+            --exclude-glob .github/** \
+            --exclude-glob .env* \
+            --exclude-glob *.log \
+            --exclude-glob tmp/** \
+            --exclude-glob cache/** \
+            --exclude-glob node_modules/** \
+            --exclude-glob vendor/** \
+            --exclude-glob logs/** \
+            --exclude-glob CLAUDE.md \
+            --exclude-glob agents.md \
+            --exclude-glob .agents/** \
+            --exclude-glob uploads/** \
+            --exclude-glob admin/uploads/** \
+            ./public_html/ /public_html/
+          bye
+          EOF
