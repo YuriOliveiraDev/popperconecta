@@ -33,10 +33,10 @@ jobs:
           # evita deletar arquivos do servidor
           state-name: .ftp-state-v2.json
 
-          timeout: 60000
+          timeout: 180000
 
           log-level: verbose
-
+          security: loose
           exclude: |
             **/.git*
             **/.github/**
