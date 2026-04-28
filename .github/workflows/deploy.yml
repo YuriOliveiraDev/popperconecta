@@ -32,9 +32,12 @@ jobs:
           set net:max-retries 1;
           set net:reconnect-interval-base 5;
           set net:reconnect-interval-max 15;
+          set cmd:fail-exit true;
           set xfer:clobber on;
           debug 3;
           open -u \"$FTP_USERNAME\",\"$FTP_PASSWORD\" \"ftp://$FTP_SERVER\";
+          mkdir -p /public_html;
+          cd /public_html;
           mirror --reverse --verbose --parallel=1 \
             --exclude-glob .git* \
             --exclude-glob .github/** \
@@ -51,6 +54,6 @@ jobs:
             --exclude-glob .agents/** \
             --exclude-glob uploads/** \
             --exclude-glob admin/uploads/** \
-            public_html .;
+            public_html /public_html;
           bye
           "
