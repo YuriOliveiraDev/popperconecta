@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Bootstrap pattern
 
-Todo arquivo PHP de entrada segue este padrão obrigatório (antes de qualquer output HTML):
+Todo arquivo PHP de entrada segue este padrão obrigatório (antes de qualquer output HTML.):
 
 ```php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
