@@ -167,6 +167,18 @@ if (!empty($resp['success']) && is_array($resp['data'])) {
   $items = $extractItems($resp['data']);
   $info['itens'] = count($items);
   $info['success'] = true;
+} else {
+  // TOTVS falhou — serve cache stale se disponível (melhor que vazio)
+  if (is_file($cacheFile)) {
+    $cached = file_get_contents($cacheFile);
+    $stale = json_decode((string) $cached, true);
+    if (is_array($stale)) {
+      $stale['_stale'] = true;
+      echo json_encode($stale, JSON_UNESCAPED_UNICODE);
+      exit;
+    }
+  }
+  // Sem cache algum: continua com $items vazio (retorna estrutura zerada)
 }
 
 // Agregações
@@ -595,5 +607,8 @@ $data = [
   ],
 ];
 
-file_put_contents($cacheFile, json_encode($data, JSON_UNESCAPED_UNICODE));
+// Só cacheia quando TOTVS retornou dados reais — evita cache de resultado vazio
+if ($info['success'] && $info['itens'] > 0) {
+  @file_put_contents($cacheFile, json_encode($data, JSON_UNESCAPED_UNICODE));
+}
 echo json_encode($data, JSON_UNESCAPED_UNICODE);

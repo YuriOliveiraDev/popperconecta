@@ -29,6 +29,20 @@ if (!preg_match('/^\d{4}-\d{2}$/', $ym)) {
   $ym = date('Y-m');
 }
 
+$force = (isset($_GET['force']) && $_GET['force'] === '1');
+
+$cacheFile = sys_get_temp_dir() . '/totvs_exec_save_' . preg_replace('/[^a-z0-9_\-]/i', '_', $ym) . '.json';
+$cacheSeconds = 5 * 60;
+
+if (!$force && is_file($cacheFile) && (time() - filemtime($cacheFile) < $cacheSeconds)) {
+  $cached = file_get_contents($cacheFile);
+  $kpiCached = json_decode((string) $cached, true);
+  if (is_array($kpiCached)) {
+    echo json_encode($kpiCached, JSON_UNESCAPED_UNICODE);
+    exit;
+  }
+}
+
 $ymNoDash = str_replace('-', '', $ym); // YYYYMM
 $anoY = substr($ymNoDash, 0, 4);
 $mesYm = $ymNoDash; // YYYYMM
@@ -48,13 +62,32 @@ $yearEndIso   = $anoY . '-12-31';
 $resp = callTotvsApi('kpi_pedidos'); // ou '000070' conforme seu config
 
 if (!$resp['success'] || !is_array($resp['data'])) {
-  http_response_code(500);
+  // Tenta servir cache stale antes de retornar vazio
+  if (is_file($cacheFile)) {
+    $cached = file_get_contents($cacheFile);
+    $kpiCached = json_decode((string) $cached, true);
+    if (is_array($kpiCached)) {
+      $kpiCached['_stale'] = true;
+      echo json_encode($kpiCached, JSON_UNESCAPED_UNICODE);
+      exit;
+    }
+  }
+  // Sem cache: retorna estrutura vazia (200) para JS não travar
   echo json_encode([
-    'success' => false,
-    'message' => 'Falha ao consultar TOTVS',
-    'debug'   => $resp['info'] ?? null,
-    'error'   => $resp['json_error'] ?? null,
-    'raw'     => mb_substr((string)($resp['raw'] ?? ''), 0, 500),
+    'success'       => false,
+    'ym'            => $ym,
+    'updated_at'    => date('Y-m-d H:i:s'),
+    'hoje'          => 0.0,
+    'mes'           => 0.0,
+    'ano'           => 0.0,
+    'qtd_nf_hoje'   => 0,
+    'qtd_nf_mes'    => 0,
+    'clientes_mes'  => 0,
+    'diario_mes'    => [],
+    'top_produtos'  => [],
+    'top_vendedores'=> [],
+    'debug_count'   => 0,
+    '_totvs_error'  => $resp['info']['error'] ?? 'falha',
   ], JSON_UNESCAPED_UNICODE);
   exit;
 }
@@ -217,4 +250,5 @@ $kpi['diario_mes'] = $diario;
 $kpi['top_produtos']   = $prod;
 $kpi['top_vendedores'] = $vend;
 
+@file_put_contents($cacheFile, json_encode($kpi, JSON_UNESCAPED_UNICODE));
 echo json_encode($kpi, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);

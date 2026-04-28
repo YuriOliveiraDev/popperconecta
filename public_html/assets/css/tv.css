@@ -16,7 +16,7 @@
   --info: #2563eb;
 
   --radius: 16px;
-  --footer-h: 44px;
+  --footer-h: 0px;
   --header-offset: 0px;
 }
 
@@ -32,6 +32,15 @@ body {
   font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -53,14 +62,14 @@ body.page.is-ready main {
    LAYOUT BASE
 ========================================================= */
 .page {
-  min-height: 100vh;
+  min-height: var(--vhpx, 100vh);
   display: flex;
   flex-direction: column;
 }
 
 .page > main {
   flex: 1;
-  min-height: calc(100vh - var(--header-offset) - var(--footer-h));
+  min-height: calc(var(--vhpx, 100vh) - var(--header-offset) - var(--footer-h));
   padding-top: var(--header-offset);
   overflow: hidden;
 }
@@ -101,6 +110,7 @@ body.page.is-ready main {
 .carousel__viewport {
   width: 100%;
   height: 100%;
+  touch-action: pan-x;
 }
 
 .carousel__track {
@@ -238,14 +248,13 @@ body.page.is-ready main {
   height: 30px;
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, .15);
-  background: rgba(15, 23, 42, .25);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, .35);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   opacity: .35;
-  transition: all .25s ease;
+  transition: opacity .25s ease, background .25s ease;
 }
 
 .carousel__fullscreen svg {
@@ -664,6 +673,7 @@ body.page.is-ready main {
   overflow-x: hidden;
   padding-right: 6px;
   scroll-behavior: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .top-item {
@@ -753,14 +763,14 @@ html:fullscreen .page > main {
 }
 
 html:fullscreen .page > main {
-  min-height: 100vh !important;
+  min-height: var(--vhpx, 100vh) !important;
 }
 
 html:fullscreen #mainCarousel,
 html:fullscreen #mainCarousel .carousel__viewport,
 html:fullscreen #mainCarousel .carousel__track,
 html:fullscreen #mainCarousel .slide {
-  height: 100vh !important;
+  height: var(--vhpx, 100vh) !important;
 }
 
 html:fullscreen .carousel__fullscreen {
@@ -1005,7 +1015,7 @@ html:fullscreen .carousel__fullscreen:hover {
    ========================= */
 
 .slide--geo{
-  padding: 18px 22px;
+  padding: 10px 12px;
   box-sizing: border-box;
 }
 
@@ -1013,7 +1023,7 @@ html:fullscreen .carousel__fullscreen:hover {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .geo-header{
@@ -1024,15 +1034,15 @@ html:fullscreen .carousel__fullscreen:hover {
 
 .geo-title{
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.3rem;
   line-height: 1.1;
   font-weight: 800;
   color: #1e293b;
 }
 
 .geo-sub{
-  margin-top: 6px;
-  font-size: 1rem;
+  margin-top: 2px;
+  font-size: .82rem;
   color: #64748b;
 }
 
@@ -1040,8 +1050,8 @@ html:fullscreen .carousel__fullscreen:hover {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  gap: 18px;
+  grid-template-columns: 1.2fr 3fr 1.2fr;
+  gap: 14px;
 }
 
 .geo-card{
@@ -1057,144 +1067,16 @@ html:fullscreen .carousel__fullscreen:hover {
 
 .geo-card--map{
   justify-content: space-between;
+  padding: 4px 4px 8px;
 }
 
-.geo-card-head{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+.geo-card--map .geo-card-head{
+  display: none;
 }
 
-.geo-card-head h4{
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.geo-badge{
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 72px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: rgba(92,44,140,.10);
-  color: #5c2c8c;
-  font-weight: 700;
-  font-size: .92rem;
-}
-
-.geo-list{
-  min-height: 0;
-  overflow: hidden;
-}
-
-.br-map-wrap{
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;
-}
-
-.br-map{
-  width: 100%;
-  max-width: 560px;
-  height: auto;
-  max-height: 100%;
-}
-
-.uf-shape{
-  fill: rgba(226,232,240,.85);
-  stroke: rgba(255,255,255,.95);
-  stroke-width: 4;
-  transition: fill .25s ease, transform .2s ease, filter .2s ease;
-  cursor: default;
-}
-
-.uf-shape:hover{
-  transform: translateY(-2px);
-  filter: brightness(1.03);
-}
-
-.geo-legend{
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 10px;
-  color: #64748b;
-  font-size: .92rem;
-}
-
-.geo-legend-bar{
-  flex: 1;
-  height: 12px;
-  border-radius: 999px;
-  background: linear-gradient(90deg, rgb(233,226,245) 0%, rgb(92,44,140) 100%);
-  box-shadow: inset 0 0 0 1px rgba(15,23,42,.06);
-}
-
-/* =========================
-   GEO / MAPA BRASIL
-   ========================= */
-
-.slide--geo{
-  padding: 18px 22px;
-  box-sizing: border-box;
-}
-
-.geo-slide{
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.geo-header{
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.geo-title{
-  margin: 0;
-  font-size: 2rem;
-  line-height: 1.1;
-  font-weight: 800;
-  color: #1e293b;
-}
-
-.geo-sub{
-  margin-top: 6px;
-  font-size: 1rem;
-  color: #64748b;
-}
-
-.geo-grid{
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  gap: 18px;
-}
-
-.geo-card{
-  background: rgba(255,255,255,.92);
-  border: 1px solid rgba(148,163,184,.18);
-  border-radius: 24px;
-  box-shadow: 0 14px 34px rgba(15,23,42,.08);
-  padding: 16px 18px;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.geo-card--map{
-  justify-content: space-between;
+.geo-card--map .geo-legend{
+  margin-top: 4px;
+  padding: 0 6px;
 }
 
 .geo-card-head{
@@ -1233,7 +1115,7 @@ html:fullscreen .carousel__fullscreen:hover {
 .sales-map{
   width: 100%;
   flex: 1;
-  min-height: 520px;
+  min-height: 0;
   border-radius: 20px;
   background: linear-gradient(180deg, #faf7ff 0%, #ffffff 100%);
   overflow: hidden;
@@ -1280,8 +1162,33 @@ html:fullscreen .carousel__fullscreen:hover {
 
 .geo-list{
   min-height: 0;
-  overflow: auto;
-  padding-right: 6px;
+  overflow: hidden;
+  padding-right: 0;
+}
+
+/* itens compactos — cabe top 10 sem scroll */
+.geo-list .top-item{
+  padding: 8px 4px;
+  gap: 10px;
+}
+.geo-list .top-rank{
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.geo-list .top-name{
+  font-size: 19px;
+}
+.geo-list .top-subline{
+  font-size: 13px;
+  margin-top: 2px;
+}
+.geo-list .top-bar{
+  display: none;
+}
+.geo-list .top-val{
+  font-size: 18px;
 }
 
 .geo-list::-webkit-scrollbar{

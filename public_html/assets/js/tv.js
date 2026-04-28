@@ -150,63 +150,51 @@
         }
     }
 
+    // Scroll sincronizado: pos/direction compartilhados, ambas as listas movem juntas
+    let _syncScrollRAF = null;
+
     function stopTopAutoScroll() {
-        if (_topScrollRAFProdutos) {
-            cancelAnimationFrame(_topScrollRAFProdutos);
-            _topScrollRAFProdutos = null;
-        }
-        if (_topScrollRAFClientes) {
-            cancelAnimationFrame(_topScrollRAFClientes);
-            _topScrollRAFClientes = null;
-        }
-    }
-
-    function autoScrollTopList(containerId, speed = 0.35) {
-        const el = document.getElementById(containerId);
-        if (!el) return null;
-
-        const item = el.querySelector('.top-item');
-        if (!item) return null;
-
-        let direction = 1;
-        let pos = 0;
-
-        function step() {
-            const realMax = Math.max(0, el.scrollHeight - el.clientHeight);
-
-            if (realMax <= 0) {
-                const rafId = requestAnimationFrame(step);
-                if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
-                if (containerId === 'listTopClientes') _topScrollRAFClientes = rafId;
-                return;
-            }
-
-            pos += direction * speed;
-
-            if (pos >= realMax) {
-                pos = realMax;
-                direction = -1;
-            }
-
-            if (pos <= 0) {
-                pos = 0;
-                direction = 1;
-            }
-
-            el.scrollTop = pos;
-
-            const rafId = requestAnimationFrame(step);
-            if (containerId === 'listTopProdutos') _topScrollRAFProdutos = rafId;
-            if (containerId === 'listTopClientes') _topScrollRAFClientes = rafId;
-        }
-
-        return requestAnimationFrame(step);
+        if (_topScrollRAFProdutos) { cancelAnimationFrame(_topScrollRAFProdutos); _topScrollRAFProdutos = null; }
+        if (_topScrollRAFClientes) { cancelAnimationFrame(_topScrollRAFClientes); _topScrollRAFClientes = null; }
+        if (_syncScrollRAF)        { cancelAnimationFrame(_syncScrollRAF);        _syncScrollRAF = null; }
     }
 
     function startTopAutoScroll() {
         stopTopAutoScroll();
-        _topScrollRAFProdutos = autoScrollTopList('listTopProdutos', 0.30);
-        _topScrollRAFClientes = autoScrollTopList('listTopClientes', 0.35);
+
+        const SPEED = 0.15; // px/frame a 60fps ≈ 9px/s — ajuste aqui para mais/menos
+
+        const elP = document.getElementById('listTopProdutos');
+        const elC = document.getElementById('listTopClientes');
+
+        if (!elP && !elC) return;
+
+        let pos = 0;
+        let direction = 1;
+
+        function step() {
+            const maxP = elP ? Math.max(0, elP.scrollHeight - elP.clientHeight) : 0;
+            const maxC = elC ? Math.max(0, elC.scrollHeight - elC.clientHeight) : 0;
+            const sharedMax = Math.max(maxP, maxC);
+
+            if (sharedMax <= 0) {
+                _syncScrollRAF = requestAnimationFrame(step);
+                return;
+            }
+
+            pos += direction * SPEED;
+
+            if (pos >= sharedMax) { pos = sharedMax; direction = -1; }
+            if (pos <= 0)         { pos = 0;          direction =  1; }
+
+            // cada lista vai até seu próprio máximo — a mais curta fica no fundo enquanto a mais longa continua
+            if (elP) elP.scrollTop = Math.min(pos, maxP);
+            if (elC) elC.scrollTop = Math.min(pos, maxC);
+
+            _syncScrollRAF = requestAnimationFrame(step);
+        }
+
+        _syncScrollRAF = requestAnimationFrame(step);
     }
 
     function restartTopAutoScrollDelayed(delay = 1200) {
@@ -776,48 +764,6 @@
         }
         return await res.json();
     }
-    function renderGeoList(containerId, badgeId, items, labelKey = 'regiao') {
-        const wrap = document.getElementById(containerId);
-        if (!wrap) return;
-
-        const list = Array.isArray(items) ? items : [];
-        const valid = list.filter(item => Number(item?.valor || 0) > 0);
-
-        const total = valid.reduce((acc, x) => acc + asNumber(x.valor), 0); const max = valid.length ? asNumber(valid[0].valor) : 0;
-
-        const badge = document.getElementById(badgeId);
-        if (badge) badge.textContent = valid.length ? `Top ${valid.length}` : '—';
-
-        wrap.innerHTML = '';
-
-        if (!valid.length) {
-            wrap.innerHTML = '<div style="opacity:.7;padding:8px 6px;">Sem dados</div>';
-            return;
-        }
-
-        valid.forEach((item, idx) => {
-            const nome = String(item[labelKey] ?? item.uf ?? '—');
-            const valor = asNumber(item.valor);
-            const pct = total > 0 ? (valor / total) * 100 : 0;
-            const width = max > 0 ? (valor / max) * 100 : 0;
-
-            const row = document.createElement('div');
-            row.className = 'top-item';
-
-            row.innerHTML = `
-            <div class="top-rank">${idx + 1}</div>
-            <div class="top-main">
-                <div class="top-name" title="${escapeHtml(nome)}">${escapeHtml(nome)}</div>
-                <div class="top-subline">${pct.toFixed(1)}%</div>
-                <div class="top-bar"><i style="width:${width.toFixed(1)}%"></i></div>
-            </div>
-            <div class="top-val">${moneyBR(valor)}</div>
-        `;
-
-            wrap.appendChild(row);
-        });
-    }
-
     function mixColorByRatio(ratio) {
         const r = Math.max(0, Math.min(1, Number(ratio) || 0));
 
@@ -875,7 +821,7 @@
             renderGeoList(
                 'listTopEstados',
                 'geoBadgeUFs',
-                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking : [],
+                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking.slice(0, 10) : [],
                 'uf'
             );
 
@@ -1007,15 +953,22 @@
         window._salesMapLabelsLayer = L.layerGroup(labels).addTo(salesMap);
     }
     async function loadGeo() {
-        try {
-            const [geojson, payload] = await Promise.all([
-                fetch('/assets/maps/brasil-ufs.geojson', { cache: 'no-store' }).then(r => {
-                    if (!r.ok) throw new Error('GeoJSON não encontrado');
-                    return r.json();
-                }),
-                fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
-            ]);
+        // allSettled — GeoJSON e clientes_insights falham de forma independente
+        const [geojsonResult, cliResult] = await Promise.allSettled([
+            fetch('/assets/maps/brasil-ufs.geojson', { cache: 'default' }).then(r => {
+                if (!r.ok) throw new Error('GeoJSON não encontrado');
+                return r.json();
+            }),
+            fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
+        ]);
 
+        if (geojsonResult.status === 'rejected') console.error('GeoJSON falhou:', geojsonResult.reason);
+        if (cliResult.status    === 'rejected') console.error('Geo cli falhou:',  cliResult.reason);
+
+        const geojson = geojsonResult.status === 'fulfilled' ? geojsonResult.value : null;
+        const payload = cliResult.status     === 'fulfilled' ? cliResult.value     : null;
+
+        try {
             const geo = payload?.geografia || {};
             const ufsMap = geo.ufs_map || {};
 
@@ -1031,15 +984,23 @@
             renderGeoList(
                 'listTopEstados',
                 'geoBadgeUFs',
-                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking : [],
+                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking.slice(0, 10) : [],
                 'uf'
             );
 
+            if (geojson) {
             const values = Object.values(ufsMap)
                 .map(x => Number(x?.valor || 0))
                 .filter(v => Number.isFinite(v) && v > 0);
 
             const max = values.length ? Math.max(...values) : 0;
+
+            // Força altura pixel — Android WebView ignora flex:1 em container oculto na init
+            const _setMapH = () => {
+                const el = document.getElementById('salesMap');
+                if (el) el.style.height = Math.max(300, (window.innerHeight || 768) - 120) + 'px';
+            };
+            _setMapH();
 
             if (!salesMap) {
                 salesMap = L.map('salesMap', {
@@ -1052,6 +1013,7 @@
                     keyboard: false,
                     tap: false
                 });
+                window.__salesMap = salesMap;
             }
 
             if (salesLayer) {
@@ -1059,7 +1021,7 @@
                 salesLayer = null;
             }
 
-            salesLayer = L.geoJSON(geojson, {
+            window.__salesLayer = salesLayer = L.geoJSON(geojson, {
                 style: function (feature) {
                     const props = feature?.properties || {};
                     const uf = normalizeUF(props, feature);
@@ -1113,56 +1075,65 @@
 
             const bounds = salesLayer.getBounds();
             if (bounds.isValid()) {
-                salesMap.fitBounds(bounds, { padding: [10, 10] });
+                salesMap.fitBounds(bounds, { padding: [2, 2] });
             }
 
             renderStateLabels(geojson, ufsMap);
 
+            const refitMap = () => {
+                if (!salesMap || !salesLayer) return;
+                _setMapH();
+                salesMap.invalidateSize();
+                const b = salesLayer.getBounds();
+                if (b.isValid()) salesMap.fitBounds(b, { padding: [2, 2] });
+            };
+
             setTimeout(() => {
-                if (salesMap) {
-                    salesMap.invalidateSize();
-                    renderStateLabels(geojson, ufsMap);
-                }
+                refitMap();
+                renderStateLabels(geojson, ufsMap);
             }, 300);
+
+            // Segundo refit após animação do carousel terminar
+            setTimeout(refitMap, 800);
+            } // end if (geojson)
 
         } catch (e) {
             console.error('Erro ao carregar geografia:', e);
-            renderGeoList('listTopRegioes', 'geoBadgeRegioes', [], 'regiao');
-            renderGeoList('listTopEstados', 'geoBadgeUFs', [], 'uf');
         }
     }
     async function loadTops() {
-        try {
-            const [prodPayload, cliPayload] = await Promise.all([
-                fetchJson(`/api/dashboard/dashboard-executivo-save.php?ym=${CURRENT_YM}`),
-                fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
-            ]);
+        // Promise.allSettled — falha isolada, não trava o outro
+        const [prodResult, cliResult] = await Promise.allSettled([
+            fetchJson(`/api/dashboard/dashboard-executivo-save.php?ym=${CURRENT_YM}`),
+            fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
+        ]);
 
-            setText('topsUpdated', prodPayload?.updated_at || cliPayload?.updated_at || '--');
+        const prodPayload = prodResult.status === 'fulfilled' ? prodResult.value : null;
+        const cliPayload  = cliResult.status  === 'fulfilled' ? cliResult.value  : null;
 
-            renderTopList(
-                'listTopProdutos',
-                'badgeTopProdutos',
-                prodPayload?.top_produtos || null
-            );
+        if (prodResult.status === 'rejected') console.error('Tops prod falhou:', prodResult.reason);
+        if (cliResult.status  === 'rejected') console.error('Tops cli falhou:',  cliResult.reason);
 
-            const top50 = cliPayload?.ranking?.top50 || [];
-            const clientesAsEntries = Array.isArray(top50)
-                ? top50.map(x => [x.cliente, x.valor])
-                : null;
+        setText('topsUpdated', prodPayload?.updated_at || cliPayload?.updated_at || '--');
 
-            renderTopList(
-                'listTopClientes',
-                'badgeTopClientes',
-                clientesAsEntries
-            );
+        renderTopList(
+            'listTopProdutos',
+            'badgeTopProdutos',
+            prodPayload?.top_produtos || null
+        );
 
-            restartTopAutoScrollDelayed(1200);
-        } catch (e) {
-            console.error('Erro ao carregar tops:', e);
-            renderTopList('listTopProdutos', 'badgeTopProdutos', null);
-            renderTopList('listTopClientes', 'badgeTopClientes', null);
-        }
+        const top50 = cliPayload?.ranking?.top50 || [];
+        const clientesAsEntries = Array.isArray(top50)
+            ? top50.map(x => [x.cliente, x.valor])
+            : null;
+
+        renderTopList(
+            'listTopClientes',
+            'badgeTopClientes',
+            clientesAsEntries
+        );
+
+        restartTopAutoScrollDelayed(1200);
     }
 
     async function loadDailyChart() {

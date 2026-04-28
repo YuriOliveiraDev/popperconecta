@@ -11,15 +11,22 @@
   apply();
 
   window.addEventListener('resize', apply);
-  window.addEventListener('orientationchange', apply);
+  window.addEventListener('orientationchange', () => { setTimeout(apply, 200); });
 
+  // TV Box pode demorar a estabilizar após fullscreen
   document.addEventListener('fullscreenchange', () => {
-    setTimeout(apply, 60);
+    setTimeout(apply, 80);
+    setTimeout(apply, 300);
   });
 
   document.addEventListener('webkitfullscreenchange', () => {
-    setTimeout(apply, 60);
+    setTimeout(apply, 80);
+    setTimeout(apply, 300);
   });
+
+  // alguns TV Boxes estabilizam só depois de layout completo
+  setTimeout(apply, 400);
+  setTimeout(apply, 1000);
 
 })();
 
@@ -107,6 +114,26 @@ function render(){
   track.style.transform = `translate3d(${-x}px,0,0)`;
 
   setActiveDot();
+
+  // Invalida mapa Leaflet quando slide geo fica visível
+  const slides = track.querySelectorAll('.slide');
+  const activeSlide = slides[index];
+  if (activeSlide && activeSlide.dataset.id === 'geo') {
+    setTimeout(function () {
+      const m = window.__salesMap;
+      const l = window.__salesLayer;
+      if (m && typeof m.invalidateSize === 'function') {
+        // Força altura pixel antes de invalidar — Android WebView pode ter container 0px
+        const mapEl = document.getElementById('salesMap');
+        if (mapEl) mapEl.style.height = Math.max(300, (window.innerHeight || 768) - 120) + 'px';
+        m.invalidateSize();
+        if (l) {
+          const b = l.getBounds();
+          if (b && b.isValid()) m.fitBounds(b, { padding: [2, 2] });
+        }
+      }
+    }, 650); // após animação de transição do carousel (.6s)
+  }
 }
 
 function buildDots(){
@@ -177,6 +204,33 @@ function goNext(){
 
 prev?.addEventListener('click', goPrev);
 next?.addEventListener('click', goNext);
+
+// Swipe touch — TV Box com touchscreen ou tablet kiosk
+(function addSwipe() {
+  if (!carousel) return;
+  let startX = 0;
+  let startY = 0;
+
+  carousel.addEventListener('touchstart', function (e) {
+    startX = e.changedTouches[0].screenX;
+    startY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  carousel.addEventListener('touchend', function (e) {
+    const dx = e.changedTouches[0].screenX - startX;
+    const dy = e.changedTouches[0].screenY - startY;
+    if (Math.abs(dx) > 50 && Math.abs(dy) < Math.abs(dx)) {
+      if (dx < 0) goNext();
+      else goPrev();
+    }
+  }, { passive: true });
+})();
+
+// Navegação por teclado — controle remoto / D-pad / TV Box
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowLeft' || e.key === 'Left') { goPrev(); e.preventDefault(); }
+  else if (e.key === 'ArrowRight' || e.key === 'Right') { goNext(); e.preventDefault(); }
+});
 
 // Em alguns devices (TV Box), fullscreen muda o viewport sem disparar resize
 window.addEventListener('resize', () => {

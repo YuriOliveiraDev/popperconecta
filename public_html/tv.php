@@ -42,7 +42,11 @@ try {
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#5c2c8c">
   <title>Início — <?= h((string) APP_NAME) ?></title>
 
   <!-- LEAFLET LOCAL -->
@@ -354,6 +358,23 @@ try {
       }
 
       window.DASH_CURRENT = 'executivo';
+
+      // Auto-fullscreen no primeiro toque/clique (requerido por browsers — gesture necessário)
+      (function autoFs() {
+        function tryFs() {
+          var el = document.documentElement;
+          var fn = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+          if (fn && !document.fullscreenElement && !document.webkitFullscreenElement) {
+            fn.call(el).catch(function () {});
+          }
+          document.removeEventListener('click', tryFs);
+          document.removeEventListener('touchstart', tryFs);
+          document.removeEventListener('keydown', tryFs);
+        }
+        document.addEventListener('click', tryFs, { once: true, passive: true });
+        document.addEventListener('touchstart', tryFs, { once: true, passive: true });
+        document.addEventListener('keydown', tryFs, { once: true, passive: true });
+      })();
     })();
   </script>
 
