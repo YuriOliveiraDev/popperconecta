@@ -24,13 +24,15 @@ jobs:
           lftp -u "$FTP_USERNAME","$FTP_PASSWORD" "ftp://$FTP_SERVER:21" <<'EOF'
           set ftp:ssl-allow no
           set ftp:passive-mode true
-          set net:timeout 30
-          set net:max-retries 10
+          set ftp:sync-mode off
+          set net:timeout 20
+          set net:max-retries 20
           set net:reconnect-interval-base 5
           set net:reconnect-interval-max 60
           set xfer:clobber on
+          set xfer:use-temp-file yes
           set cmd:fail-exit yes
-          mirror --reverse --verbose --only-newer --parallel=2 \
+          mirror --reverse --continue --verbose --only-newer --parallel=1 \
             --exclude-glob .git* \
             --exclude-glob .github/** \
             --exclude-glob .env* \
