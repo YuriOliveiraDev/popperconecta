@@ -21,4 +21,4 @@ jobs:
           localDir: "public_html"
           remoteDir: "public_html"
           forceSsl: false
-          options: "--parallel=1 --verbose --exclude-glob .git* --exclude-glob .github/** --exclude-glob .env* --exclude-glob *.log --exclude-glob tmp/** --exclude-glob cache/** --exclude-glob node_modules/** --exclude-glob vendor/** --exclude-glob logs/** --exclude-glob CLAUDE.md --exclude-glob agents.md --exclude-glob .agents/** --exclude-glob uploads/** --exclude-glob admin/uploads/**"
+          options: "--parallel=1 --verbose --exclude-glob .git* --exclude-glob .github/** --exclude-glob .env* --exclude-glob *.log --exclude-glob tmp/** --exclude-glob cache/** --exclude-glob node_modules/** --exclude-glob vendor/** --exclude-glob logs/** --exclude-glob CLAUDE.md --exclude-glob agents.md --exclude-glob DOCUMENTACAO.txt --exclude-glob .agents/** --exclude-glob uploads/** --exclude-glob admin/uploads/**"
