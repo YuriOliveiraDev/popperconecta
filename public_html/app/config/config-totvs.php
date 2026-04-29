@@ -17,6 +17,7 @@ define('TOTVS_DEFAULT_CONSULTA', '000072');
 define('TOTVS_CONSULTAS', [
     'kpi_contasapagar' => '000072',
     'kpi_pedidos'     => '000070',
+    'kpi_docsentrada' => '000083',
     // 'kpi_outra'     => '000040',
 ]);
 

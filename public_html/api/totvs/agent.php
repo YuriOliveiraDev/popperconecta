@@ -122,6 +122,9 @@ function agent_totvs_perms_for_action(string $action): array
         case 'contas_pagar_resumo':
         case 'contas_pagar_proximos':
         case 'contas_pagar_rankings':
+        case 'documento_entrada_resumo':
+        case 'documento_entrada_proximos':
+        case 'documento_entrada_rankings':
             return $financeiroAmplo;
 
         case 'comex_importacoes_resumo':
