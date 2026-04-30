@@ -10,6 +10,56 @@ header('Cache-Control: post-check=0, pre-check=0', false);
 header('Pragma: no-cache');
 header('Expires: 0');
 
+// Auto-login via token fixo para TVs em quiosque
+(function () {
+    $token = (string)(getenv('TV_AUTO_TOKEN') ?: '');
+    $given = (string)($_GET['tv_token'] ?? '');
+    if ($token === '' || $given === '' || !hash_equals($token, $given)) {
+        return;
+    }
+    start_session();
+    if (!empty($_SESSION['user'])) {
+        return;
+    }
+    $u = db()->query("
+        SELECT id, name, email, role, setor, hierarquia, is_active, permissions,
+               phone, birth_date, gender, profile_photo_path
+        FROM users
+        WHERE is_active = 1
+        ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, id ASC
+        LIMIT 1
+    ")->fetch(PDO::FETCH_ASSOC);
+    if (!$u) {
+        return;
+    }
+    session_regenerate_id(true);
+    $_SESSION['user'] = auth_create_session_user($u);
+    // Cookie remember-me de 1 ano para TV
+    $selector  = bin2hex(random_bytes(12));
+    $validator = bin2hex(random_bytes(32));
+    $tokenHash = password_hash($validator, PASSWORD_DEFAULT);
+    $expiresAt = (new DateTime('+365 days'))->format('Y-m-d H:i:s');
+    db()->prepare('
+        INSERT INTO user_remember_tokens
+            (user_id, selector, token_hash, expires_at, user_agent, ip_address)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ')->execute([
+        (int)$u['id'],
+        $selector,
+        $tokenHash,
+        $expiresAt,
+        substr((string)($_SERVER['HTTP_USER_AGENT'] ?? ''), 0, 255),
+        $_SERVER['REMOTE_ADDR'] ?? null,
+    ]);
+    setcookie(auth_remember_cookie_name(), $selector . ':' . $validator, [
+        'expires'  => time() + 60 * 60 * 24 * 365,
+        'path'     => '/',
+        'secure'   => auth_is_https(),
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
+})();
+
 $u = current_user();
 $activePage = 'home';
 

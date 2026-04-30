@@ -64,11 +64,20 @@
 
     function escapeHtml(str) {
         return String(str ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function allSettled(promises) {
+        return Promise.all(promises.map(function (p) {
+            return Promise.resolve(p).then(
+                function (value) { return { status: 'fulfilled', value: value }; },
+                function (reason) { return { status: 'rejected', reason: reason }; }
+            );
+        }));
     }
 
     function asNumber(v) {
@@ -804,36 +813,6 @@
         });
     }
 
-    async function loadGeo() {
-        try {
-            const payload = await fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`);
-            const geo = payload?.geografia || {};
-
-            setText('geoUpdated', payload?.updated_at || '--');
-
-            renderGeoList(
-                'listTopRegioes',
-                'geoBadgeRegioes',
-                Array.isArray(geo.regioes) ? geo.regioes : [],
-                'regiao'
-            );
-
-            renderGeoList(
-                'listTopEstados',
-                'geoBadgeUFs',
-                Array.isArray(geo.ufs_ranking) ? geo.ufs_ranking.slice(0, 10) : [],
-                'uf'
-            );
-
-            renderBrazilMap(geo.ufs_map || {});
-        } catch (e) {
-            console.error('Erro ao carregar geografia:', e);
-            renderGeoList('listTopRegioes', 'geoBadgeRegioes', [], 'regiao');
-            renderGeoList('listTopEstados', 'geoBadgeUFs', [], 'uf');
-            renderBrazilMap({});
-        }
-    }
-
     function renderGeoList(containerId, badgeId, items, labelKey = 'regiao') {
         const wrap = document.getElementById(containerId);
         if (!wrap) return;
@@ -953,8 +932,7 @@
         window._salesMapLabelsLayer = L.layerGroup(labels).addTo(salesMap);
     }
     async function loadGeo() {
-        // allSettled — GeoJSON e clientes_insights falham de forma independente
-        const [geojsonResult, cliResult] = await Promise.allSettled([
+        const [geojsonResult, cliResult] = await allSettled([
             fetch('/assets/maps/brasil-ufs.geojson', { cache: 'default' }).then(r => {
                 if (!r.ok) throw new Error('GeoJSON não encontrado');
                 return r.json();
@@ -1102,8 +1080,7 @@
         }
     }
     async function loadTops() {
-        // Promise.allSettled — falha isolada, não trava o outro
-        const [prodResult, cliResult] = await Promise.allSettled([
+        const [prodResult, cliResult] = await allSettled([
             fetchJson(`/api/dashboard/dashboard-executivo-save.php?ym=${CURRENT_YM}`),
             fetchJson(`/api/dashboard/clientes_insights.php?ym=${CURRENT_YM}`)
         ]);
@@ -1164,7 +1141,7 @@
         try {
             const payload = await fetchJson(url);
             renderFromValues(payload);
-            await Promise.allSettled([
+            await allSettled([
                 loadDailyChart(),
                 loadTops(),
                 loadGeo()
