@@ -11,37 +11,59 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install lftp
-        run: sudo apt-get install -y lftp
-
-      - name: Deploy to FTP
+      - name: Deploy changed files to FTP
         env:
           FTP_HOST: ${{ secrets.FTP_SERVER }}
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
         run: |
-          lftp -u "$FTP_USER,$FTP_PASS" "ftp://$FTP_HOST:$FTP_PORT" <<'LFTP_SCRIPT'
-          set ftp:passive-mode true
-          set ftp:ssl-allow false
-          set net:timeout 60
-          set net:max-retries 10
-          set net:reconnect-interval-base 5
-          set net:reconnect-interval-multiplier 1
-          mirror --reverse --verbose --parallel=2 \
-            --exclude-glob .git* \
-            --exclude-glob .env* \
-            --exclude-glob *.log \
-            --exclude .playwright-mcp/ \
-            --exclude uploads/comunicados/ \
-            --exclude uploads/profile_photos/ \
-            --exclude admin/uploads/ \
-            --exclude node_modules/ \
-            --exclude vendor/ \
-            --exclude tmp/ \
-            --exclude cache/ \
-            --exclude logs/ \
-            ./public_html/ /public_html/
-          bye
-          LFTP_SCRIPT
+          BEFORE="${{ github.event.before }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            CHANGED=$(git ls-files -- public_html/ | sed 's|^public_html/||')
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" HEAD -- public_html/ | sed 's|^public_html/||')
+          fi
+
+          if [ -z "$CHANGED" ]; then
+            echo "No changes in public_html/ — nothing to deploy"
+            exit 0
+          fi
+
+          echo "=== Files to deploy ==="
+          echo "$CHANGED"
+          echo "======================"
+
+          SUCCESS=0
+          FAILED=0
+
+          while IFS= read -r file; do
+            local_path="public_html/$file"
+            remote_path="/public_html/$file"
+
+            if [ ! -f "$local_path" ]; then
+              echo "SKIP (deleted): $file"
+              continue
+            fi
+
+            echo "Uploading: $file"
+            if curl --ftp-create-dirs \
+                     --retry 5 \
+                     --retry-delay 3 \
+                     -T "$local_path" \
+                     "ftp://$FTP_HOST:$FTP_PORT$remote_path" \
+                     --user "$FTP_USER:$FTP_PASS" \
+                     --silent --show-error; then
+              SUCCESS=$((SUCCESS + 1))
+            else
+              echo "FAILED: $file"
+              FAILED=$((FAILED + 1))
+            fi
+          done <<< "$CHANGED"
+
+          echo "=== Deploy: $SUCCESS ok, $FAILED failed ==="
+          [ $FAILED -eq 0 ]
