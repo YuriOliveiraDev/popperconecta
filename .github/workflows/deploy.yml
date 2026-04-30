@@ -20,52 +20,105 @@ jobs:
           FTP_PORT: ${{ secrets.FTP_PORT }}
           FTP_USER: ${{ secrets.FTP_USERNAME }}
           FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
-          BEFORE="${{ github.event.before }}"
+          cat > /tmp/deploy.py << 'PYEOF'
+          import os, sys, time, subprocess
+          from ftplib import FTP, all_errors
 
-          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
-            CHANGED=$(git ls-files -- public_html/ | sed 's|^public_html/||')
-          else
-            CHANGED=$(git diff --name-only "$BEFORE" HEAD -- public_html/ | sed 's|^public_html/||')
-          fi
+          host     = os.environ['FTP_HOST']
+          port     = int(os.environ.get('FTP_PORT', '21'))
+          user     = os.environ['FTP_USER']
+          password = os.environ['FTP_PASS']
+          before   = os.environ.get('BEFORE_SHA', '')
 
-          if [ -z "$CHANGED" ]; then
-            echo "No changes in public_html/ — nothing to deploy"
-            exit 0
-          fi
+          ZERO = '0' * 40
+          if before in (ZERO, ''):
+              result = subprocess.run(['git', 'ls-files', '--', 'public_html/'], capture_output=True, text=True)
+          else:
+              result = subprocess.run(['git', 'diff', '--name-only', before, 'HEAD', '--', 'public_html/'], capture_output=True, text=True)
 
-          echo "=== Files to deploy ==="
-          echo "$CHANGED"
-          echo "======================"
+          files = [f[len('public_html/'):] for f in result.stdout.strip().split('\n') if f.startswith('public_html/')]
+          files = [f for f in files if f]
 
-          SUCCESS=0
-          FAILED=0
+          if not files:
+              print('No changes in public_html/ — nothing to deploy')
+              sys.exit(0)
 
-          while IFS= read -r file; do
-            local_path="public_html/$file"
-            remote_path="/public_html/$file"
+          print(f'=== Files to deploy ({len(files)}) ===')
+          for f in files:
+              print(f'  {f}')
 
-            if [ ! -f "$local_path" ]; then
-              echo "SKIP (deleted): $file"
-              continue
-            fi
+          def make_ftp():
+              ftp = FTP()
+              ftp.connect(host, port, timeout=120)
+              ftp.login(user, password)
+              ftp.set_pasv(True)
+              return ftp
 
-            echo "Uploading: $file"
-            if curl --ftp-create-dirs \
-                     --retry 5 \
-                     --retry-delay 5 \
-                     --connect-timeout 30 \
-                     --max-time 120 \
-                     -T "$local_path" \
-                     "ftp://$FTP_HOST:$FTP_PORT$remote_path" \
-                     --user "$FTP_USER:$FTP_PASS" \
-                     --silent --show-error; then
-              SUCCESS=$((SUCCESS + 1))
-            else
-              echo "FAILED: $file"
-              FAILED=$((FAILED + 1))
-            fi
-          done <<< "$CHANGED"
+          def ensure_dir(ftp, remote_dir):
+              parts = remote_dir.strip('/').split('/')
+              path = ''
+              for part in parts:
+                  if not part:
+                      continue
+                  path += '/' + part
+                  try:
+                      ftp.mkd(path)
+                  except Exception:
+                      pass
 
-          echo "=== Deploy: $SUCCESS ok, $FAILED failed ==="
-          [ $FAILED -eq 0 ]
+          def upload_file(ftp, local_path, remote_path, max_retries=8):
+              for attempt in range(max_retries):
+                  try:
+                      ensure_dir(ftp, os.path.dirname(remote_path))
+                      with open(local_path, 'rb') as f:
+                          ftp.storbinary(f'STOR {remote_path}', f, blocksize=4096)
+                      return True, ftp
+                  except all_errors as e:
+                      print(f'  Attempt {attempt+1}/{max_retries} failed: {e}')
+                      if attempt < max_retries - 1:
+                          wait = min(60, 10 * (attempt + 1))
+                          print(f'  Reconnecting in {wait}s...')
+                          time.sleep(wait)
+                          try:
+                              ftp.quit()
+                          except Exception:
+                              pass
+                          try:
+                              ftp = make_ftp()
+                          except Exception as e2:
+                              print(f'  Reconnect failed: {e2}')
+              return False, ftp
+
+          ftp = make_ftp()
+          success = 0
+          failed  = 0
+
+          for file in files:
+              local_path  = f'public_html/{file}'
+              remote_path = f'/public_html/{file}'
+
+              if not os.path.isfile(local_path):
+                  print(f'SKIP (deleted): {file}')
+                  continue
+
+              size = os.path.getsize(local_path)
+              print(f'Uploading: {file} ({size:,} bytes)')
+              ok, ftp = upload_file(ftp, local_path, remote_path)
+              if ok:
+                  print('  OK')
+                  success += 1
+              else:
+                  print('  FAILED after all retries')
+                  failed += 1
+
+          try:
+              ftp.quit()
+          except Exception:
+              pass
+
+          print(f'=== Deploy: {success} ok, {failed} failed ===')
+          sys.exit(0 if failed == 0 else 1)
+          PYEOF
+          python3 /tmp/deploy.py
