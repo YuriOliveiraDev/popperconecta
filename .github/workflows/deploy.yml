@@ -12,40 +12,36 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install lftp
+        run: sudo apt-get install -y lftp
+
       - name: Deploy to FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          protocol: ftp
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: ${{ secrets.FTP_PORT }}
-
-          # destino correto do site
-          server-dir: /public_html/
-
-          # somente arquivos do site
-          local-dir: ./public_html/
-
-          # 🔥 IMPORTANTE — evita erro 550 da Locaweb
-          dangerous-clean-slate: false
-
-          # evita deletar arquivos do servidor
-          state-name: .ftp-state-v2.json
-
-          log-level: verbose
-
-          exclude: |
-            **/.git*
-            **/.github/**
-            **/.env*
-            **/*.log
-            **/tmp/**
-            **/cache/**
-            **/node_modules/**
-            **/vendor/**
-            logs/**
-            .playwright-mcp/**
-            uploads/comunicados/**
-            uploads/profile_photos/**
-            admin/uploads/**
+        env:
+          FTP_HOST: ${{ secrets.FTP_SERVER }}
+          FTP_PORT: ${{ secrets.FTP_PORT }}
+          FTP_USER: ${{ secrets.FTP_USERNAME }}
+          FTP_PASS: ${{ secrets.FTP_PASSWORD }}
+        run: |
+          lftp -u "$FTP_USER,$FTP_PASS" "ftp://$FTP_HOST:$FTP_PORT" <<'LFTP_SCRIPT'
+          set ftp:passive-mode true
+          set ftp:ssl-allow false
+          set net:timeout 60
+          set net:max-retries 10
+          set net:reconnect-interval-base 5
+          set net:reconnect-interval-multiplier 1
+          mirror --reverse --verbose --parallel=2 \
+            --exclude-glob .git* \
+            --exclude-glob .env* \
+            --exclude-glob *.log \
+            --exclude .playwright-mcp/ \
+            --exclude uploads/comunicados/ \
+            --exclude uploads/profile_photos/ \
+            --exclude admin/uploads/ \
+            --exclude node_modules/ \
+            --exclude vendor/ \
+            --exclude tmp/ \
+            --exclude cache/ \
+            --exclude logs/ \
+            ./public_html/ /public_html/
+          bye
+          LFTP_SCRIPT
