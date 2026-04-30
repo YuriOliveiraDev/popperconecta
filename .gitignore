@@ -2,6 +2,7 @@
 public_html/CLAUDE.md
 public_html/agents.md
 public_html/.agents/
+public_html/.playwright-mcp/
 
 # Uploads gerados em runtime — ficam só no servidor
 public_html/uploads/comunicados/

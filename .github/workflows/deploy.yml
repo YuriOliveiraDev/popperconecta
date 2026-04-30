@@ -45,3 +45,7 @@ jobs:
             **/node_modules/**
             **/vendor/**
             logs/**
+            .playwright-mcp/**
+            uploads/comunicados/**
+            uploads/profile_photos/**
+            admin/uploads/**
