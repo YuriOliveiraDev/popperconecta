@@ -288,8 +288,8 @@ final class TotvsAgentService
                 ],
                 [
                     'action' => 'documento_entrada_rankings',
-                    'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada.',
-                    'params' => ['from', 'to', 'limit', 'force'],
+                    'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada. Use date_from/date_to para base por emissao e from/to para base por vencimento.',
+                    'params' => ['date_from', 'date_to', 'from', 'to', 'limit', 'force'],
                 ],
             ],
         ];
@@ -839,6 +839,7 @@ final class TotvsAgentService
         $dataset = self::buildDocumentoEntradaDataset($params);
         $limit = self::clampInt($params['limit'] ?? 20, 1, 100);
         return [
+            'data_base' => $dataset['data_base'],
             'periodo' => $dataset['periodo'],
             'rankings' => [
                 'centro_custo' => array_slice($dataset['rankings']['centro_custo'], 0, $limit),
@@ -1701,23 +1702,26 @@ final class TotvsAgentService
 
     private static function buildDocumentoEntradaDataset(array $params): array
     {
-        $from = (string) ($params['from'] ?? date('Y-m-01'));
-        $to = (string) ($params['to'] ?? date('Y-m-t'));
+        $useEmissaoBase = !empty($params['date_from']) || !empty($params['date_to']);
+        $from = (string) ($params[$useEmissaoBase ? 'date_from' : 'from'] ?? date('Y-m-01'));
+        $to = (string) ($params[$useEmissaoBase ? 'date_to' : 'to'] ?? date('Y-m-t'));
         $fromTs = strtotime($from . ' 00:00:00') ?: strtotime(date('Y-m-01 00:00:00'));
         $toTs = strtotime($to . ' 23:59:59') ?: strtotime(date('Y-m-t 23:59:59'));
         if ($fromTs > $toTs) {
             [$fromTs, $toTs] = [$toTs, $fromTs];
             [$from, $to] = [$to, $from];
         }
+        $dataBase = $useEmissaoBase ? 'emissao' : 'vencimento';
 
         $rows = self::fetchConsultaRows(TOTVS_CONSULTAS['kpi_docsentrada'] ?? '000083', !empty($params['force']));
 
-        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs): bool {
+        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs, $useEmissaoBase): bool {
             if (!is_array($row)) {
                 return false;
             }
-            $vencTs = toDateTs($row['DT_VENCIMENTO'] ?? '');
-            return $vencTs !== null && $vencTs >= $fromTs && $vencTs <= $toTs;
+            $dateField = $useEmissaoBase ? 'DT_EMISSAO' : 'DT_VENCIMENTO';
+            $baseTs = toDateTs($row[$dateField] ?? '');
+            return $baseTs !== null && $baseTs >= $fromTs && $baseTs <= $toTs;
         }));
 
         $todayTs = strtotime('today');
@@ -1864,7 +1868,12 @@ final class TotvsAgentService
         $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos15));
 
         return [
-            'periodo' => ['from' => $from, 'to' => $to],
+            'data_base' => $dataBase,
+            'periodo' => [
+                'from' => $from,
+                'to' => $to,
+                'tipo_data' => $dataBase,
+            ],
             'resumo' => [
                 'total_qtd' => $totalQtd,
                 'total_valor' => $totalValor,
