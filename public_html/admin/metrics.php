@@ -119,6 +119,22 @@ function sync_current_month_goal_metric(string $dashboardSlug): void {
   ]);
 }
 
+function deactivate_other_monthly_goals(string $dashboardSlug, string $refMonth, int $excludeId = 0): void {
+  $sql = '
+    UPDATE dashboard_faturamento_metas_mensais
+    SET is_active = 0
+    WHERE dash_slug = ? AND ref_month = ? AND is_active = 1
+  ';
+  $params = [$dashboardSlug, $refMonth];
+
+  if ($excludeId > 0) {
+    $sql .= ' AND id <> ?';
+    $params[] = $excludeId;
+  }
+
+  db()->prepare($sql)->execute($params);
+}
+
 function parse_ptbr_number(string $s): ?float {
   $s = trim($s);
   if ($s === '') return null;
@@ -470,11 +486,49 @@ if (
       VALUES (?, ?, ?, ?, ?)
     ');
     $stmtMeta->execute([$dashboard_slug, $refMonth, $val, $obs !== '' ? $obs : null, $uid]);
+    deactivate_other_monthly_goals($dashboard_slug, $refMonth, (int)db()->lastInsertId());
 
     sync_current_month_goal_metric($dashboard_slug);
     flash_set('success', 'Meta mensal adicionada.');
   } catch (Throwable $e) {
     flash_set('error', 'Erro ao adicionar meta mensal: ' . $e->getMessage());
+  }
+
+  header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
+  exit;
+}
+
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' &&
+  $dashboard_slug === 'executivo' &&
+  (($_POST['meta_action'] ?? '') === 'edit_meta_mensal')
+) {
+  try {
+    $id = (int)($_POST['meta_id'] ?? 0);
+    $refMonth = normalize_month_input((string)($_POST['meta_month'] ?? ''));
+    $rawVal = (string)($_POST['meta_valor'] ?? '');
+    $obs = trim((string)($_POST['meta_obs'] ?? ''));
+
+    if ($id <= 0) throw new Exception('ID invalido.');
+    if ($refMonth === null) throw new Exception('Mes invalido.');
+
+    $val = parse_ptbr_number($rawVal);
+    if ($val === null) throw new Exception('Valor invalido.');
+    if (abs($val) < 0.00001) throw new Exception('Valor nao pode ser zero.');
+
+    $stmtMeta = db()->prepare('
+      UPDATE dashboard_faturamento_metas_mensais
+      SET ref_month = ?, valor = ?, observacao = ?, is_active = 1
+      WHERE id = ? AND dash_slug = ?
+      LIMIT 1
+    ');
+    $stmtMeta->execute([$refMonth, $val, $obs !== '' ? $obs : null, $id, $dashboard_slug]);
+    deactivate_other_monthly_goals($dashboard_slug, $refMonth, $id);
+
+    sync_current_month_goal_metric($dashboard_slug);
+    flash_set('success', 'Meta mensal atualizada.');
+  } catch (Throwable $e) {
+    flash_set('error', 'Erro ao atualizar meta mensal: ' . $e->getMessage());
   }
 
   header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
@@ -536,7 +590,7 @@ if ($dashboard_slug === 'executivo') {
       SELECT m.id, m.ref_month, m.valor, m.observacao, m.created_at, m.is_active, u.name as user_name
       FROM dashboard_faturamento_metas_mensais m
       LEFT JOIN users u ON u.id = m.created_by
-      WHERE m.dash_slug = ?
+      WHERE m.dash_slug = ? AND m.is_active = 1
       ORDER BY m.ref_month DESC, m.id DESC
       LIMIT 200
     ');
@@ -555,6 +609,16 @@ if ($dashboard_slug === 'executivo') {
   } catch (Throwable $e) {
     $metasMensais = [];
     $metaMensalLatestByMonth = [];
+  }
+}
+$metaEditId = (int)($_GET['edit_meta'] ?? 0);
+$metaEditRow = null;
+if ($metaEditId > 0) {
+  foreach ($metasMensais as $metaRow) {
+    if ((int)($metaRow['id'] ?? 0) === $metaEditId) {
+      $metaEditRow = $metaRow;
+      break;
+    }
   }
 }
 
@@ -843,28 +907,36 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
             <div class="group__title" style="font-size:13px;margin-bottom:8px;">Metas mensais</div>
 
             <form method="post" class="metrics-inline-form">
-              <input type="hidden" name="meta_action" value="add_meta_mensal" />
+              <input type="hidden" name="meta_action" value="<?= $metaEditRow ? 'edit_meta_mensal' : 'add_meta_mensal' ?>" />
+              <?php if ($metaEditRow): ?>
+                <input type="hidden" name="meta_id" value="<?= (int)($metaEditRow['id'] ?? 0) ?>" />
+              <?php endif; ?>
 
               <div class="field" style="margin:0;">
                 <label class="field__label" for="meta_month">Mes</label>
                 <input class="field__control" id="meta_month" name="meta_month" type="month"
-                  value="<?= h(date('Y-m')) ?>" />
+                  value="<?= h($metaEditRow ? date('Y-m', strtotime((string)$metaEditRow['ref_month'])) : date('Y-m')) ?>" />
               </div>
 
               <div class="field" style="margin:0;">
                 <label class="field__label" for="meta_valor">Meta (R$)</label>
                 <input class="field__control metric-input" id="meta_valor" name="meta_valor"
                   placeholder="Ex: R$ 4.000.000,00"
+                  value="<?= h($metaEditRow ? brl((float)($metaEditRow['valor'] ?? 0)) : '') ?>"
                   autocomplete="off" inputmode="decimal" data-type="money" />
               </div>
 
               <div class="field" style="margin:0;">
                 <label class="field__label" for="meta_obs">Observacao</label>
                 <input class="field__control" id="meta_obs" name="meta_obs"
+                  value="<?= h((string)($metaEditRow['observacao'] ?? '')) ?>"
                   placeholder="Ex: meta revisada do mes" />
               </div>
 
-              <button class="btn btn--primary" type="submit">Adicionar meta</button>
+              <button class="btn btn--primary" type="submit"><?= $metaEditRow ? 'Salvar edicao' : 'Adicionar meta' ?></button>
+              <?php if ($metaEditRow): ?>
+                <a class="btn btn--secondary" href="/admin/metrics.php?dash=<?= h($dashboard_slug) ?>">Cancelar</a>
+              <?php endif; ?>
             </form>
 
             <div class="group__title" style="font-size:13px;margin:14px 0 8px;border-bottom:none;padding-bottom:0;">Historico de metas</div>
@@ -892,9 +964,8 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
                         $metaValue = (float)($meta['valor'] ?? 0);
                         $metaObs = (string)($meta['observacao'] ?? '');
                         $metaUser = (string)($meta['user_name'] ?? '');
-                        $metaActive = (int)($meta['is_active'] ?? 0) === 1;
                         $isLatestMonthGoal = ($metaMensalLatestByMonth[$metaMonth] ?? 0) === $metaId;
-                        $metaStatus = !$metaActive ? 'Removida' : ($isLatestMonthGoal ? 'Vigente' : 'Historico');
+                        $metaStatus = $isLatestMonthGoal ? 'Vigente' : 'Historico';
                       ?>
                       <tr>
                         <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h(date('m/Y', strtotime($metaMonth))) ?></td>
@@ -903,13 +974,12 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
                         <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h($metaStatus) ?></td>
                         <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h($metaUser) ?></td>
                         <td style="padding:8px;border-bottom:1px solid #f1f5f9;text-align:right;">
-                          <?php if ($metaActive): ?>
-                            <form method="post" onsubmit="return confirm('Remover esta meta mensal?');" style="display:inline;">
-                              <input type="hidden" name="meta_action" value="del_meta_mensal" />
-                              <input type="hidden" name="meta_id" value="<?= $metaId ?>" />
-                              <button class="btn btn--secondary" type="submit">Excluir</button>
-                            </form>
-                          <?php endif; ?>
+                          <a class="btn btn--secondary" href="/admin/metrics.php?dash=<?= h($dashboard_slug) ?>&edit_meta=<?= $metaId ?>">Editar</a>
+                          <form method="post" onsubmit="return confirm('Remover esta meta mensal?');" style="display:inline;">
+                            <input type="hidden" name="meta_action" value="del_meta_mensal" />
+                            <input type="hidden" name="meta_id" value="<?= $metaId ?>" />
+                            <button class="btn btn--secondary" type="submit">Excluir</button>
+                          </form>
                         </td>
                       </tr>
                     <?php endforeach; ?>

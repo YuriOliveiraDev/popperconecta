@@ -2624,6 +2624,23 @@ GQL;
             }
         }
 
+        try {
+            $stmtMetaMes = db()->prepare('
+                SELECT valor
+                FROM dashboard_faturamento_metas_mensais
+                WHERE dash_slug = ? AND ref_month = ? AND is_active = 1
+                ORDER BY id DESC
+                LIMIT 1
+            ');
+            $stmtMetaMes->execute([$dashboardSlug, date('Y-m-01')]);
+            $metaMesAtual = $stmtMetaMes->fetchColumn();
+            if ($metaMesAtual !== false && $metaMesAtual !== null) {
+                $metrics['meta_mes'] = (float) $metaMesAtual;
+            }
+        } catch (Throwable $e) {
+            // fallback para metrics.meta_mes
+        }
+
         return $metrics;
     }
 
