@@ -680,6 +680,7 @@ final class TotvsAgentService
         return [
             'ym' => $dataset['ym'],
             'updated_at' => $dataset['updated_at'],
+            'values' => $dataset['values'],
             'qtd_nf_hoje' => $dataset['qtd_nf_hoje'],
             'qtd_nf_mes' => $dataset['qtd_nf_mes'],
             'clientes_mes' => $dataset['clientes_mes'],
@@ -1024,10 +1025,13 @@ final class TotvsAgentService
 
         $m = array_merge($metrics, $totvs['values']);
         $adj = self::fetchDashboardAjustes($dash);
+        $hojeFaturadoTotvs = (float) ($m['hoje_faturado'] ?? 0.0);
+        $mesFaturadoTotvs = (float) ($m['mes_faturado'] ?? 0.0);
+        $anoFaturadoTotvs = (float) ($m['ano_faturado'] ?? 0.0);
 
-        $m['hoje_faturado'] = (float) ($m['hoje_faturado'] ?? 0) + $adj['hoje'];
-        $m['mes_faturado'] = (float) ($m['mes_faturado'] ?? 0) + $adj['mes'];
-        $m['ano_faturado'] = (float) ($m['ano_faturado'] ?? 0) + $adj['ano'];
+        $m['hoje_faturado'] = $hojeFaturadoTotvs + $adj['hoje'];
+        $m['mes_faturado'] = $mesFaturadoTotvs + $adj['mes'];
+        $m['ano_faturado'] = $anoFaturadoTotvs + $adj['ano'];
 
         $m['realizado_hoje'] = (float) ($m['hoje_faturado'] ?? 0) + (float) ($m['hoje_im'] ?? 0);
         $m['realizado_ate_hoje'] = (float) ($m['mes_faturado'] ?? 0) + (float) ($m['mes_im'] ?? 0);
@@ -1079,14 +1083,23 @@ final class TotvsAgentService
                 'ajuste_hoje' => $adj['hoje'],
                 'ajuste_mes' => $adj['mes'],
                 'ajuste_ano' => $adj['ano'],
+                'hoje_faturado_totvs' => $hojeFaturadoTotvs,
+                'hoje_faturado_ajuste_manual' => $adj['hoje'],
+                'hoje_faturado_total' => (float) ($m['hoje_faturado'] ?? 0),
                 'hoje_total' => (float) ($m['realizado_hoje'] ?? 0),
                 'hoje_faturado' => (float) ($m['hoje_faturado'] ?? 0),
                 'hoje_im' => (float) ($m['hoje_im'] ?? 0),
                 'hoje_ag' => (float) ($m['hoje_ag'] ?? 0),
+                'mes_faturado_totvs' => $mesFaturadoTotvs,
+                'mes_faturado_ajuste_manual' => $adj['mes'],
+                'mes_faturado_total' => (float) ($m['mes_faturado'] ?? 0),
                 'mes_total' => (float) ($m['realizado_ate_hoje'] ?? 0),
                 'mes_faturado' => (float) ($m['mes_faturado'] ?? 0),
                 'mes_im' => (float) ($m['mes_im'] ?? 0),
                 'mes_ag' => (float) ($m['mes_ag'] ?? 0),
+                'ano_faturado_totvs' => $anoFaturadoTotvs,
+                'ano_faturado_ajuste_manual' => $adj['ano'],
+                'ano_faturado_total' => (float) ($m['ano_faturado'] ?? 0),
                 'ano_faturado' => (float) ($m['ano_faturado'] ?? 0),
                 'ano_im' => (float) ($m['ano_im'] ?? 0),
                 'ano_ag' => (float) ($m['ano_ag'] ?? 0),
@@ -1190,8 +1203,39 @@ final class TotvsAgentService
             }
         }
 
+        $ajustes = self::fetchDashboardAjustesByDateRange('executivo', date('Y-m-d', $fromYear), date('Y-m-d', $toToday));
+        $ajusteHoje = 0.0;
+        $ajusteMes = 0.0;
+        $ajusteAno = 0.0;
+        foreach ($ajustes['rows'] as $ajuste) {
+            $refDate = (string) ($ajuste['ref_date'] ?? '');
+            $valor = (float) ($ajuste['valor'] ?? 0.0);
+            if ($refDate === '') {
+                continue;
+            }
+
+            $adjYmd = str_replace('-', '', $refDate);
+            if ($refDate >= date('Y-m-d', $fromMonth) && $refDate <= date('Y-m-d', $toMonth)) {
+                $fatMonth += $valor;
+                $ajusteMes += $valor;
+                $dia = substr($adjYmd, 6, 2);
+                if ($dia !== '') {
+                    $diarioMes[$dia] = (($diarioMes[$dia] ?? 0.0) + $valor);
+                }
+            }
+            if ($refDate >= date('Y-m-d', $fromYear) && $refDate <= date('Y-m-d', $toToday)) {
+                $fatYear += $valor;
+                $ajusteAno += $valor;
+            }
+            if ($adjYmd === $todayStr) {
+                $fatToday += $valor;
+                $ajusteHoje += $valor;
+            }
+        }
+
         arsort($topProdutos);
         arsort($topVendedores);
+        ksort($diarioMes);
 
         return [
             'success' => true,
@@ -1207,6 +1251,9 @@ final class TotvsAgentService
                 'ano_faturado' => round($fatYear, 2),
                 'ano_agendado' => round($agdYear, 2),
                 'ano_total' => round($fatYear + $agdYear, 2),
+                'ajuste_hoje' => round($ajusteHoje, 2),
+                'ajuste_mes' => round($ajusteMes, 2),
+                'ajuste_ano' => round($ajusteAno, 2),
             ],
             'qtd_nf_hoje' => $qtdNfHoje,
             'qtd_nf_mes' => $qtdNfMes,
@@ -1486,14 +1533,27 @@ final class TotvsAgentService
 
         arsort($bySeller);
         arsort($byState);
-        $ticketMedio = count($nfTotals) > 0 ? ($totalMes / count($nfTotals)) : 0.0;
+        $ajuste = self::fetchDashboardAjustesByDateRange('executivo', $monthStart, $monthEnd);
+        $faturadoTotvs = round($totalMes, 2);
+        $faturadoAjuste = round((float) $ajuste['valor_periodo'], 2);
+        $faturadoFinal = round($faturadoTotvs + $faturadoAjuste, 2);
+        $totalDocumentosTotvs = count($nfTotals);
+        $totalDocumentosAjuste = 0;
+        $totalDocumentosFinal = $totalDocumentosTotvs + $totalDocumentosAjuste;
+        $ticketMedio = $totalDocumentosFinal > 0 ? ($faturadoFinal / $totalDocumentosFinal) : 0.0;
 
         return [
             'periodo' => ['inicio' => $monthStart, 'fim' => $monthEnd],
             'resumo' => [
-                'faturado' => round($totalMes, 2),
+                'faturado_totvs' => $faturadoTotvs,
+                'faturado_ajuste_manual' => $faturadoAjuste,
+                'faturado_com_ajustes' => $faturadoFinal,
+                'faturado_total' => $faturadoFinal,
+                'faturado' => $faturadoFinal,
                 'ticket_medio' => round($ticketMedio, 2),
-                'total_documentos' => count($nfTotals),
+                'total_documentos_totvs' => $totalDocumentosTotvs,
+                'total_documentos_ajuste_manual' => $totalDocumentosAjuste,
+                'total_documentos' => $totalDocumentosFinal,
             ],
             'top_vendedores' => array_slice($bySeller, 0, 10, true),
             'top_estados' => array_slice($byState, 0, 10, true),
@@ -2469,8 +2529,8 @@ GQL;
 
         $targetYmd = str_replace('-', '', $date);
         $rows = self::fetchConsultaRows('000070', !empty($params['force']));
-        $valor = 0.0;
-        $qtdNfs = 0;
+        $valorTotvs = 0.0;
+        $qtdNfsTotvs = 0;
 
         foreach ($rows as $row) {
             if (!is_array($row)) {
@@ -2487,14 +2547,25 @@ GQL;
                 continue;
             }
 
-            $valor += $valorItem;
-            $qtdNfs++;
+            $valorTotvs += $valorItem;
+            $qtdNfsTotvs++;
         }
+
+        $ajuste = self::fetchDashboardAjustesByDateRange('executivo', $date, $date);
+        $valorAjuste = (float) ($ajuste['valor_periodo'] ?? 0.0);
+        $qtdNfsAjuste = 0;
+        $valorFinal = $valorTotvs + $valorAjuste;
+        $qtdNfsFinal = $qtdNfsTotvs + $qtdNfsAjuste;
 
         return [
             'date' => $date,
-            'valor' => round($valor, 2),
-            'qtd_nfs' => $qtdNfs,
+            'valor_totvs' => round($valorTotvs, 2),
+            'valor_ajuste_manual' => round($valorAjuste, 2),
+            'valor_total' => round($valorFinal, 2),
+            'valor' => round($valorFinal, 2),
+            'qtd_nfs_totvs' => $qtdNfsTotvs,
+            'qtd_nfs_ajuste_manual' => $qtdNfsAjuste,
+            'qtd_nfs' => $qtdNfsFinal,
             'updated_at' => date('d/m/Y, H:i'),
         ];
     }
@@ -2655,10 +2726,25 @@ GQL;
     {
         $now = time();
         $todayYmd = date('Y-m-d', $now);
-        $monthStart = date('Y-m-01', $now);
-        $monthEnd = date('Y-m-t', $now);
         $yearStart = date('Y-01-01', $now);
-        $yearEnd = date('Y-12-31', $now);
+        $ajustes = self::fetchDashboardAjustesByDateRange($dashboardSlug, $yearStart, $todayYmd);
+
+        return [
+            'hoje' => (float) ($ajustes['valor_hoje'] ?? 0.0),
+            'mes' => (float) ($ajustes['valor_mes'] ?? 0.0),
+            'ano' => (float) ($ajustes['valor_periodo'] ?? 0.0),
+        ];
+    }
+
+    private static function fetchDashboardAjustesByDateRange(string $dashboardSlug, string $dateFrom, string $dateTo): array
+    {
+        if ($dateFrom > $dateTo) {
+            [$dateFrom, $dateTo] = [$dateTo, $dateFrom];
+        }
+
+        $monthStart = substr($dateTo, 0, 7) . '-01';
+        $monthEnd = date('Y-m-t', strtotime($dateTo));
+        $todayYmd = date('Y-m-d');
 
         $stmt = db()->prepare('
             SELECT ref_date, valor
@@ -2666,25 +2752,38 @@ GQL;
             WHERE dash_slug = ?
               AND is_active = 1
               AND ref_date BETWEEN ? AND ?
+            ORDER BY ref_date ASC, id ASC
         ');
-        $stmt->execute([$dashboardSlug, $yearStart, $yearEnd]);
+        $stmt->execute([$dashboardSlug, $dateFrom, $dateTo]);
 
-        $adjToday = 0.0;
-        $adjMonth = 0.0;
-        $adjYear = 0.0;
+        $rows = [];
+        $valorPeriodo = 0.0;
+        $valorMes = 0.0;
+        $valorHoje = 0.0;
+
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $date = (string) ($row['ref_date'] ?? '');
-            $value = (float) ($row['valor'] ?? 0);
-            $adjYear += $value;
-            if ($date >= $monthStart && $date <= $monthEnd) {
-                $adjMonth += $value;
+            $refDate = (string) ($row['ref_date'] ?? '');
+            $valor = (float) ($row['valor'] ?? 0.0);
+            $rows[] = [
+                'ref_date' => $refDate,
+                'valor' => $valor,
+            ];
+            $valorPeriodo += $valor;
+            if ($refDate >= $monthStart && $refDate <= $monthEnd) {
+                $valorMes += $valor;
             }
-            if ($date === $todayYmd) {
-                $adjToday += $value;
+            if ($refDate === $todayYmd) {
+                $valorHoje += $valor;
             }
         }
 
-        return ['hoje' => $adjToday, 'mes' => $adjMonth, 'ano' => $adjYear];
+        return [
+            'rows' => $rows,
+            'valor_periodo' => $valorPeriodo,
+            'valor_periodo_total' => $valorPeriodo,
+            'valor_mes' => $valorMes,
+            'valor_hoje' => $valorHoje,
+        ];
     }
 
     private static function ufToRegiao(string $uf): string
