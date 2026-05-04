@@ -10,7 +10,7 @@ const ADMIN_PERMISSION_CATALOG = [
   'admin.users'        => ['label' => 'Usuários',     'url' => '/admin/users/users.php'],
   'admin.comunicados'  => ['label' => 'Comunicados',  'url' => '/admin/comunicados.php'],
   'admin.rh'           => ['label' => 'RH',           'url' => '/admin/rh/rh.php'],
-  'admin.metrics'      => ['label' => 'Metrics',      'url' => '/admin/metrics.php'],
+  'admin.metrics'      => ['label' => 'Faturamento Manual', 'url' => '/admin/metrics.php'],
 ];
 
 // Dashboards

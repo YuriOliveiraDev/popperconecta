@@ -43,7 +43,6 @@ require_once APP_ROOT . '/app/layout/header.php';
   <div class="dash-topbar">
     <div class="dash-topbar__left">
       <h2 class="page-title">Metricas de Desempenho</h2>
-      <p class="dash-subtitle">Atualizacao automatica + botao para forcar a leitura do TOTVS.</p>
 
       <section class="dashboard-grid">
         <div class="kpi-card">
@@ -120,21 +119,6 @@ require_once APP_ROOT . '/app/layout/header.php';
         <div class="chart-card">
           <h3 class="chart-title" id="titlePace">Ritmo (Dia util)</h3>
           <div class="chart-box"><canvas id="salesBySectorChart"></canvas></div>
-        </div>
-
-        <div class="data-table-card grid-col-span-3">
-          <h3 class="table-title">Detalhamento (indicador -> valor)</h3>
-          <div class="table-wrap">
-            <table class="table" id="topProductsTable">
-              <thead>
-                <tr>
-                  <th>Indicador</th>
-                  <th class="right">Valor</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
         </div>
       </section>
     </div>

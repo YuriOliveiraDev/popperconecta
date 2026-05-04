@@ -1038,7 +1038,7 @@ final class TotvsAgentService
         $m['realizado_ate_hoje'] = (float) ($m['mes_faturado'] ?? 0) + (float) ($m['mes_im'] ?? 0);
         $m['realizado_ano_acum'] = (float) ($m['ano_faturado'] ?? 0) + (float) ($m['ano_im'] ?? 0);
 
-        $metaAno = (float) ($m['meta_ano'] ?? 0);
+        $metaAno = 53000000.00;
         $realizadoAno = (float) ($m['realizado_ano_acum'] ?? 0);
         $faltaAno = max(0, $metaAno - $realizadoAno);
 

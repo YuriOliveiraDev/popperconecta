@@ -30,11 +30,13 @@ try {
   $dashboards = null;
 }
 
-$allowedDash = ['executivo', 'financeiro'];
+$allowedDash = ['executivo'];
 $dashboard_slug = $_GET['dash'] ?? 'executivo';
 if (!in_array($dashboard_slug, $allowedDash, true)) $dashboard_slug = 'executivo';
 
 $current_dash = $dashboard_slug;
+
+ensure_dashboard_faturamento_metas_table();
 
 $error = '';
 // =========================
@@ -55,6 +57,68 @@ function flash_get(): ?array {
 /* =========================================================
    HELPERS
 ========================================================= */
+function normalize_month_input(string $value): ?string {
+  $value = trim($value);
+  if (!preg_match('/^\d{4}-\d{2}$/', $value)) return null;
+
+  [$year, $month] = array_map('intval', explode('-', $value, 2));
+  if ($year < 2020 || $year > 2100 || $month < 1 || $month > 12) return null;
+
+  return sprintf('%04d-%02d-01', $year, $month);
+}
+
+function ensure_dashboard_faturamento_metas_table(): void {
+  static $done = false;
+  if ($done) return;
+  $done = true;
+
+  try {
+    db()->exec("
+      CREATE TABLE IF NOT EXISTS dashboard_faturamento_metas_mensais (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        dash_slug varchar(50) NOT NULL DEFAULT 'executivo',
+        ref_month date NOT NULL,
+        valor decimal(15,2) NOT NULL DEFAULT '0.00',
+        observacao varchar(255) DEFAULT NULL,
+        created_by int(11) DEFAULT NULL,
+        created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        is_active tinyint(1) NOT NULL DEFAULT '1',
+        PRIMARY KEY (id),
+        KEY idx_dash_month (dash_slug, ref_month),
+        KEY idx_active (is_active)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
+  } catch (Throwable $e) {
+    // Keep the page available even if the DB user cannot create the table.
+  }
+}
+
+function sync_current_month_goal_metric(string $dashboardSlug): void {
+  ensure_dashboard_faturamento_metas_table();
+
+  $currentMonth = date('Y-m-01');
+  $stmt = db()->prepare('
+    SELECT valor
+    FROM dashboard_faturamento_metas_mensais
+    WHERE dash_slug = ? AND ref_month = ? AND is_active = 1
+    ORDER BY id DESC
+    LIMIT 1
+  ');
+  $stmt->execute([$dashboardSlug, $currentMonth]);
+  $value = $stmt->fetchColumn();
+
+  $stmtUp = db()->prepare('
+    UPDATE metrics
+    SET metric_value_num = ?, metric_value_text = NULL
+    WHERE dashboard_slug = ? AND metric_key = ?
+  ');
+  $stmtUp->execute([
+    ($value === false || $value === null) ? null : (float)$value,
+    $dashboardSlug,
+    'meta_mes',
+  ]);
+}
+
 function parse_ptbr_number(string $s): ?float {
   $s = trim($s);
   if ($s === '') return null;
@@ -241,7 +305,6 @@ function parse_bulk_ajustes_payload(string $raw, string $strategy, int $defaultY
 ========================================================= */
 $manualKeysByDash = [
   'executivo' => ['meta_ano', 'meta_mes'],
-  'financeiro' => ['faturado_dia', 'contas_pagar_dia'],
 ];
 $manualKeys = array_flip($manualKeysByDash[$dashboard_slug] ?? []);
 
@@ -384,6 +447,66 @@ if (
   header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
   exit;
 }
+
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' &&
+  $dashboard_slug === 'executivo' &&
+  (($_POST['meta_action'] ?? '') === 'add_meta_mensal')
+) {
+  try {
+    $refMonth = normalize_month_input((string)($_POST['meta_month'] ?? ''));
+    $rawVal = (string)($_POST['meta_valor'] ?? '');
+    $obs = trim((string)($_POST['meta_obs'] ?? ''));
+
+    if ($refMonth === null) throw new Exception('Mes invalido.');
+
+    $val = parse_ptbr_number($rawVal);
+    if ($val === null) throw new Exception('Valor invalido.');
+    if (abs($val) < 0.00001) throw new Exception('Valor nao pode ser zero.');
+
+    $uid = (int)($u['id'] ?? 0);
+    $stmtMeta = db()->prepare('
+      INSERT INTO dashboard_faturamento_metas_mensais (dash_slug, ref_month, valor, observacao, created_by)
+      VALUES (?, ?, ?, ?, ?)
+    ');
+    $stmtMeta->execute([$dashboard_slug, $refMonth, $val, $obs !== '' ? $obs : null, $uid]);
+
+    sync_current_month_goal_metric($dashboard_slug);
+    flash_set('success', 'Meta mensal adicionada.');
+  } catch (Throwable $e) {
+    flash_set('error', 'Erro ao adicionar meta mensal: ' . $e->getMessage());
+  }
+
+  header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
+  exit;
+}
+
+if (
+  $_SERVER['REQUEST_METHOD'] === 'POST' &&
+  $dashboard_slug === 'executivo' &&
+  (($_POST['meta_action'] ?? '') === 'del_meta_mensal')
+) {
+  try {
+    $id = (int)($_POST['meta_id'] ?? 0);
+    if ($id <= 0) throw new Exception('ID invalido.');
+
+    $stmtMeta = db()->prepare('
+      UPDATE dashboard_faturamento_metas_mensais
+      SET is_active = 0
+      WHERE id = ? AND dash_slug = ?
+      LIMIT 1
+    ');
+    $stmtMeta->execute([$id, $dashboard_slug]);
+
+    sync_current_month_goal_metric($dashboard_slug);
+    flash_set('success', 'Meta mensal removida.');
+  } catch (Throwable $e) {
+    flash_set('error', 'Erro ao remover meta mensal: ' . $e->getMessage());
+  }
+
+  header('Location: /admin/metrics.php?dash=' . urlencode($dashboard_slug));
+  exit;
+}
 /* =========================================================
    LISTA AJUSTES (executivo)
 ========================================================= */
@@ -402,6 +525,36 @@ if ($dashboard_slug === 'executivo') {
     $ajustes = $stmtL->fetchAll(PDO::FETCH_ASSOC);
   } catch (Throwable $e) {
     $ajustes = [];
+  }
+}
+
+$metasMensais = [];
+$metaMensalLatestByMonth = [];
+if ($dashboard_slug === 'executivo') {
+  try {
+    $stmtMetaL = db()->prepare('
+      SELECT m.id, m.ref_month, m.valor, m.observacao, m.created_at, m.is_active, u.name as user_name
+      FROM dashboard_faturamento_metas_mensais m
+      LEFT JOIN users u ON u.id = m.created_by
+      WHERE m.dash_slug = ?
+      ORDER BY m.ref_month DESC, m.id DESC
+      LIMIT 200
+    ');
+    $stmtMetaL->execute([$dashboard_slug]);
+    $metasMensais = $stmtMetaL->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($metasMensais as $metaRow) {
+      $monthKey = (string)($metaRow['ref_month'] ?? '');
+      $metaId = (int)($metaRow['id'] ?? 0);
+      $isActive = (int)($metaRow['is_active'] ?? 0) === 1;
+
+      if ($isActive && $monthKey !== '' && !isset($metaMensalLatestByMonth[$monthKey])) {
+        $metaMensalLatestByMonth[$monthKey] = $metaId;
+      }
+    }
+  } catch (Throwable $e) {
+    $metasMensais = [];
+    $metaMensalLatestByMonth = [];
   }
 }
 
@@ -481,13 +634,6 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
 
   <main class="container metrics metrics--fullwidth metrics--two-col">
     <h2 class="page-title">Configuração de Métricas de <?= h($dashboardName) ?></h2>
-
-    <nav class="tabs">
-      <a class="tab <?= $dashboard_slug === 'executivo' ? 'is-active' : '' ?>"
-        href="/admin/metrics.php?dash=executivo">Faturamento</a>
-      <a class="tab <?= $dashboard_slug === 'financeiro' ? 'is-active' : '' ?>"
-        href="/admin/metrics.php?dash=financeiro">Financeiro</a>
-    </nav>
 
     <div class="card metrics-card">
       <?php if ($error): ?>
@@ -645,9 +791,11 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
             <?php endif; ?>
           </div>
 
-          <div style="margin-top:14px;">
+          <div class="metrics-side-grid">
+          <div class="metrics-side-panel" style="margin-top:14px;">
             <div class="group__title" style="font-size:13px;margin-bottom:8px;">Histórico</div>
 
+            <div class="metrics-history-wrap">
             <table style="width:100%;border-collapse:collapse;">
               <thead>
                 <tr>
@@ -688,11 +836,94 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
                 <?php endif; ?>
               </tbody>
             </table>
+            </div>
+          </div>
+
+          <div class="metrics-side-panel" style="margin-top:14px;">
+            <div class="group__title" style="font-size:13px;margin-bottom:8px;">Metas mensais</div>
+
+            <form method="post" class="metrics-inline-form">
+              <input type="hidden" name="meta_action" value="add_meta_mensal" />
+
+              <div class="field" style="margin:0;">
+                <label class="field__label" for="meta_month">Mes</label>
+                <input class="field__control" id="meta_month" name="meta_month" type="month"
+                  value="<?= h(date('Y-m')) ?>" />
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label class="field__label" for="meta_valor">Meta (R$)</label>
+                <input class="field__control metric-input" id="meta_valor" name="meta_valor"
+                  placeholder="Ex: R$ 4.000.000,00"
+                  autocomplete="off" inputmode="decimal" data-type="money" />
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label class="field__label" for="meta_obs">Observacao</label>
+                <input class="field__control" id="meta_obs" name="meta_obs"
+                  placeholder="Ex: meta revisada do mes" />
+              </div>
+
+              <button class="btn btn--primary" type="submit">Adicionar meta</button>
+            </form>
+
+            <div class="group__title" style="font-size:13px;margin:14px 0 8px;border-bottom:none;padding-bottom:0;">Historico de metas</div>
+
+            <div class="metrics-history-wrap">
+              <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding:8px;border-bottom:1px solid #e2e8f0;">Mes</th>
+                    <th style="text-align:right;padding:8px;border-bottom:1px solid #e2e8f0;">Meta</th>
+                    <th style="text-align:left;padding:8px;border-bottom:1px solid #e2e8f0;">Observacao</th>
+                    <th style="text-align:left;padding:8px;border-bottom:1px solid #e2e8f0;">Status</th>
+                    <th style="text-align:left;padding:8px;border-bottom:1px solid #e2e8f0;">Por</th>
+                    <th style="text-align:right;padding:8px;border-bottom:1px solid #e2e8f0;">Acao</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php if (empty($metasMensais)): ?>
+                    <tr><td colspan="6" style="padding:10px;color:#64748b;">Sem metas cadastradas.</td></tr>
+                  <?php else: ?>
+                    <?php foreach ($metasMensais as $meta): ?>
+                      <?php
+                        $metaMonth = (string)($meta['ref_month'] ?? '');
+                        $metaId = (int)($meta['id'] ?? 0);
+                        $metaValue = (float)($meta['valor'] ?? 0);
+                        $metaObs = (string)($meta['observacao'] ?? '');
+                        $metaUser = (string)($meta['user_name'] ?? '');
+                        $metaActive = (int)($meta['is_active'] ?? 0) === 1;
+                        $isLatestMonthGoal = ($metaMensalLatestByMonth[$metaMonth] ?? 0) === $metaId;
+                        $metaStatus = !$metaActive ? 'Removida' : ($isLatestMonthGoal ? 'Vigente' : 'Historico');
+                      ?>
+                      <tr>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h(date('m/Y', strtotime($metaMonth))) ?></td>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;text-align:right;font-weight:700;"><?= brl($metaValue) ?></td>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h($metaObs) ?></td>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h($metaStatus) ?></td>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;"><?= h($metaUser) ?></td>
+                        <td style="padding:8px;border-bottom:1px solid #f1f5f9;text-align:right;">
+                          <?php if ($metaActive): ?>
+                            <form method="post" onsubmit="return confirm('Remover esta meta mensal?');" style="display:inline;">
+                              <input type="hidden" name="meta_action" value="del_meta_mensal" />
+                              <input type="hidden" name="meta_id" value="<?= $metaId ?>" />
+                              <button class="btn btn--secondary" type="submit">Excluir</button>
+                            </form>
+                          <?php endif; ?>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
           </div>
         </section>
       <?php endif; ?>
 
       <!-- Formulário: somente campos manuais -->
+      <?php if (false): ?>
       <form method="post" class="form metrics-form" id="metricsForm" data-metrics-form>
         <?php foreach ($ordered as $groupName => $items): ?>
           <section class="group">
@@ -740,6 +971,7 @@ $dashboardName = ($dashboard_slug === 'executivo') ? 'Faturamento' : 'Financeiro
 
         <button class="btn btn--primary" type="submit">Salvar Alterações</button>
       </form>
+      <?php endif; ?>
     </div>
   </main>
 

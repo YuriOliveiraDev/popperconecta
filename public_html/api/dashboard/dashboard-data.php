@@ -426,7 +426,7 @@ try {
 // ======================================================
 // 5) LÓGICA EXECUTIVO/FATURAMENTO
 // ======================================================
-$meta_ano = (float) ($m['meta_ano'] ?? 0);
+$meta_ano = 53000000.00;
 $realizado_ano = (float) ($m['realizado_ano_acum'] ?? 0);
 $falta_ano = max(0, $meta_ano - $realizado_ano);
 
