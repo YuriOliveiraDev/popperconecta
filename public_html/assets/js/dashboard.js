@@ -14,11 +14,14 @@
 
   function num(v) { return (typeof v === 'number' && isFinite(v)) ? v : 0; }
 
-  // ✅ Principal de HOJE = Faturado + IM (igual card Hoje / carousel)
+  // Faturamento real de hoje = apenas faturado (IM é previsão, não realizado)
   function hojePrincipal(v) {
-    const fatHoje = num(v.hoje_faturado);
-    const imHoje = num(v.hoje_im ?? v.hoje_agendado);
-    return num(v.hoje_total) || (fatHoje + imHoje);
+    return num(v.realizado_hoje) || num(v.hoje_faturado);
+  }
+
+  // Previsão do dia = faturado + IM (para comparação com meta do dia)
+  function hojePrevisao(v) {
+    return num(v.previsao_hoje) || (num(v.hoje_faturado) + num(v.hoje_im ?? v.hoje_agendado));
   }
 
   function refMesAnoFromUpdatedAt(updatedAt) {
@@ -327,7 +330,7 @@
       chartPace = new Chart(elPace, {
         type: 'bar',
         data: {
-          labels: ['Meta dinâmica do dia', 'Realizado hoje (Fat + IM)'],
+          labels: ['Meta dinâmica do dia', 'Previsão hoje (Fat + IM)'],
           datasets: [
             {
               label: `Dia — ${ref.mesAno}`,
@@ -403,14 +406,16 @@
     const updatedAt = payload.updated_at || '—';
     const ref = buildRefLabels(updatedAt);
 
-    // ✅ principal do mês = mes_total (FATURADO + IM)
+    // Faturamento real do mês = apenas faturado
     const fatMes = num(v.mes_faturado);
     const imMes = num(v.mes_im ?? v.mes_agendado);
     const agMes = num(v.mes_ag);
-    const totalMes = num(v.mes_total) || (fatMes + imMes) || num(v.realizado_ate_hoje);
+    const totalMes = num(v.realizado_ate_hoje) || fatMes;
+    const prevMes  = num(v.previsao_mes) || (fatMes + imMes);
 
-    // ✅ principal HOJE
+    // Faturamento real de hoje = apenas faturado
     const totalHoje = hojePrincipal(v);
+    const prevHoje  = hojePrevisao(v);
 
     setText('titleProgressMonth', `Progresso (Mês) — ${ref.mesAno}`);
     setText('titleProgressYear', `Progresso (Ano) — ${ref.ano}`);
@@ -465,10 +470,10 @@
       chartProgressYear.update('none');
     }
 
-    // ✅ Gráfico do "dia": Meta dinâmica vs Realizado HOJE
+    // Gráfico do "dia": Meta dinâmica vs Previsão hoje (fat+IM)
     if (chartPace) {
       chartPace.data.datasets[0].label = `Dia — ${ref.mesAno}`;
-      chartPace.data.datasets[0].data = [num(v.a_faturar_dia_util), totalHoje];
+      chartPace.data.datasets[0].data = [num(v.a_faturar_dia_util), prevHoje];
       chartPace.update('none');
     }
 
@@ -482,12 +487,14 @@
       const fatMes2 = num(v.mes_faturado);
       const imMes2 = num(v.mes_im ?? v.mes_agendado);
       const agMes2 = num(v.mes_ag);
-      const totalMes2 = num(v.mes_total) || (fatMes2 + imMes2) || num(v.realizado_ate_hoje);
+      const totalMes2 = num(v.realizado_ate_hoje) || fatMes2;
+      const prevMes2 = num(v.previsao_mes) || (fatMes2 + imMes2);
 
       const fatHoje2 = num(v.hoje_faturado);
       const imHoje2 = num(v.hoje_im ?? v.hoje_agendado);
       const agHoje2 = num(v.hoje_ag);
-      const totalHoje2 = num(v.hoje_total) || (fatHoje2 + imHoje2);
+      const totalHoje2 = num(v.realizado_hoje) || fatHoje2;
+      const prevHoje2 = num(v.previsao_hoje) || (fatHoje2 + imHoje2);
 
       const rows = [
         ['Meta do ano', brl.format(num(v.meta_ano))],
@@ -495,14 +502,16 @@
         ['Falta para meta do ano', brl.format(num(v.falta_meta_ano))],
 
         ['Meta do mês', brl.format(num(v.meta_mes))],
-        ['Realizado (mês) — principal (Faturado + IM)', brl.format(totalMes2)],
-        ['Faturado no mês', brl.format(fatMes2)],
-        ['Agendado IMEDIATO no mês', brl.format(imMes2)],
+        ['Faturado real no mês', brl.format(totalMes2)],
+        ['Faturado no mês (NF emitidas)', brl.format(fatMes2)],
+        ['Imediato no mês (previsão)', brl.format(imMes2)],
+        ['Previsão total mês (Fat + IM)', brl.format(prevMes2)],
         ['Agendado AG no mês', brl.format(agMes2)],
 
-        ['Hoje — principal (Faturado + IM)', brl.format(totalHoje2)],
-        ['Faturado hoje', brl.format(fatHoje2)],
-        ['Agendado IMEDIATO p/ hoje', brl.format(imHoje2)],
+        ['Faturado real hoje', brl.format(totalHoje2)],
+        ['Faturado hoje (NF emitidas)', brl.format(fatHoje2)],
+        ['Imediato p/ hoje (previsão)', brl.format(imHoje2)],
+        ['Previsão total hoje (Fat + IM)', brl.format(prevHoje2)],
         ['Agendado AG p/ hoje', brl.format(agHoje2)],
 
         ['Deveria ter até hoje', brl.format(num(v.deveria_ate_hoje))],
@@ -510,7 +519,7 @@
 
         ['Meta fixa por dia útil (teórica)', brl.format(num(v.meta_dia_util))],
         ['Meta necessária por dia útil (dinâmica)', brl.format(num(v.a_faturar_dia_util))],
-        ['Realizado hoje (Fat + IM)', brl.format(totalHoje2)],
+        ['Faturado real hoje (NF emitidas)', brl.format(totalHoje2)],
         ['Realizado por dia útil (média do mês)', brl.format(num(v.realizado_dia_util))],
         ['Produtividade (dia útil)', pct0.format(num(v.realizado_dia_util_pct))],
 
@@ -538,7 +547,10 @@
     const fatHoje = num(v.hoje_faturado);
     const imHoje = num(v.hoje_im ?? v.hoje_agendado);
     const agHoje = num(v.hoje_ag);
-    const totalHoje = num(v.hoje_total) || (fatHoje + imHoje);
+    // Card de hoje mostra faturado real
+    const totalHoje = num(v.realizado_hoje) || fatHoje;
+    // Previsão (fat+IM) usada no gap vs meta do dia
+    const prevHoje = num(v.previsao_hoje) || (fatHoje + imHoje);
 
     setText('kpi-hoje-total', brl.format(totalHoje));
     setText('kpi-hoje-fat', brl.format(fatHoje));
@@ -557,8 +569,8 @@
     const faltaMes = Math.max(0, metaMes - realizadoMes);
     const metaDiaDinamica = (diasRestantes > 0) ? (faltaMes / diasRestantes) : 0;
 
-    // Gap de HOJE agora comparando com a meta dinâmica
-    const gapHoje = totalHoje - metaDiaDinamica;
+    // Gap do dia compara previsão (fat+IM) com meta dinâmica
+    const gapHoje = prevHoje - metaDiaDinamica;
 
     setText('kpi-meta-hoje', brl.format(metaDiaDinamica));
     setText('kpi-gap-hoje', brl.format(gapHoje));

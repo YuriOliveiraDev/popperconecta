@@ -40,7 +40,7 @@ $mobileHomeLinks = [
 <header class="topbar topbar--site">
     <div class="topbar__left">
         <a class="brand" href="/index.php">
-            <?= header_e(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta') ?>
+            <img src="/assets/img/logo-brand.png" alt="<?= header_e(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta') ?>" class="brand__logo">
         </a>
 
         <a class="link<?= $activePage === 'home' ? ' link--active' : '' ?>" href="/index.php">
@@ -245,7 +245,7 @@ $mobileHomeLinks = [
             </button>
 
             <a class="mobile-dashboardbar__brand" href="/index.php">
-                <span class="mobile-dashboardbar__brand-title"><?= header_e(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta') ?></span>
+                <img src="/assets/img/logo-brand.png" alt="<?= header_e(defined('APP_NAME') ? (string) APP_NAME : 'Popper Conecta') ?>" class="mobile-dashboardbar__brand-logo">
             </a>
 
             <a class="mobile-dashboardbar__profile" href="/me.php" aria-label="Meus dados">

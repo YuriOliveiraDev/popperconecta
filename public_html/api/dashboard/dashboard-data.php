@@ -276,10 +276,15 @@ if (!$useCache) {
     $info71['success'] = true;
   }
 
-  // ✅ TOTAL principal = FATURADO + IM
-  $sumToday = $fatToday + $imToday;
-  $sumMonth = $fatMonth + $imMonth;
-  $sumYear = $fatYear + $imYear;
+  // Realizado real = apenas FATURADO (000070). IM é previsão separada.
+  $sumToday = $fatToday;
+  $sumMonth = $fatMonth;
+  $sumYear  = $fatYear;
+
+  // Previsão do dia = faturado + IM (para comparação com meta do dia)
+  $prevToday = $fatToday + $imToday;
+  $prevMonth = $fatMonth + $imMonth;
+  $prevYear  = $fatYear  + $imYear;
 
   $totvsOk = (!empty($info70['success']) || !empty($info71['success']));
 
@@ -289,6 +294,10 @@ if (!$useCache) {
       'realizado_hoje' => round($sumToday, 2),
       'realizado_ate_hoje' => round($sumMonth, 2),
       'realizado_ano_acum' => round($sumYear, 2),
+
+      'previsao_hoje' => round($prevToday, 2),
+      'previsao_mes' => round($prevMonth, 2),
+      'previsao_ano' => round($prevYear, 2),
 
       'hoje_faturado' => round($fatToday, 2),
       'mes_faturado' => round($fatMonth, 2),
@@ -348,7 +357,10 @@ if (is_array($totvsPayload) && isset($totvsPayload['values']) && is_array($totvs
     'ano_ag',
     'hoje_agendado',
     'mes_agendado',
-    'ano_agendado'
+    'ano_agendado',
+    'previsao_hoje',
+    'previsao_mes',
+    'previsao_ano',
   ] as $k) {
     if (array_key_exists($k, $tv))
       $m[$k] = (float) $tv[$k];
@@ -397,10 +409,15 @@ try {
   $m['mes_faturado'] = (float) ($m['mes_faturado'] ?? 0) + $adjMonth;
   $m['ano_faturado'] = (float) ($m['ano_faturado'] ?? 0) + $adjYear;
 
-  // recalc totais principais (faturado + IM)
-  $m['realizado_hoje'] = (float) ($m['hoje_faturado'] ?? 0) + (float) ($m['hoje_im'] ?? 0);
-  $m['realizado_ate_hoje'] = (float) ($m['mes_faturado'] ?? 0) + (float) ($m['mes_im'] ?? 0);
-  $m['realizado_ano_acum'] = (float) ($m['ano_faturado'] ?? 0) + (float) ($m['ano_im'] ?? 0);
+  // realizado real = só faturado (ajustes já aplicados acima)
+  $m['realizado_hoje']     = (float) ($m['hoje_faturado'] ?? 0);
+  $m['realizado_ate_hoje'] = (float) ($m['mes_faturado']  ?? 0);
+  $m['realizado_ano_acum'] = (float) ($m['ano_faturado']  ?? 0);
+
+  // previsão = faturado + IM (para meta do dia)
+  $m['previsao_hoje'] = (float) ($m['hoje_faturado'] ?? 0) + (float) ($m['hoje_im'] ?? 0);
+  $m['previsao_mes']  = (float) ($m['mes_faturado']  ?? 0) + (float) ($m['mes_im']  ?? 0);
+  $m['previsao_ano']  = (float) ($m['ano_faturado']  ?? 0) + (float) ($m['ano_im']  ?? 0);
 
 } catch (Throwable $e) {
   // silencioso
@@ -494,6 +511,11 @@ $data = [
     // compat
     'mes_agendado' => (float) ($m['mes_im'] ?? 0),
     'hoje_agendado' => (float) ($m['hoje_im'] ?? 0),
+
+    // previsão do dia/mês/ano = faturado + IM
+    'previsao_hoje' => (float) ($m['previsao_hoje'] ?? 0),
+    'previsao_mes'  => (float) ($m['previsao_mes']  ?? 0),
+    'previsao_ano'  => (float) ($m['previsao_ano']  ?? 0),
   ],
   'totvs_exec' => $totvsPayload,
 ];

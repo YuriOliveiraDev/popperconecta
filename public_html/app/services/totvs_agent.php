@@ -1656,8 +1656,8 @@ final class TotvsAgentService
             if (!is_array($row)) {
                 return false;
             }
-            $emissaoTs = toDateTs($row['DT_EMISSAO'] ?? '');
-            return $emissaoTs !== null && $emissaoTs >= $fromTs && $emissaoTs <= $toTs;
+            $vencTs = toDateTs($row['DT_VENCIMENTO'] ?? '');
+            return $vencTs !== null && $vencTs >= $fromTs && $vencTs <= $toTs;
         }));
 
         $todayTs = strtotime('today');

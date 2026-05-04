@@ -45,6 +45,20 @@
   margin-right: 6px;
 }
 
+.brand__logo {
+  height: 48px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.mobile-dashboardbar__brand-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
 .link,
 .topbar__dropdown-trigger {
   appearance: none;
