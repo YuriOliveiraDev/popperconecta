@@ -278,17 +278,17 @@ final class TotvsAgentService
                 ],
                 [
                     'action' => 'documento_entrada_resumo',
-                    'descricao' => 'Retorna resumo de documentos de entrada (NF entrada): total, valor e proximos vencimentos.',
-                    'params' => ['from', 'to', 'force'],
+                    'descricao' => 'Retorna resumo de documentos de entrada (NF entrada SD1): total quantidade e valor por emissao. Campos disponiveis: DATA (emissao), VALOR (D1_TOTAL), CONTA_CONTABIL, CENTRO_CUSTO, DESCRICAO, CODIGO (fornecedor), LOJA, FORNECEDOR (nome). Sem vencimento.',
+                    'params' => ['from', 'to', 'date_from', 'date_to', 'force'],
                 ],
                 [
                     'action' => 'documento_entrada_proximos',
-                    'descricao' => 'Retorna lista de documentos de entrada com vencimento proximo (3, 7 ou 15 dias).',
-                    'params' => ['from', 'to', 'janela', 'force'],
+                    'descricao' => 'Retorna proximos documentos de entrada por data de emissao (sem vencimento disponivel na consulta atual). Use janela para filtrar 3_dias, 7_dias ou 15_dias a partir de hoje.',
+                    'params' => ['from', 'to', 'date_from', 'date_to', 'janela', 'force'],
                 ],
                 [
                     'action' => 'documento_entrada_rankings',
-                    'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada. Use date_from/date_to para base por emissao e from/to para base por vencimento.',
+                    'descricao' => 'Retorna rankings de gastos por centro de custo, conta contabil e fornecedor nos documentos de entrada (base emissao). Rankings: centro_custo, conta_contabil, fornecedor. Use date_from/date_to ou from/to para filtrar periodo de emissao.',
                     'params' => ['date_from', 'date_to', 'from', 'to', 'limit', 'force'],
                 ],
             ],
@@ -843,14 +843,14 @@ final class TotvsAgentService
             'periodo' => $dataset['periodo'],
             'rankings' => [
                 'centro_custo' => array_slice($dataset['rankings']['centro_custo'], 0, $limit),
-                'natureza' => array_slice($dataset['rankings']['natureza'], 0, $limit),
+                'conta_contabil' => array_slice($dataset['rankings']['conta_contabil'], 0, $limit),
                 'fornecedor' => array_slice($dataset['rankings']['fornecedor'], 0, $limit),
                 'max_centro' => $dataset['rankings']['max_centro'],
-                'max_natureza' => $dataset['rankings']['max_natureza'],
+                'max_conta_contabil' => $dataset['rankings']['max_conta_contabil'],
                 'max_fornecedor' => $dataset['rankings']['max_fornecedor'],
             ],
             'centro_fornecedores' => $dataset['centro_fornecedores'],
-            'natureza_fornecedores' => $dataset['natureza_fornecedores'],
+            'conta_contabil_fornecedores' => $dataset['conta_contabil_fornecedores'],
         ];
     }
 
@@ -1702,50 +1702,40 @@ final class TotvsAgentService
 
     private static function buildDocumentoEntradaDataset(array $params): array
     {
-        $useEmissaoBase = !empty($params['date_from']) || !empty($params['date_to']);
-        $from = (string) ($params[$useEmissaoBase ? 'date_from' : 'from'] ?? date('Y-m-01'));
-        $to = (string) ($params[$useEmissaoBase ? 'date_to' : 'to'] ?? date('Y-m-t'));
+        // Nova consulta 000083 retorna apenas DATA (emissao) — sem vencimento
+        $from = (string) ($params['date_from'] ?? ($params['from'] ?? date('Y-m-01')));
+        $to   = (string) ($params['date_to']   ?? ($params['to']   ?? date('Y-m-t')));
         $fromTs = strtotime($from . ' 00:00:00') ?: strtotime(date('Y-m-01 00:00:00'));
-        $toTs = strtotime($to . ' 23:59:59') ?: strtotime(date('Y-m-t 23:59:59'));
+        $toTs   = strtotime($to   . ' 23:59:59') ?: strtotime(date('Y-m-t 23:59:59'));
         if ($fromTs > $toTs) {
             [$fromTs, $toTs] = [$toTs, $fromTs];
             [$from, $to] = [$to, $from];
         }
-        $dataBase = $useEmissaoBase ? 'emissao' : 'vencimento';
 
         $rows = self::fetchConsultaRows(TOTVS_CONSULTAS['kpi_docsentrada'] ?? '000083', !empty($params['force']));
 
-        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs, $useEmissaoBase): bool {
+        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs): bool {
             if (!is_array($row)) {
                 return false;
             }
-            $dateField = $useEmissaoBase ? 'DT_EMISSAO' : 'DT_VENCIMENTO';
-            $baseTs = toDateTs($row[$dateField] ?? '');
+            $baseTs = toDateTs($row['DATA'] ?? '');
             return $baseTs !== null && $baseTs >= $fromTs && $baseTs <= $toTs;
         }));
-
-        $todayTs = strtotime('today');
-        $next3Ts = strtotime('+3 days', $todayTs);
-        $next7Ts = strtotime('+7 days', $todayTs);
-        $next15Ts = strtotime('+15 days', $todayTs);
 
         $titulosPorFornecedor = [];
         $totalValor = 0.0;
         $totalQtd = 0;
-        $topNatureza = [];
+        $topContaContabil = [];
         $topCentro = [];
         $topFornecedor = [];
-        $naturezaFornecedores = [];
+        $contaContabilFornecedores = [];
         $centroFornecedores = [];
-        $proximos3 = [];
-        $proximos7 = [];
-        $proximos15 = [];
 
         foreach ($itemsFiltered as $row) {
-            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
-            $valor = (float) ($row['VL_PARCELA'] ?? 0);
-            $natureza = trim((string) ($row['NATUREZA'] ?? 'N/A'));
-            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? ''));
+            $fornNome = trim((string) ($row['FORNECEDOR'] ?? ($row['CODIGO'] ?? '')));
+            $valor = (float) ($row['VALOR'] ?? 0);
+            $conta = trim((string) ($row['CONTA_CONTABIL'] ?? 'N/A'));
+            $ccdRaw = trim((string) ($row['CENTRO_CUSTO'] ?? ''));
             $ccdNomeado = $ccdRaw !== '' ? nomeSetorCCD($ccdRaw) : 'N/A';
 
             if (!isset($titulosPorFornecedor[$fornNome])) {
@@ -1754,29 +1744,22 @@ final class TotvsAgentService
             $titulosPorFornecedor[$fornNome]['total'] += $valor;
             $titulosPorFornecedor[$fornNome]['qtd']++;
             $titulosPorFornecedor[$fornNome]['titulos'][] = [
-                'filial'             => (string) ($row['FILIAL'] ?? ''),
-                'nf_numero'          => (string) ($row['NF_NUMERO'] ?? ''),
-                'serie'              => (string) ($row['SERIE'] ?? ''),
-                'emissao'            => ddmmyyyy($row['DT_EMISSAO'] ?? ''),
-                'vencimento'         => ddmmyyyy($row['DT_VENCIMENTO'] ?? ''),
-                'natureza'           => $natureza,
-                'centro_custo'       => $ccdNomeado,
-                'centro_custo_raw'   => $ccdRaw,
-                'centro_custo_rateio'=> (string) ($row['CENTRO_CUSTO_RATEIO'] ?? ''),
-                'perc_rateio'        => (float) ($row['PERC_RATEIO'] ?? 0),
-                'conta_contabil'     => (string) ($row['CONTA_CONTABIL'] ?? ''),
-                'parcela'            => (string) ($row['PARCELA'] ?? ''),
-                'vl_parcela'         => $valor,
-                'vl_saldo'           => (float) ($row['VL_SALDO'] ?? 0),
-                'vl_total_nf'        => (float) ($row['VL_TOTAL_TITULO'] ?? 0),
+                'emissao'          => ddmmyyyy($row['DATA'] ?? ''),
+                'conta_contabil'   => $conta,
+                'centro_custo'     => $ccdNomeado,
+                'centro_custo_raw' => $ccdRaw,
+                'descricao'        => trim((string) ($row['DESCRICAO'] ?? '')),
+                'codigo'           => trim((string) ($row['CODIGO'] ?? '')),
+                'loja'             => trim((string) ($row['LOJA'] ?? '')),
+                'valor'            => $valor,
             ];
 
             $totalValor += $valor;
             $totalQtd++;
 
-            $topNatureza[$natureza]['key'] = $natureza;
-            $topNatureza[$natureza]['total'] = ($topNatureza[$natureza]['total'] ?? 0.0) + $valor;
-            $topNatureza[$natureza]['qtd'] = ($topNatureza[$natureza]['qtd'] ?? 0) + 1;
+            $topContaContabil[$conta]['key'] = $conta;
+            $topContaContabil[$conta]['total'] = ($topContaContabil[$conta]['total'] ?? 0.0) + $valor;
+            $topContaContabil[$conta]['qtd'] = ($topContaContabil[$conta]['qtd'] ?? 0) + 1;
 
             $topCentro[$ccdNomeado]['key'] = $ccdNomeado;
             $topCentro[$ccdNomeado]['total'] = ($topCentro[$ccdNomeado]['total'] ?? 0.0) + $valor;
@@ -1786,40 +1769,17 @@ final class TotvsAgentService
             $topFornecedor[$fornNome]['total'] = ($topFornecedor[$fornNome]['total'] ?? 0.0) + $valor;
             $topFornecedor[$fornNome]['qtd'] = ($topFornecedor[$fornNome]['qtd'] ?? 0) + 1;
 
-            $naturezaFornecedores[$natureza][$fornNome]['nome'] = $fornNome;
-            $naturezaFornecedores[$natureza][$fornNome]['qtd'] = ($naturezaFornecedores[$natureza][$fornNome]['qtd'] ?? 0) + 1;
-            $naturezaFornecedores[$natureza][$fornNome]['total'] = ($naturezaFornecedores[$natureza][$fornNome]['total'] ?? 0.0) + $valor;
+            $contaContabilFornecedores[$conta][$fornNome]['nome'] = $fornNome;
+            $contaContabilFornecedores[$conta][$fornNome]['qtd'] = ($contaContabilFornecedores[$conta][$fornNome]['qtd'] ?? 0) + 1;
+            $contaContabilFornecedores[$conta][$fornNome]['total'] = ($contaContabilFornecedores[$conta][$fornNome]['total'] ?? 0.0) + $valor;
 
             $centroFornecedores[$ccdNomeado][$fornNome]['nome'] = $fornNome;
             $centroFornecedores[$ccdNomeado][$fornNome]['qtd'] = ($centroFornecedores[$ccdNomeado][$fornNome]['qtd'] ?? 0) + 1;
             $centroFornecedores[$ccdNomeado][$fornNome]['total'] = ($centroFornecedores[$ccdNomeado][$fornNome]['total'] ?? 0.0) + $valor;
         }
 
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $vencTs = toDateTs($row['DT_VENCIMENTO'] ?? '');
-            if ($vencTs === null) {
-                continue;
-            }
-            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
-            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? '')));
-            $row['vencimento_fmt'] = ddmmyyyy($row['DT_VENCIMENTO'] ?? '');
-            $row['emissao_fmt'] = ddmmyyyy($row['DT_EMISSAO'] ?? '');
-            if ($vencTs >= $todayTs && $vencTs <= $next3Ts) {
-                $proximos3[] = $row;
-            }
-            if ($vencTs >= $todayTs && $vencTs <= $next7Ts) {
-                $proximos7[] = $row;
-            }
-            if ($vencTs >= $todayTs && $vencTs <= $next15Ts) {
-                $proximos15[] = $row;
-            }
-        }
-
-        $topNaturezaList = array_values($topNatureza);
-        usort($topNaturezaList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
+        $topContaContabilList = array_values($topContaContabil);
+        usort($topContaContabilList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
 
         $topCentroList = array_values($topCentro);
         usort($topCentroList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
@@ -1827,22 +1787,22 @@ final class TotvsAgentService
         $topFornecedorList = array_values($topFornecedor);
         usort($topFornecedorList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
 
-        $maxNatureza = empty($topNaturezaList) ? 0 : max(array_column($topNaturezaList, 'total'));
+        $maxContaContabil = empty($topContaContabilList) ? 0 : max(array_column($topContaContabilList, 'total'));
         $maxCentro = empty($topCentroList) ? 0 : max(array_column($topCentroList, 'total'));
         $maxFornecedor = empty($topFornecedorList) ? 0 : max(array_column($topFornecedorList, 'total'));
 
-        $naturezaFornecedoresResponse = [];
-        foreach ($naturezaFornecedores as $natureza => $fornecedores) {
+        $contaContabilFornecedoresResponse = [];
+        foreach ($contaContabilFornecedores as $conta => $fornecedores) {
             $lista = array_values($fornecedores);
             usort($lista, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
-            $totalNatureza = $topNatureza[$natureza]['total'] ?? 0.0;
+            $totalConta = $topContaContabil[$conta]['total'] ?? 0.0;
             foreach ($lista as &$f) {
-                $f['percent'] = $totalNatureza > 0 ? round(($f['total'] / $totalNatureza) * 100, 1) : 0.0;
+                $f['percent'] = $totalConta > 0 ? round(($f['total'] / $totalConta) * 100, 1) : 0.0;
             }
             unset($f);
-            $naturezaFornecedoresResponse[$natureza] = [
-                'natureza' => $natureza,
-                'total' => $totalNatureza,
+            $contaContabilFornecedoresResponse[$conta] = [
+                'conta_contabil' => $conta,
+                'total' => $totalConta,
                 'fornecedores' => $lista,
             ];
         }
@@ -1863,39 +1823,32 @@ final class TotvsAgentService
             ];
         }
 
-        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos3));
-        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos7));
-        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos15));
-
         return [
-            'data_base' => $dataBase,
+            'data_base' => 'emissao',
             'periodo' => [
                 'from' => $from,
                 'to' => $to,
-                'tipo_data' => $dataBase,
+                'tipo_data' => 'emissao',
             ],
             'resumo' => [
                 'total_qtd' => $totalQtd,
                 'total_valor' => $totalValor,
-                'proximos_3_dias' => $sumProx3,
-                'proximos_7_dias' => $sumProx7,
-                'proximos_15_dias' => $sumProx15,
             ],
             'rankings' => [
                 'centro_custo' => $topCentroList,
-                'natureza' => $topNaturezaList,
+                'conta_contabil' => $topContaContabilList,
                 'fornecedor' => $topFornecedorList,
                 'max_centro' => $maxCentro,
-                'max_natureza' => $maxNatureza,
+                'max_conta_contabil' => $maxContaContabil,
                 'max_fornecedor' => $maxFornecedor,
             ],
             'centro_fornecedores' => $centroFornecedoresResponse,
-            'natureza_fornecedores' => $naturezaFornecedoresResponse,
+            'conta_contabil_fornecedores' => $contaContabilFornecedoresResponse,
             'titulos_por_fornecedor' => $titulosPorFornecedor,
             'proximos' => [
-                '3_dias' => ['items' => $proximos3, 'total' => $sumProx3],
-                '7_dias' => ['items' => $proximos7, 'total' => $sumProx7],
-                '15_dias' => ['items' => $proximos15, 'total' => $sumProx15],
+                '3_dias'  => ['items' => [], 'total' => 0.0],
+                '7_dias'  => ['items' => [], 'total' => 0.0],
+                '15_dias' => ['items' => [], 'total' => 0.0],
             ],
         ];
     }
