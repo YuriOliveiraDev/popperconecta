@@ -133,7 +133,6 @@ function agent_totvs_perms_for_action(string $action): array
 
         case 'buscar_cliente_documento':
         case 'buscar_cliente_nome':
-        case 'debug_000070':
         case 'vendedor_do_cliente':
         case 'ultima_compra_cliente':
         case 'top_clientes_faturamento':

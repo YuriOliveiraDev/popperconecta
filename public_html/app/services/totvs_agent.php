@@ -20,9 +20,6 @@ final class TotvsAgentService
             case 'catalogo':
                 return self::catalogo();
 
-            case 'debug_000070':
-                return self::debug000070($params);
-
             case 'top_clientes_inadimplentes':
                 return self::topClientesInadimplentes($params);
 
@@ -133,11 +130,6 @@ final class TotvsAgentService
     {
         return [
             'acoes' => [
-                [
-                    'action' => 'debug_000070',
-                    'descricao' => 'Retorna amostra bruta temporaria da consulta 000070 para diagnostico.',
-                    'params' => ['dt_ini', 'dt_fim', 'limit', 'force'],
-                ],
                 [
                     'action' => 'top_clientes_inadimplentes',
                     'descricao' => 'Retorna os clientes com maior valor inadimplente.',
@@ -568,7 +560,16 @@ final class TotvsAgentService
         $cliente = self::resolveCliente($params);
         $dataset = self::buildFaturamentoDataset($params);
         $key = self::clienteKey((string) $cliente['cliente'], (string) $cliente['loja']);
-        $historico = $dataset['historico_por_cliente'][$key] ?? [
+        $historico = $dataset['historico_por_cliente'][$key] ?? null;
+        if ($historico === null) {
+            foreach ($dataset['historico_por_cliente'] as $item) {
+                if ((string) ($item['cliente'] ?? '') === (string) $cliente['cliente']) {
+                    $historico = $item;
+                    break;
+                }
+            }
+        }
+        $historico = $historico ?? [
             'faturamento_total' => 0.0,
             'qtd_pedidos' => 0,
             'qtd_nfs' => 0,
@@ -1162,60 +1163,6 @@ final class TotvsAgentService
                 'mes_ag' => 'Pedidos agendados futuros no acumulado do mes',
             ],
             'totvs_exec' => $totvs,
-        ];
-    }
-
-    public static function debug000070(array $params): array
-    {
-        $dtIni = self::normalizeAgentDate((string) ($params['dt_ini'] ?? '')) ?? '2026-01-01';
-        $dtFim = self::normalizeAgentDate((string) ($params['dt_fim'] ?? '')) ?? '2026-01-31';
-        $limit = self::clampInt($params['limit'] ?? 5, 1, 20);
-        $from = self::parseYmd(str_replace('-', '', $dtIni));
-        $to = self::parseYmd(str_replace('-', '', $dtFim));
-
-        if ($from === null || $to === null) {
-            throw new InvalidArgumentException('Informe dt_ini e dt_fim no formato YYYY-MM-DD.');
-        }
-        if ($from > $to) {
-            throw new InvalidArgumentException('dt_ini nao pode ser maior que dt_fim.');
-        }
-
-        $rows = self::fetchConsultaRows('000070', !empty($params['force']));
-        $filtradas = [];
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            $dataBruta = self::onlyDigits((string) self::pickFirst($row, [
-                'EMISAO',
-                'C5_EMISSAO',
-                'D2_EMISSAO',
-                'DATA_EMISSAO',
-                'DATA',
-                'DT_EMISSAO',
-            ], ''));
-
-            if ($dataBruta === '') {
-                continue;
-            }
-
-            $ts = self::parseYmd($dataBruta);
-            if (!self::inRange($ts, $from, $to)) {
-                continue;
-            }
-
-            $filtradas[] = $row;
-        }
-
-        return [
-            'periodo' => [
-                'dt_ini' => $dtIni,
-                'dt_fim' => $dtFim,
-            ],
-            'rows_total' => count($filtradas),
-            'rows_amostra' => array_slice($filtradas, 0, $limit),
         ];
     }
 
@@ -2253,6 +2200,10 @@ GQL;
         $rankingVendedores = [];
         $rankingSupervisores = [];
         [$fromTs, $toTs] = self::resolvePeriodoFaturamento($params);
+        $dateFrom = $fromTs ? date('Y-m-d', $fromTs) : '';
+        $dateTo = $toTs ? date('Y-m-d', $toTs) : '';
+        $dateFromCmp = str_replace('-', '', $dateFrom);
+        $dateToCmp = str_replace('-', '', $dateTo);
         $search = self::normalizeText((string) ($params['search'] ?? ''));
         $filterVend = trim((string) ($params['vendedor'] ?? ''));
         $filterSuper = trim((string) ($params['supervisor'] ?? ''));
@@ -2265,19 +2216,25 @@ GQL;
 
             $codigo = trim((string) self::pickFirst($row, ['C5_CLIENTE', 'COD_CLIENTE', 'A1_COD'], ''));
             $loja = trim((string) self::pickFirst($row, ['C5_LOJACLI', 'C5_LOJA', 'LOJA_CLIENTE', 'LOJA'], ''));
-            if ($codigo === '' || $loja === '') {
+            if ($codigo === '') {
                 continue;
             }
 
             $key = self::clienteKey($codigo, $loja);
-            $dataEmissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
+            $dataEmissao = self::onlyDigits((string) ($row['EMISAO'] ?? ''));
+            if ($dataEmissao === '' && isset($row['C5_EMISSAO'])) {
+                $dataEmissao = self::onlyDigits((string) $row['C5_EMISSAO']);
+            }
+            if ($dataEmissao === '' && isset($row['D2_EMISSAO'])) {
+                $dataEmissao = self::onlyDigits((string) $row['D2_EMISSAO']);
+            }
             $tsEmissao = self::parseYmd($dataEmissao);
+            if ($dataEmissao === '' || ($dateFromCmp !== '' && $dataEmissao < $dateFromCmp) || ($dateToCmp !== '' && $dataEmissao > $dateToCmp)) {
+                continue;
+            }
             $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
             $custo = self::toFloatBr(self::pickFirst($row, ['CUSTO', 'D2_CUSTO', 'CUSTO_TOTAL'], 0));
             if ($valor <= 0) {
-                continue;
-            }
-            if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
                 continue;
             }
 
