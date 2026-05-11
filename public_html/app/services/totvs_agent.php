@@ -4,6 +4,15 @@ declare(strict_types=1);
 final class TotvsAgentService
 {
     private const CACHE_TTL_SECONDS = 120;
+    private const FILIAIS = [
+        '010101' => 'TUFFLOG',
+        '020101' => 'FESTA SHOW',
+        '030101' => 'FESTA BRASIL',
+        '040101' => 'DIST BASSINELLI MATRIZ',
+        '040102' => 'DIST BASSINELLI FILIAL',
+        '050101' => 'DIST ALEGRIA',
+        '060101' => 'PARTY POPPER',
+    ];
 
     public static function execute(string $action, array $params = []): array
     {
@@ -184,7 +193,7 @@ final class TotvsAgentService
                 [
                     'action' => 'historico_compras_cliente',
                     'descricao' => 'Lista compras do cliente no faturado, com ultimas notas e totais.',
-                    'params' => ['cliente', 'loja', 'documento', 'nome', 'limit', 'date_from', 'date_to', 'months', 'force'],
+                    'params' => ['cliente', 'loja', 'documento', 'nome', 'limit', 'date_from', 'date_to', 'months', 'com_itens', 'force'],
                 ],
                 [
                     'action' => 'resumo_cliente',
@@ -199,12 +208,12 @@ final class TotvsAgentService
                 [
                     'action' => 'executivo_resumo',
                     'descricao' => 'Retorna os KPIs do dashboard executivo/faturamento.',
-                    'params' => ['dash', 'force'],
+                    'params' => ['dash', 'breakdown_filial', 'force'],
                 ],
                 [
                     'action' => 'executivo_tops',
                     'descricao' => 'Retorna diario do mes, top produtos, top vendedores e contagens de NF do executivo.',
-                    'params' => ['ym', 'force'],
+                    'params' => ['ym', 'breakdown_filial', 'force'],
                 ],
                 [
                     'action' => 'faturamento_total_empresa',
@@ -214,7 +223,7 @@ final class TotvsAgentService
                 [
                     'action' => 'faturamento_hoje',
                     'descricao' => 'Retorna o faturado da empresa em uma data especifica. Sem date, usa o dia atual.',
-                    'params' => ['date', 'force'],
+                    'params' => ['date', 'breakdown_filial', 'force'],
                 ],
                 [
                     'action' => 'faturamento_mes_atual',
@@ -249,7 +258,7 @@ final class TotvsAgentService
                 [
                     'action' => 'insight_comercial',
                     'descricao' => 'Retorna rankings e analise comercial de preco/desconto do insight.',
-                    'params' => ['ym', 'dt_ini', 'dt_fim', 'force'],
+                    'params' => ['ym', 'dt_ini', 'dt_fim', 'limit', 'produto_filtro', 'breakdown_filial', 'force'],
                 ],
                 [
                     'action' => 'contas_pagar_resumo',
@@ -278,17 +287,17 @@ final class TotvsAgentService
                 ],
                 [
                     'action' => 'documento_entrada_resumo',
-                    'descricao' => 'Retorna resumo de documentos de entrada (NF entrada SD1): total quantidade e valor por emissao. Campos disponiveis: DATA (emissao), VALOR (D1_TOTAL), CONTA_CONTABIL, CENTRO_CUSTO, DESCRICAO, CODIGO (fornecedor), LOJA, FORNECEDOR (nome). Sem vencimento.',
-                    'params' => ['from', 'to', 'date_from', 'date_to', 'force'],
+                    'descricao' => 'Retorna resumo de documentos de entrada (NF entrada): total, valor e proximos vencimentos.',
+                    'params' => ['from', 'to', 'force'],
                 ],
                 [
                     'action' => 'documento_entrada_proximos',
-                    'descricao' => 'Retorna proximos documentos de entrada por data de emissao (sem vencimento disponivel na consulta atual). Use janela para filtrar 3_dias, 7_dias ou 15_dias a partir de hoje.',
-                    'params' => ['from', 'to', 'date_from', 'date_to', 'janela', 'force'],
+                    'descricao' => 'Retorna lista de documentos de entrada com vencimento proximo (3, 7 ou 15 dias).',
+                    'params' => ['from', 'to', 'janela', 'force'],
                 ],
                 [
                     'action' => 'documento_entrada_rankings',
-                    'descricao' => 'Retorna rankings de gastos por centro de custo, conta contabil e fornecedor nos documentos de entrada (base emissao). Rankings: centro_custo, conta_contabil, fornecedor. Use date_from/date_to ou from/to para filtrar periodo de emissao.',
+                    'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada. Use date_from/date_to para base por emissao e from/to para base por vencimento.',
                     'params' => ['date_from', 'date_to', 'from', 'to', 'limit', 'force'],
                 ],
             ],
@@ -560,8 +569,10 @@ final class TotvsAgentService
             'ultima_compra' => null,
             'compras' => [],
         ];
+        $limit = self::resolveLimit($params['limit'] ?? 50, 50, 500);
+        $comItens = self::boolParam($params['com_itens'] ?? false);
 
-        return [
+        $response = [
             'filtros' => $dataset['filtros'],
             'cliente' => [
                 'cliente' => $cliente['cliente'],
@@ -577,8 +588,14 @@ final class TotvsAgentService
                 'primeira_compra' => $historico['primeira_compra'],
                 'ultima_compra' => $historico['ultima_compra'],
             ],
-            'compras' => array_slice($historico['compras'], 0, self::clampInt($params['limit'] ?? 50, 1, 200)),
+            'compras' => self::limitItems($historico['compras'], $limit),
         ];
+
+        if ($comItens) {
+            $response['notas'] = self::buildHistoricoNotasComItens($historico['compras'], $limit);
+        }
+
+        return $response;
     }
 
     public static function resumoCliente(array $params): array
@@ -671,13 +688,18 @@ final class TotvsAgentService
 
     public static function executivoResumo(array $params): array
     {
-        return self::buildExecutivoDataset($params);
+        $data = self::buildExecutivoDataset($params);
+        if (self::boolParam($params['breakdown_filial'] ?? false)) {
+            $data['por_filial'] = self::buildFilialBreakdownResumo($params, 'mes');
+        }
+
+        return $data;
     }
 
     public static function executivoTops(array $params): array
     {
         $dataset = self::buildExecutivoTopsDataset($params);
-        return [
+        $response = [
             'ym' => $dataset['ym'],
             'updated_at' => $dataset['updated_at'],
             'values' => $dataset['values'],
@@ -689,6 +711,12 @@ final class TotvsAgentService
             'top_vendedores' => $dataset['top_vendedores'],
             'debug' => $dataset['debug'],
         ];
+
+        if (self::boolParam($params['breakdown_filial'] ?? false)) {
+            $response['por_filial'] = $dataset['por_filial'] ?? [];
+        }
+
+        return $response;
     }
 
     public static function faturamentoTotalEmpresa(array $params): array
@@ -726,7 +754,12 @@ final class TotvsAgentService
 
     public static function faturamentoHoje(array $params): array
     {
-        return self::buildFaturamentoDiarioEmpresa($params);
+        $data = self::buildFaturamentoDiarioEmpresa($params);
+        if (self::boolParam($params['breakdown_filial'] ?? false)) {
+            $data['por_filial'] = self::buildFilialBreakdownHoje($params, (string) ($data['date'] ?? date('Y-m-d')));
+        }
+
+        return $data;
     }
 
     public static function faturamentoMesAtual(array $params): array
@@ -843,14 +876,14 @@ final class TotvsAgentService
             'periodo' => $dataset['periodo'],
             'rankings' => [
                 'centro_custo' => array_slice($dataset['rankings']['centro_custo'], 0, $limit),
-                'conta_contabil' => array_slice($dataset['rankings']['conta_contabil'], 0, $limit),
+                'natureza' => array_slice($dataset['rankings']['natureza'], 0, $limit),
                 'fornecedor' => array_slice($dataset['rankings']['fornecedor'], 0, $limit),
                 'max_centro' => $dataset['rankings']['max_centro'],
-                'max_conta_contabil' => $dataset['rankings']['max_conta_contabil'],
+                'max_natureza' => $dataset['rankings']['max_natureza'],
                 'max_fornecedor' => $dataset['rankings']['max_fornecedor'],
             ],
             'centro_fornecedores' => $dataset['centro_fornecedores'],
-            'conta_contabil_fornecedores' => $dataset['conta_contabil_fornecedores'],
+            'natureza_fornecedores' => $dataset['natureza_fornecedores'],
         ];
     }
 
@@ -1090,20 +1123,32 @@ final class TotvsAgentService
                 'hoje_total' => (float) ($m['realizado_hoje'] ?? 0),
                 'hoje_faturado' => (float) ($m['hoje_faturado'] ?? 0),
                 'hoje_im' => (float) ($m['hoje_im'] ?? 0),
+                'hoje_imediato' => (float) ($m['hoje_im'] ?? 0),
                 'hoje_ag' => (float) ($m['hoje_ag'] ?? 0),
+                'hoje_agendado' => (float) ($m['hoje_ag'] ?? 0),
                 'mes_faturado_totvs' => $mesFaturadoTotvs,
                 'mes_faturado_ajuste_manual' => $adj['mes'],
                 'mes_faturado_total' => (float) ($m['mes_faturado'] ?? 0),
                 'mes_total' => (float) ($m['realizado_ate_hoje'] ?? 0),
                 'mes_faturado' => (float) ($m['mes_faturado'] ?? 0),
                 'mes_im' => (float) ($m['mes_im'] ?? 0),
+                'mes_imediato' => (float) ($m['mes_im'] ?? 0),
                 'mes_ag' => (float) ($m['mes_ag'] ?? 0),
+                'mes_agendado' => (float) ($m['mes_ag'] ?? 0),
                 'ano_faturado_totvs' => $anoFaturadoTotvs,
                 'ano_faturado_ajuste_manual' => $adj['ano'],
                 'ano_faturado_total' => (float) ($m['ano_faturado'] ?? 0),
                 'ano_faturado' => (float) ($m['ano_faturado'] ?? 0),
                 'ano_im' => (float) ($m['ano_im'] ?? 0),
+                'ano_imediato' => (float) ($m['ano_im'] ?? 0),
                 'ano_ag' => (float) ($m['ano_ag'] ?? 0),
+                'ano_agendado' => (float) ($m['ano_ag'] ?? 0),
+            ],
+            'labels' => [
+                'im' => 'Pedidos para faturar hoje',
+                'ag' => 'Pedidos agendados futuros',
+                'mes_im' => 'Pedidos para faturar hoje no acumulado do mes',
+                'mes_ag' => 'Pedidos agendados futuros no acumulado do mes',
             ],
             'totvs_exec' => $totvs,
         ];
@@ -1136,6 +1181,7 @@ final class TotvsAgentService
         $topProdutos = [];
         $topVendedores = [];
         $clientesMes = [];
+        $filiaisMes = [];
 
         foreach ($rows70 as $row) {
             if (!is_array($row)) {
@@ -1158,6 +1204,10 @@ final class TotvsAgentService
                 $dia = substr($emissao, 6, 2);
                 $diarioMes[$dia] = (($diarioMes[$dia] ?? 0.0) + $valor);
                 $qtdNfMes++;
+
+                $filialCodigo = self::resolveFilialCode($row);
+                $filialNome = self::resolveFilialName($filialCodigo, $row);
+                self::appendFilialBreakdown($filiaisMes, $filialCodigo, $filialNome, $valor);
 
                 $produto = trim((string) self::pickFirst($row, ['PRODUTO', 'PROD_DESC', 'DESCRICAO', 'B1_DESC', 'ITEM_DESC', 'C6_DESCRI'], ''));
                 if ($produto !== '') {
@@ -1262,6 +1312,7 @@ final class TotvsAgentService
             'diario_mes' => $diarioMes,
             'top_produtos' => array_slice($topProdutos, 0, 100, true),
             'top_vendedores' => array_slice($topVendedores, 0, 50, true),
+            'por_filial' => self::finalizeFilialBreakdown($filiaisMes),
             'debug' => [
                 'top_produtos_count' => count($topProdutos),
                 'top_vendedores_count' => count($topVendedores),
@@ -1488,6 +1539,9 @@ final class TotvsAgentService
         $priceAggVendor = [];
         $priceAggClient = [];
         $priceAggProd = [];
+        $produtos = [];
+        $filiais = [];
+        $produtoFiltro = self::normalizeText((string) ($params['produto_filtro'] ?? ''));
 
         foreach ($itemsMonth as $row) {
             $seller = trim((string) self::pickFirst($row, ['VENDEDOR', 'A3_NOME'], 'Sem vendedor'));
@@ -1501,6 +1555,10 @@ final class TotvsAgentService
                 if ($nf !== '') {
                     $nfTotals[$nf] = ($nfTotals[$nf] ?? 0.0) + $value;
                 }
+
+                $filialCodigo = self::resolveFilialCode($row);
+                $filialNome = self::resolveFilialName($filialCodigo, $row);
+                self::appendFilialBreakdown($filiais, $filialCodigo, $filialNome, $value);
             }
 
             $sellerCode = self::pickFirst($row, ['COD_VENDEDOR', 'F2_VEND1', 'VENDEDOR_COD'], '');
@@ -1509,17 +1567,36 @@ final class TotvsAgentService
             $clientName = self::pickFirst($row, ['CLIENTE', 'A1_NOME'], '');
             $prodCode = self::pickFirst($row, ['CODIGO', 'B1_COD', 'PRODUTO_COD'], '');
             $prodName = self::pickFirst($row, ['PRODUTO', 'B1_DESC'], '');
+            $prodKey = self::normKey((string) $prodCode, (string) $prodName, 'Sem produto');
+
+            if (!isset($produtos[$prodKey])) {
+                $produtos[$prodKey] = [
+                    'codigo' => trim((string) $prodCode),
+                    'nome' => trim((string) $prodName) !== '' ? trim((string) $prodName) : 'Sem produto',
+                    'quantidade' => 0.0,
+                    'valor_total' => 0.0,
+                    'documentos' => [],
+                ];
+            }
 
             $qtde = self::toFloatBr(self::pickFirst($row, ['QTDE', 'D2_QUANT'], 0));
             $pt = self::toFloatBr(self::pickFirst($row, ['PRECO_TABELA', 'D2_PRUNIT'], 0));
             $pp = self::toFloatBr(self::pickFirst($row, ['PRECO_PRATICADO', 'D2_PRCVEN'], 0));
+
+            if ($value > 0) {
+                $produtos[$prodKey]['quantidade'] += $qtde;
+                $produtos[$prodKey]['valor_total'] += $value;
+                if ($nf !== '') {
+                    $produtos[$prodKey]['documentos'][$nf] = true;
+                }
+            }
+
             if ($qtde <= 0 || $pt <= 0 || $pp <= 0) {
                 continue;
             }
 
             $sellerKey = self::normKey((string) $sellerCode, (string) $sellerName, 'Sem vendedor');
             $clientKey = self::normKey((string) $clientCode, (string) $clientName, 'Sem cliente');
-            $prodKey = self::normKey((string) $prodCode, (string) $prodName, 'Sem produto');
             $valTabela = $pt * $qtde;
             $valPrat = $pp * $qtde;
             $descR = $valTabela - $valPrat;
@@ -1542,8 +1619,26 @@ final class TotvsAgentService
         $totalDocumentosAjuste = 0;
         $totalDocumentosFinal = $totalDocumentosTotvs + $totalDocumentosAjuste;
         $ticketMedio = $totalDocumentosFinal > 0 ? ($faturadoFinal / $totalDocumentosFinal) : 0.0;
+        $produtosList = [];
+        foreach ($produtos as $produto) {
+            if ($produtoFiltro !== '' && !str_contains(self::normalizeText((string) ($produto['nome'] ?? '')), $produtoFiltro)) {
+                continue;
+            }
 
-        return [
+            $docs = count($produto['documentos']);
+            $valorTotal = round((float) ($produto['valor_total'] ?? 0.0), 2);
+            $produtosList[] = [
+                'codigo' => (string) ($produto['codigo'] ?? ''),
+                'nome' => (string) ($produto['nome'] ?? ''),
+                'quantidade' => round((float) ($produto['quantidade'] ?? 0.0), 2),
+                'valor_total' => $valorTotal,
+                'ticket_medio' => $docs > 0 ? round($valorTotal / $docs, 2) : $valorTotal,
+            ];
+        }
+        usort($produtosList, static fn(array $a, array $b): int => (($b['valor_total'] ?? 0.0) <=> ($a['valor_total'] ?? 0.0)));
+        $produtosLimit = self::resolveLimit($params['limit'] ?? 20, 20, 5000);
+
+        $response = [
             'periodo' => ['inicio' => $monthStart, 'fim' => $monthEnd],
             'resumo' => [
                 'faturado_totvs' => $faturadoTotvs,
@@ -1558,6 +1653,7 @@ final class TotvsAgentService
             ],
             'top_vendedores' => array_slice($bySeller, 0, 10, true),
             'top_estados' => array_slice($byState, 0, 10, true),
+            'produtos' => self::limitItems($produtosList, $produtosLimit),
             'descontos' => [
                 'vendedor_pct' => self::rankAggByPct($priceAggVendor),
                 'vendedor_desc' => self::rankAggByDesc($priceAggVendor),
@@ -1567,6 +1663,12 @@ final class TotvsAgentService
                 'produto_desc' => self::rankAggByDesc($priceAggProd),
             ],
         ];
+
+        if (self::boolParam($params['breakdown_filial'] ?? false)) {
+            $response['por_filial'] = self::finalizeFilialBreakdown($filiais);
+        }
+
+        return $response;
     }
 
     private static function buildContasPagarDataset(array $params): array
@@ -1702,40 +1804,50 @@ final class TotvsAgentService
 
     private static function buildDocumentoEntradaDataset(array $params): array
     {
-        // Nova consulta 000083 retorna apenas DATA (emissao) — sem vencimento
-        $from = (string) ($params['date_from'] ?? ($params['from'] ?? date('Y-m-01')));
-        $to   = (string) ($params['date_to']   ?? ($params['to']   ?? date('Y-m-t')));
+        $useEmissaoBase = !empty($params['date_from']) || !empty($params['date_to']);
+        $from = (string) ($params[$useEmissaoBase ? 'date_from' : 'from'] ?? date('Y-m-01'));
+        $to = (string) ($params[$useEmissaoBase ? 'date_to' : 'to'] ?? date('Y-m-t'));
         $fromTs = strtotime($from . ' 00:00:00') ?: strtotime(date('Y-m-01 00:00:00'));
-        $toTs   = strtotime($to   . ' 23:59:59') ?: strtotime(date('Y-m-t 23:59:59'));
+        $toTs = strtotime($to . ' 23:59:59') ?: strtotime(date('Y-m-t 23:59:59'));
         if ($fromTs > $toTs) {
             [$fromTs, $toTs] = [$toTs, $fromTs];
             [$from, $to] = [$to, $from];
         }
+        $dataBase = $useEmissaoBase ? 'emissao' : 'vencimento';
 
         $rows = self::fetchConsultaRows(TOTVS_CONSULTAS['kpi_docsentrada'] ?? '000083', !empty($params['force']));
 
-        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs): bool {
+        $itemsFiltered = array_values(array_filter($rows, static function ($row) use ($fromTs, $toTs, $useEmissaoBase): bool {
             if (!is_array($row)) {
                 return false;
             }
-            $baseTs = toDateTs($row['DATA'] ?? '');
+            $dateField = $useEmissaoBase ? 'DT_EMISSAO' : 'DT_VENCIMENTO';
+            $baseTs = toDateTs($row[$dateField] ?? '');
             return $baseTs !== null && $baseTs >= $fromTs && $baseTs <= $toTs;
         }));
+
+        $todayTs = strtotime('today');
+        $next3Ts = strtotime('+3 days', $todayTs);
+        $next7Ts = strtotime('+7 days', $todayTs);
+        $next15Ts = strtotime('+15 days', $todayTs);
 
         $titulosPorFornecedor = [];
         $totalValor = 0.0;
         $totalQtd = 0;
-        $topContaContabil = [];
+        $topNatureza = [];
         $topCentro = [];
         $topFornecedor = [];
-        $contaContabilFornecedores = [];
+        $naturezaFornecedores = [];
         $centroFornecedores = [];
+        $proximos3 = [];
+        $proximos7 = [];
+        $proximos15 = [];
 
         foreach ($itemsFiltered as $row) {
-            $fornNome = trim((string) ($row['FORNECEDOR'] ?? ($row['CODIGO'] ?? '')));
-            $valor = (float) ($row['VALOR'] ?? 0);
-            $conta = trim((string) ($row['CONTA_CONTABIL'] ?? 'N/A'));
-            $ccdRaw = trim((string) ($row['CENTRO_CUSTO'] ?? ''));
+            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
+            $valor = (float) ($row['VL_PARCELA'] ?? 0);
+            $natureza = trim((string) ($row['NATUREZA'] ?? 'N/A'));
+            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? ''));
             $ccdNomeado = $ccdRaw !== '' ? nomeSetorCCD($ccdRaw) : 'N/A';
 
             if (!isset($titulosPorFornecedor[$fornNome])) {
@@ -1744,22 +1856,29 @@ final class TotvsAgentService
             $titulosPorFornecedor[$fornNome]['total'] += $valor;
             $titulosPorFornecedor[$fornNome]['qtd']++;
             $titulosPorFornecedor[$fornNome]['titulos'][] = [
-                'emissao'          => ddmmyyyy($row['DATA'] ?? ''),
-                'conta_contabil'   => $conta,
-                'centro_custo'     => $ccdNomeado,
-                'centro_custo_raw' => $ccdRaw,
-                'descricao'        => trim((string) ($row['DESCRICAO'] ?? '')),
-                'codigo'           => trim((string) ($row['CODIGO'] ?? '')),
-                'loja'             => trim((string) ($row['LOJA'] ?? '')),
-                'valor'            => $valor,
+                'filial'             => (string) ($row['FILIAL'] ?? ''),
+                'nf_numero'          => (string) ($row['NF_NUMERO'] ?? ''),
+                'serie'              => (string) ($row['SERIE'] ?? ''),
+                'emissao'            => ddmmyyyy($row['DT_EMISSAO'] ?? ''),
+                'vencimento'         => ddmmyyyy($row['DT_VENCIMENTO'] ?? ''),
+                'natureza'           => $natureza,
+                'centro_custo'       => $ccdNomeado,
+                'centro_custo_raw'   => $ccdRaw,
+                'centro_custo_rateio'=> (string) ($row['CENTRO_CUSTO_RATEIO'] ?? ''),
+                'perc_rateio'        => (float) ($row['PERC_RATEIO'] ?? 0),
+                'conta_contabil'     => (string) ($row['CONTA_CONTABIL'] ?? ''),
+                'parcela'            => (string) ($row['PARCELA'] ?? ''),
+                'vl_parcela'         => $valor,
+                'vl_saldo'           => (float) ($row['VL_SALDO'] ?? 0),
+                'vl_total_nf'        => (float) ($row['VL_TOTAL_TITULO'] ?? 0),
             ];
 
             $totalValor += $valor;
             $totalQtd++;
 
-            $topContaContabil[$conta]['key'] = $conta;
-            $topContaContabil[$conta]['total'] = ($topContaContabil[$conta]['total'] ?? 0.0) + $valor;
-            $topContaContabil[$conta]['qtd'] = ($topContaContabil[$conta]['qtd'] ?? 0) + 1;
+            $topNatureza[$natureza]['key'] = $natureza;
+            $topNatureza[$natureza]['total'] = ($topNatureza[$natureza]['total'] ?? 0.0) + $valor;
+            $topNatureza[$natureza]['qtd'] = ($topNatureza[$natureza]['qtd'] ?? 0) + 1;
 
             $topCentro[$ccdNomeado]['key'] = $ccdNomeado;
             $topCentro[$ccdNomeado]['total'] = ($topCentro[$ccdNomeado]['total'] ?? 0.0) + $valor;
@@ -1769,17 +1888,40 @@ final class TotvsAgentService
             $topFornecedor[$fornNome]['total'] = ($topFornecedor[$fornNome]['total'] ?? 0.0) + $valor;
             $topFornecedor[$fornNome]['qtd'] = ($topFornecedor[$fornNome]['qtd'] ?? 0) + 1;
 
-            $contaContabilFornecedores[$conta][$fornNome]['nome'] = $fornNome;
-            $contaContabilFornecedores[$conta][$fornNome]['qtd'] = ($contaContabilFornecedores[$conta][$fornNome]['qtd'] ?? 0) + 1;
-            $contaContabilFornecedores[$conta][$fornNome]['total'] = ($contaContabilFornecedores[$conta][$fornNome]['total'] ?? 0.0) + $valor;
+            $naturezaFornecedores[$natureza][$fornNome]['nome'] = $fornNome;
+            $naturezaFornecedores[$natureza][$fornNome]['qtd'] = ($naturezaFornecedores[$natureza][$fornNome]['qtd'] ?? 0) + 1;
+            $naturezaFornecedores[$natureza][$fornNome]['total'] = ($naturezaFornecedores[$natureza][$fornNome]['total'] ?? 0.0) + $valor;
 
             $centroFornecedores[$ccdNomeado][$fornNome]['nome'] = $fornNome;
             $centroFornecedores[$ccdNomeado][$fornNome]['qtd'] = ($centroFornecedores[$ccdNomeado][$fornNome]['qtd'] ?? 0) + 1;
             $centroFornecedores[$ccdNomeado][$fornNome]['total'] = ($centroFornecedores[$ccdNomeado][$fornNome]['total'] ?? 0.0) + $valor;
         }
 
-        $topContaContabilList = array_values($topContaContabil);
-        usort($topContaContabilList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $vencTs = toDateTs($row['DT_VENCIMENTO'] ?? '');
+            if ($vencTs === null) {
+                continue;
+            }
+            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
+            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? '')));
+            $row['vencimento_fmt'] = ddmmyyyy($row['DT_VENCIMENTO'] ?? '');
+            $row['emissao_fmt'] = ddmmyyyy($row['DT_EMISSAO'] ?? '');
+            if ($vencTs >= $todayTs && $vencTs <= $next3Ts) {
+                $proximos3[] = $row;
+            }
+            if ($vencTs >= $todayTs && $vencTs <= $next7Ts) {
+                $proximos7[] = $row;
+            }
+            if ($vencTs >= $todayTs && $vencTs <= $next15Ts) {
+                $proximos15[] = $row;
+            }
+        }
+
+        $topNaturezaList = array_values($topNatureza);
+        usort($topNaturezaList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
 
         $topCentroList = array_values($topCentro);
         usort($topCentroList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
@@ -1787,22 +1929,22 @@ final class TotvsAgentService
         $topFornecedorList = array_values($topFornecedor);
         usort($topFornecedorList, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
 
-        $maxContaContabil = empty($topContaContabilList) ? 0 : max(array_column($topContaContabilList, 'total'));
+        $maxNatureza = empty($topNaturezaList) ? 0 : max(array_column($topNaturezaList, 'total'));
         $maxCentro = empty($topCentroList) ? 0 : max(array_column($topCentroList, 'total'));
         $maxFornecedor = empty($topFornecedorList) ? 0 : max(array_column($topFornecedorList, 'total'));
 
-        $contaContabilFornecedoresResponse = [];
-        foreach ($contaContabilFornecedores as $conta => $fornecedores) {
+        $naturezaFornecedoresResponse = [];
+        foreach ($naturezaFornecedores as $natureza => $fornecedores) {
             $lista = array_values($fornecedores);
             usort($lista, static fn(array $a, array $b): int => ($b['total'] <=> $a['total']));
-            $totalConta = $topContaContabil[$conta]['total'] ?? 0.0;
+            $totalNatureza = $topNatureza[$natureza]['total'] ?? 0.0;
             foreach ($lista as &$f) {
-                $f['percent'] = $totalConta > 0 ? round(($f['total'] / $totalConta) * 100, 1) : 0.0;
+                $f['percent'] = $totalNatureza > 0 ? round(($f['total'] / $totalNatureza) * 100, 1) : 0.0;
             }
             unset($f);
-            $contaContabilFornecedoresResponse[$conta] = [
-                'conta_contabil' => $conta,
-                'total' => $totalConta,
+            $naturezaFornecedoresResponse[$natureza] = [
+                'natureza' => $natureza,
+                'total' => $totalNatureza,
                 'fornecedores' => $lista,
             ];
         }
@@ -1823,32 +1965,39 @@ final class TotvsAgentService
             ];
         }
 
+        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos3));
+        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos7));
+        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos15));
+
         return [
-            'data_base' => 'emissao',
+            'data_base' => $dataBase,
             'periodo' => [
                 'from' => $from,
                 'to' => $to,
-                'tipo_data' => 'emissao',
+                'tipo_data' => $dataBase,
             ],
             'resumo' => [
                 'total_qtd' => $totalQtd,
                 'total_valor' => $totalValor,
+                'proximos_3_dias' => $sumProx3,
+                'proximos_7_dias' => $sumProx7,
+                'proximos_15_dias' => $sumProx15,
             ],
             'rankings' => [
                 'centro_custo' => $topCentroList,
-                'conta_contabil' => $topContaContabilList,
+                'natureza' => $topNaturezaList,
                 'fornecedor' => $topFornecedorList,
                 'max_centro' => $maxCentro,
-                'max_conta_contabil' => $maxContaContabil,
+                'max_natureza' => $maxNatureza,
                 'max_fornecedor' => $maxFornecedor,
             ],
             'centro_fornecedores' => $centroFornecedoresResponse,
-            'conta_contabil_fornecedores' => $contaContabilFornecedoresResponse,
+            'natureza_fornecedores' => $naturezaFornecedoresResponse,
             'titulos_por_fornecedor' => $titulosPorFornecedor,
             'proximos' => [
-                '3_dias'  => ['items' => [], 'total' => 0.0],
-                '7_dias'  => ['items' => [], 'total' => 0.0],
-                '15_dias' => ['items' => [], 'total' => 0.0],
+                '3_dias' => ['items' => $proximos3, 'total' => $sumProx3],
+                '7_dias' => ['items' => $proximos7, 'total' => $sumProx7],
+                '15_dias' => ['items' => $proximos15, 'total' => $sumProx15],
             ],
         ];
     }
@@ -2066,18 +2215,31 @@ GQL;
                 continue;
             }
 
+            $filialCodigo = self::resolveFilialCode($row);
+            $filialNome = self::resolveFilialName($filialCodigo, $row);
+            $produtoCodigo = trim((string) self::pickFirst($row, ['CODIGO', 'B1_COD', 'PRODUTO_COD', 'D2_COD'], ''));
+            $produtoNome = trim((string) self::pickFirst($row, ['PRODUTO', 'PROD_DESC', 'DESCRICAO', 'B1_DESC', 'ITEM_DESC', 'C6_DESCRI'], ''));
+            $quantidade = self::toFloatBr(self::pickFirst($row, ['QTDE', 'D2_QUANT'], 0));
+            $valorUnitario = self::toFloatBr(self::pickFirst($row, ['PRECO_PRATICADO', 'D2_PRCVEN', 'PRECO_TABELA', 'D2_PRUNIT'], 0));
+
             $item = [
                 'data' => $dataEmissao,
                 'data_fmt' => self::formatDateBr($dataEmissao),
                 'nf' => trim((string) ($row['NF'] ?? '')),
                 'pedido' => trim((string) self::pickFirst($row, ['PEDIDO', 'C5_NUM', 'NUM_PEDIDO'], '')),
                 'valor' => $valor,
+                'filial_codigo' => $filialCodigo,
+                'filial_nome' => $filialNome,
                 'cliente' => trim((string) self::pickFirst($row, ['CLIENTE', 'A1_NOME', 'NOME'], '')),
                 'documento' => self::onlyDigits((string) self::pickFirst($row, ['A1_CGC', 'CGC', 'CNPJ', 'CPF'], '')),
                 'vendedor_codigo' => trim((string) self::pickFirst($row, ['E1_VEND1', 'A1_VEND', 'COD_VENDEDOR', 'VENDEDOR_CODIGO'], '')),
                 'vendedor_nome' => trim((string) self::pickFirst($row, ['A3_NOME', 'VENDEDOR', 'VENDEDOR_NOME'], '')),
                 'supervisor_codigo' => trim((string) self::pickFirst($row, ['A3_SUPER', 'SUPER', 'SUPERVISOR'], '')),
                 'supervisor_nome' => trim((string) self::pickFirst($row, ['SUPERVISOR_NOME', 'A3_SUPER_NOME'], '')),
+                'produto_codigo' => $produtoCodigo,
+                'produto_nome' => $produtoNome,
+                'quantidade' => round($quantidade, 2),
+                'valor_unitario' => round($valorUnitario, 2),
             ];
 
             if (!isset($ultimasCompras[$key]) || ($tsEmissao !== null && $tsEmissao > (int) ($ultimasCompras[$key]['ts'] ?? 0))) {
@@ -2105,10 +2267,13 @@ GQL;
                     'vendedor_nome' => $item['vendedor_nome'],
                     'supervisor_codigo' => $item['supervisor_codigo'],
                     'supervisor_nome' => $item['supervisor_nome'],
+                    'filial_codigo' => $filialCodigo,
+                    'filial_nome' => $filialNome,
                     'faturamento_total' => 0.0,
                     'qtd_pedidos' => 0,
                     'nfs' => [],
                     'pedidos' => [],
+                    'filiais' => [],
                     'primeira_compra' => null,
                     'ultima_compra' => null,
                     'compras' => [],
@@ -2116,6 +2281,17 @@ GQL;
             }
 
             $historicoPorCliente[$key]['faturamento_total'] += $valor;
+            if ($filialCodigo !== '' || $filialNome !== '') {
+                $filialKey = $filialCodigo !== '' ? $filialCodigo : $filialNome;
+                if (!isset($historicoPorCliente[$key]['filiais'][$filialKey])) {
+                    $historicoPorCliente[$key]['filiais'][$filialKey] = [
+                        'codigo' => $filialCodigo,
+                        'nome' => $filialNome !== '' ? $filialNome : $filialCodigo,
+                        'valor' => 0.0,
+                    ];
+                }
+                $historicoPorCliente[$key]['filiais'][$filialKey]['valor'] += $valor;
+            }
             if ($item['pedido'] !== '') {
                 $historicoPorCliente[$key]['pedidos'][$item['pedido']] = true;
             }
@@ -2180,7 +2356,13 @@ GQL;
                 ? round($historicoPorCliente[$key]['faturamento_total'] / $historicoPorCliente[$key]['qtd_pedidos'], 2)
                 : 0.0;
 
-            unset($historicoPorCliente[$key]['pedidos'], $historicoPorCliente[$key]['nfs']);
+            $filiaisCliente = array_values($historicoPorCliente[$key]['filiais']);
+            usort($filiaisCliente, static fn(array $a, array $b): int => (($b['valor'] ?? 0.0) <=> ($a['valor'] ?? 0.0)));
+            $filialPrincipal = $filiaisCliente[0] ?? ['codigo' => '', 'nome' => '', 'valor' => 0.0];
+            $historicoPorCliente[$key]['filial_codigo'] = (string) ($filialPrincipal['codigo'] ?? '');
+            $historicoPorCliente[$key]['filial_nome'] = (string) ($filialPrincipal['nome'] ?? '');
+
+            unset($historicoPorCliente[$key]['pedidos'], $historicoPorCliente[$key]['nfs'], $historicoPorCliente[$key]['filiais']);
             if (isset($historicoPorCliente[$key]['primeira_compra']['ts'])) {
                 unset($historicoPorCliente[$key]['primeira_compra']['ts']);
             }
@@ -2413,6 +2595,66 @@ GQL;
         return trim($cliente) . '|' . trim($loja);
     }
 
+    private static function resolveFilialCode(array $row): string
+    {
+        $code = trim((string) self::pickFirst($row, ['FILIAL', 'FILIAL_CODIGO', 'COD_FILIAL', 'D2_FILIAL', 'F2_FILIAL', 'C5_FILIAL', 'EMPRESA_FILIAL'], ''));
+        if ($code === '') {
+            return '';
+        }
+
+        $digits = self::onlyDigits($code);
+        if (strlen($digits) >= 6) {
+            return substr($digits, 0, 6);
+        }
+
+        return $code;
+    }
+
+    private static function resolveFilialName(string $code, array $row = []): string
+    {
+        $code = trim($code);
+        if ($code !== '' && isset(self::FILIAIS[$code])) {
+            return self::FILIAIS[$code];
+        }
+
+        return trim((string) self::pickFirst($row, ['FILIAL_NOME', 'NOME_FILIAL', 'EMPRESA_NOME'], ''));
+    }
+
+    private static function appendFilialBreakdown(array &$agg, string $code, string $name, float $valor): void
+    {
+        $code = trim($code);
+        $name = trim($name);
+        $key = $code !== '' ? $code : ($name !== '' ? $name : 'SEM_FILIAL');
+        if (!isset($agg[$key])) {
+            $agg[$key] = [
+                'codigo' => $code,
+                'nome' => $name !== '' ? $name : ($code !== '' ? $code : 'Sem filial'),
+                'valor' => 0.0,
+            ];
+        }
+
+        $agg[$key]['valor'] += $valor;
+    }
+
+    private static function finalizeFilialBreakdown(array $agg): array
+    {
+        $items = array_values($agg);
+        usort($items, static fn(array $a, array $b): int => (($b['valor'] ?? 0.0) <=> ($a['valor'] ?? 0.0)));
+        $total = 0.0;
+        foreach ($items as $item) {
+            $total += (float) ($item['valor'] ?? 0.0);
+        }
+
+        foreach ($items as &$item) {
+            $valor = round((float) ($item['valor'] ?? 0.0), 2);
+            $item['valor'] = $valor;
+            $item['percentual'] = $total > 0 ? round(($valor / $total) * 100, 2) : 0.0;
+        }
+        unset($item);
+
+        return $items;
+    }
+
     private static function clampInt($value, int $min, int $max): int
     {
         $int = (int) $value;
@@ -2423,6 +2665,39 @@ GQL;
             return $max;
         }
         return $int;
+    }
+
+    private static function resolveLimit($value, int $default, int $max): int
+    {
+        if ($value === null || $value === '') {
+            return $default;
+        }
+
+        $int = (int) $value;
+        if ($int <= 0) {
+            return 0;
+        }
+
+        return min($int, $max);
+    }
+
+    private static function limitItems(array $items, int $limit): array
+    {
+        if ($limit <= 0) {
+            return array_values($items);
+        }
+
+        return array_slice(array_values($items), 0, $limit);
+    }
+
+    private static function boolParam($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $normalized = self::normalizeText((string) $value);
+        return in_array($normalized, ['1', 'true', 'sim', 'yes', 'y', 'on'], true);
     }
 
     private static function onlyDigits(string $value): string
@@ -2530,6 +2805,130 @@ GQL;
             'qtd_nfs' => $qtdNfsFinal,
             'updated_at' => date('d/m/Y, H:i'),
         ];
+    }
+
+    private static function buildFilialBreakdownHoje(array $params, string $date): array
+    {
+        $targetYmd = str_replace('-', '', $date);
+        $rows = self::fetchConsultaRows('000070', !empty($params['force']));
+        $agg = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $emissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
+            if ($emissao !== $targetYmd) {
+                continue;
+            }
+
+            $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'VALOR_PEDIDO', 'VALOR_TOTAL', 'TOTAL'], 0));
+            if ($valor <= 0) {
+                continue;
+            }
+
+            $codigo = self::resolveFilialCode($row);
+            $nome = self::resolveFilialName($codigo, $row);
+            self::appendFilialBreakdown($agg, $codigo, $nome, $valor);
+        }
+
+        return self::finalizeFilialBreakdown($agg);
+    }
+
+    private static function buildFilialBreakdownResumo(array $params, string $periodo = 'mes'): array
+    {
+        $rows = self::fetchConsultaRows('000070', !empty($params['force']));
+        $now = time();
+        $from = $periodo === 'ano'
+            ? strtotime(date('Y-01-01 00:00:00', $now))
+            : strtotime(date('Y-m-01 00:00:00', $now));
+        $to = strtotime(date('Y-m-d 23:59:59', $now));
+        $agg = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $emissao = trim((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
+            $ts = self::parseYmd($emissao);
+            if (!self::inRange($ts, $from, $to)) {
+                continue;
+            }
+
+            $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'VALOR_PEDIDO', 'VALOR_TOTAL', 'TOTAL'], 0));
+            if ($valor <= 0) {
+                continue;
+            }
+
+            $codigo = self::resolveFilialCode($row);
+            $nome = self::resolveFilialName($codigo, $row);
+            self::appendFilialBreakdown($agg, $codigo, $nome, $valor);
+        }
+
+        return self::finalizeFilialBreakdown($agg);
+    }
+
+    private static function buildHistoricoNotasComItens(array $compras, int $limit): array
+    {
+        $notas = [];
+        foreach ($compras as $compra) {
+            if (!is_array($compra)) {
+                continue;
+            }
+
+            $notaKey = trim((string) ($compra['nf'] ?? ''));
+            if ($notaKey === '') {
+                $notaKey = trim((string) ($compra['pedido'] ?? ''));
+            }
+            if ($notaKey === '') {
+                $notaKey = (string) (($compra['data'] ?? '') . '|' . ($compra['valor'] ?? '0'));
+            }
+
+            if (!isset($notas[$notaKey])) {
+                $notas[$notaKey] = [
+                    'nf' => (string) ($compra['nf'] ?? ''),
+                    'pedido' => (string) ($compra['pedido'] ?? ''),
+                    'data' => (string) ($compra['data'] ?? ''),
+                    'data_fmt' => (string) ($compra['data_fmt'] ?? ''),
+                    'valor' => 0.0,
+                    'filial_codigo' => (string) ($compra['filial_codigo'] ?? ''),
+                    'filial_nome' => (string) ($compra['filial_nome'] ?? ''),
+                    'itens' => [],
+                ];
+            }
+
+            $notas[$notaKey]['valor'] += round((float) ($compra['valor'] ?? 0.0), 2);
+
+            if (($compra['produto_codigo'] ?? '') === '' && ($compra['produto_nome'] ?? '') === '') {
+                continue;
+            }
+
+            $quantidade = round((float) ($compra['quantidade'] ?? 0.0), 2);
+            $valorTotal = round((float) ($compra['valor'] ?? 0.0), 2);
+            $valorUnitario = (float) ($compra['valor_unitario'] ?? 0.0);
+            if ($valorUnitario <= 0 && $quantidade > 0) {
+                $valorUnitario = $valorTotal / $quantidade;
+            }
+
+            $notas[$notaKey]['itens'][] = [
+                'codigo' => (string) ($compra['produto_codigo'] ?? ''),
+                'descricao' => (string) ($compra['produto_nome'] ?? ''),
+                'quantidade' => $quantidade,
+                'valor_unitario' => round($valorUnitario, 2),
+                'valor_total' => $valorTotal,
+            ];
+        }
+
+        $notas = array_values($notas);
+        foreach ($notas as &$nota) {
+            $nota['valor'] = round((float) ($nota['valor'] ?? 0.0), 2);
+        }
+        unset($nota);
+        usort($notas, static fn(array $a, array $b): int => strcmp((string) ($b['data'] ?? ''), (string) ($a['data'] ?? '')));
+
+        return self::limitItems($notas, $limit);
     }
 
     private static function normalizeAgentDate(string $date): ?string
