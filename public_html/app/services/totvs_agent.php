@@ -559,12 +559,22 @@ final class TotvsAgentService
     {
         $cliente = self::resolveCliente($params);
         $dataset = self::buildFaturamentoDataset($params);
-        $key = self::clienteKey((string) $cliente['cliente'], (string) $cliente['loja']);
-        $historico = $dataset['historico_por_cliente'][$key] ?? null;
+        $historicoDataset = $dataset['historico_por_cliente'] ?? [];
+        $clienteCodigo = (string) $cliente['cliente'];
+        $clienteLoja = (string) $cliente['loja'];
+        $key = self::clienteKey($clienteCodigo, $clienteLoja);
+        $historico = $historicoDataset[$key] ?? null;
         if ($historico === null) {
-            foreach ($dataset['historico_por_cliente'] as $item) {
-                if ((string) ($item['cliente'] ?? '') === (string) $cliente['cliente']) {
-                    $historico = $item;
+            $historico = $historicoDataset[self::clienteKey($clienteCodigo, '')] ?? null;
+        }
+        if ($historico === null) {
+            $historico = $historicoDataset[$clienteCodigo] ?? null;
+        }
+        if ($historico === null) {
+            foreach ($historicoDataset as $entryKey => $entry) {
+                $entryKey = (string) $entryKey;
+                if (str_starts_with($entryKey, $clienteCodigo . '|') || $entryKey === $clienteCodigo) {
+                    $historico = $entry;
                     break;
                 }
             }
