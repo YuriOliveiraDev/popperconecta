@@ -2191,6 +2191,8 @@ GQL;
         $historicoPorCliente = [];
         $rankingVendedores = [];
         $rankingSupervisores = [];
+        $rowsTotal000070 = is_array($rows) ? count($rows) : 0;
+        $rowsComValorPositivo = 0;
         [$fromTs, $toTs] = self::resolvePeriodoFaturamento($params);
         $search = self::normalizeText((string) ($params['search'] ?? ''));
         $filterVend = trim((string) ($params['vendedor'] ?? ''));
@@ -2211,11 +2213,12 @@ GQL;
             $key = self::clienteKey($codigo, $loja);
             $dataEmissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
             $tsEmissao = self::parseYmd($dataEmissao);
-            if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
-                continue;
-            }
             $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
             if ($valor <= 0) {
+                continue;
+            }
+            $rowsComValorPositivo++;
+            if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
                 continue;
             }
 
@@ -2470,6 +2473,10 @@ GQL;
                 'vendedor' => $filterVend,
                 'supervisor' => $filterSuper,
                 'valor_min' => $valorMin,
+            ],
+            'debug' => [
+                'rows_total_000070' => $rowsTotal000070,
+                'rows_com_valor_positivo' => $rowsComValorPositivo,
             ],
         ];
     }
