@@ -2214,7 +2214,7 @@ GQL;
             if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
                 continue;
             }
-            $valor = self::toFloatBr($row['VALOR'] ?? $row['TOTAL'] ?? 0);
+            $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
             if ($valor <= 0) {
                 continue;
             }
