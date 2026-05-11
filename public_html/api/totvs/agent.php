@@ -15,6 +15,9 @@ if (is_file($secretsFile)) {
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Deploy-Version: debug-2026-05-11');
+if (function_exists('opcache_reset')) {
+    opcache_reset();
+}
 
 function agent_totvs_read_json_body(): array
 {
