@@ -572,6 +572,7 @@ final class TotvsAgentService
         $limit = self::resolveLimit($params['limit'] ?? 50, 50, 500);
         $comItens = self::boolParam($params['com_itens'] ?? false);
 
+        $comprasLimitadas = self::limitItems($historico['compras'], $limit);
         $response = [
             'filtros' => $dataset['filtros'],
             'cliente' => [
@@ -588,11 +589,14 @@ final class TotvsAgentService
                 'primeira_compra' => $historico['primeira_compra'],
                 'ultima_compra' => $historico['ultima_compra'],
             ],
-            'compras' => self::limitItems($historico['compras'], $limit),
+            'compras' => $comprasLimitadas,
         ];
 
         if ($comItens) {
-            $response['notas'] = self::buildHistoricoNotasComItens($historico['compras'], $limit);
+            $notas = self::buildHistoricoNotasComItens($historico['compras'], $limit);
+            $response['compras_linhas'] = $comprasLimitadas;
+            $response['compras'] = $notas;
+            $response['notas'] = $notas;
         }
 
         return $response;
