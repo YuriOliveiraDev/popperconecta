@@ -572,7 +572,13 @@ final class TotvsAgentService
         $limit = self::resolveLimit($params['limit'] ?? 50, 50, 500);
         $comItens = self::boolParam($params['com_itens'] ?? false);
 
-        $comprasLimitadas = self::limitItems($historico['compras'], $limit);
+        $compras = self::buildHistoricoNotasComItens($historico['compras'], $limit);
+        if (!$comItens) {
+            foreach ($compras as &$compra) {
+                unset($compra['itens']);
+            }
+            unset($compra);
+        }
         $response = [
             'filtros' => $dataset['filtros'],
             'cliente' => [
@@ -589,15 +595,8 @@ final class TotvsAgentService
                 'primeira_compra' => $historico['primeira_compra'],
                 'ultima_compra' => $historico['ultima_compra'],
             ],
-            'compras' => $comprasLimitadas,
+            'compras' => $compras,
         ];
-
-        if ($comItens) {
-            $notas = self::buildHistoricoNotasComItens($historico['compras'], $limit);
-            $response['compras_linhas'] = $comprasLimitadas;
-            $response['compras'] = $notas;
-            $response['notas'] = $notas;
-        }
 
         return $response;
     }
@@ -2191,8 +2190,6 @@ GQL;
         $historicoPorCliente = [];
         $rankingVendedores = [];
         $rankingSupervisores = [];
-        $rowsTotal000070 = is_array($rows) ? count($rows) : 0;
-        $rowsComValorPositivo = 0;
         [$fromTs, $toTs] = self::resolvePeriodoFaturamento($params);
         $search = self::normalizeText((string) ($params['search'] ?? ''));
         $filterVend = trim((string) ($params['vendedor'] ?? ''));
@@ -2214,10 +2211,10 @@ GQL;
             $dataEmissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
             $tsEmissao = self::parseYmd($dataEmissao);
             $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
+            $custo = self::toFloatBr(self::pickFirst($row, ['CUSTO', 'D2_CUSTO', 'CUSTO_TOTAL'], 0));
             if ($valor <= 0) {
                 continue;
             }
-            $rowsComValorPositivo++;
             if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
                 continue;
             }
@@ -2235,6 +2232,7 @@ GQL;
                 'nf' => trim((string) ($row['NF'] ?? '')),
                 'pedido' => trim((string) self::pickFirst($row, ['PEDIDO', 'C5_NUM', 'NUM_PEDIDO'], '')),
                 'valor' => $valor,
+                'custo' => $custo,
                 'filial_codigo' => $filialCodigo,
                 'filial_nome' => $filialNome,
                 'cliente' => trim((string) self::pickFirst($row, ['CLIENTE', 'A1_NOME', 'NOME'], '')),
@@ -2473,10 +2471,6 @@ GQL;
                 'vendedor' => $filterVend,
                 'supervisor' => $filterSuper,
                 'valor_min' => $valorMin,
-            ],
-            'debug' => [
-                'rows_total_000070' => $rowsTotal000070,
-                'rows_com_valor_positivo' => $rowsComValorPositivo,
             ],
         ];
     }
@@ -2900,44 +2894,38 @@ GQL;
             if (!isset($notas[$notaKey])) {
                 $notas[$notaKey] = [
                     'nf' => (string) ($compra['nf'] ?? ''),
-                    'pedido' => (string) ($compra['pedido'] ?? ''),
-                    'data' => (string) ($compra['data'] ?? ''),
-                    'data_fmt' => (string) ($compra['data_fmt'] ?? ''),
-                    'valor' => 0.0,
-                    'filial_codigo' => (string) ($compra['filial_codigo'] ?? ''),
-                    'filial_nome' => (string) ($compra['filial_nome'] ?? ''),
+                    'filial' => (string) ($compra['filial_nome'] ?? ''),
+                    'data' => (string) self::formatDateBr((string) ($compra['data'] ?? '')),
+                    'data_ordem' => (string) ($compra['data'] ?? ''),
+                    'valor_total' => 0.0,
                     'itens' => [],
                 ];
             }
 
-            $notas[$notaKey]['valor'] += round((float) ($compra['valor'] ?? 0.0), 2);
+            $notas[$notaKey]['valor_total'] += round((float) ($compra['valor'] ?? 0.0), 2);
 
             if (($compra['produto_codigo'] ?? '') === '' && ($compra['produto_nome'] ?? '') === '') {
                 continue;
             }
 
-            $quantidade = round((float) ($compra['quantidade'] ?? 0.0), 2);
-            $valorTotal = round((float) ($compra['valor'] ?? 0.0), 2);
-            $valorUnitario = (float) ($compra['valor_unitario'] ?? 0.0);
-            if ($valorUnitario <= 0 && $quantidade > 0) {
-                $valorUnitario = $valorTotal / $quantidade;
-            }
-
             $notas[$notaKey]['itens'][] = [
                 'codigo' => (string) ($compra['produto_codigo'] ?? ''),
-                'descricao' => (string) ($compra['produto_nome'] ?? ''),
-                'quantidade' => $quantidade,
-                'valor_unitario' => round($valorUnitario, 2),
-                'valor_total' => $valorTotal,
+                'produto' => (string) ($compra['produto_nome'] ?? ''),
+                'valor' => round((float) ($compra['valor'] ?? 0.0), 2),
+                'custo' => round((float) ($compra['custo'] ?? 0.0), 2),
             ];
         }
 
         $notas = array_values($notas);
+        usort($notas, static fn(array $a, array $b): int => strcmp(
+            (string) ($b['data_ordem'] ?? ''),
+            (string) ($a['data_ordem'] ?? '')
+        ));
         foreach ($notas as &$nota) {
-            $nota['valor'] = round((float) ($nota['valor'] ?? 0.0), 2);
+            $nota['valor_total'] = round((float) ($nota['valor_total'] ?? 0.0), 2);
+            unset($nota['data_ordem']);
         }
         unset($nota);
-        usort($notas, static fn(array $a, array $b): int => strcmp((string) ($b['data'] ?? ''), (string) ($a['data'] ?? '')));
 
         return self::limitItems($notas, $limit);
     }
