@@ -20,6 +20,9 @@ final class TotvsAgentService
             case 'catalogo':
                 return self::catalogo();
 
+            case 'debug_000070':
+                return self::debug000070($params);
+
             case 'top_clientes_inadimplentes':
                 return self::topClientesInadimplentes($params);
 
@@ -130,6 +133,11 @@ final class TotvsAgentService
     {
         return [
             'acoes' => [
+                [
+                    'action' => 'debug_000070',
+                    'descricao' => 'Retorna amostra bruta temporaria da consulta 000070 para diagnostico.',
+                    'params' => ['dt_ini', 'dt_fim', 'limit', 'force'],
+                ],
                 [
                     'action' => 'top_clientes_inadimplentes',
                     'descricao' => 'Retorna os clientes com maior valor inadimplente.',
@@ -1154,6 +1162,60 @@ final class TotvsAgentService
                 'mes_ag' => 'Pedidos agendados futuros no acumulado do mes',
             ],
             'totvs_exec' => $totvs,
+        ];
+    }
+
+    public static function debug000070(array $params): array
+    {
+        $dtIni = self::normalizeAgentDate((string) ($params['dt_ini'] ?? '')) ?? '2026-01-01';
+        $dtFim = self::normalizeAgentDate((string) ($params['dt_fim'] ?? '')) ?? '2026-01-31';
+        $limit = self::clampInt($params['limit'] ?? 5, 1, 20);
+        $from = self::parseYmd(str_replace('-', '', $dtIni));
+        $to = self::parseYmd(str_replace('-', '', $dtFim));
+
+        if ($from === null || $to === null) {
+            throw new InvalidArgumentException('Informe dt_ini e dt_fim no formato YYYY-MM-DD.');
+        }
+        if ($from > $to) {
+            throw new InvalidArgumentException('dt_ini nao pode ser maior que dt_fim.');
+        }
+
+        $rows = self::fetchConsultaRows('000070', !empty($params['force']));
+        $filtradas = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $dataBruta = self::onlyDigits((string) self::pickFirst($row, [
+                'EMISAO',
+                'C5_EMISSAO',
+                'D2_EMISSAO',
+                'DATA_EMISSAO',
+                'DATA',
+                'DT_EMISSAO',
+            ], ''));
+
+            if ($dataBruta === '') {
+                continue;
+            }
+
+            $ts = self::parseYmd($dataBruta);
+            if (!self::inRange($ts, $from, $to)) {
+                continue;
+            }
+
+            $filtradas[] = $row;
+        }
+
+        return [
+            'periodo' => [
+                'dt_ini' => $dtIni,
+                'dt_fim' => $dtFim,
+            ],
+            'rows_total' => count($filtradas),
+            'rows_amostra' => array_slice($filtradas, 0, $limit),
         ];
     }
 
