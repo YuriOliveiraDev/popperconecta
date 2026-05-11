@@ -14,6 +14,7 @@ if (is_file($secretsFile)) {
 }
 
 header('Content-Type: application/json; charset=utf-8');
+header('X-Deploy-Version: debug-2026-05-11');
 
 function agent_totvs_read_json_body(): array
 {
