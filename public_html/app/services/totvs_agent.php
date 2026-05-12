@@ -121,6 +121,15 @@ final class TotvsAgentService
 
             case 'documento_entrada_rankings':
                 return self::documentoEntradaRankings($params);
+
+            case 'estoque_produtos_resumo':
+                return self::estoqueProdutosResumo($params);
+
+            case 'estoque_produtos_lista':
+                return self::estoqueProdutosLista($params);
+
+            case 'estoque_produto_buscar':
+                return self::estoqueProdutoBuscar($params);
         }
 
         throw new InvalidArgumentException('Ação inválida para agente TOTVS.');
@@ -299,6 +308,21 @@ final class TotvsAgentService
                     'action' => 'documento_entrada_rankings',
                     'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada. Use date_from/date_to para base por emissao e from/to para base por vencimento.',
                     'params' => ['date_from', 'date_to', 'from', 'to', 'limit', 'force'],
+                ],
+                [
+                    'action' => 'estoque_produtos_resumo',
+                    'descricao' => 'Retorna o resumo geral do estoque de produtos.',
+                    'params' => ['somente_positivo', 'filial', 'search', 'force'],
+                ],
+                [
+                    'action' => 'estoque_produtos_lista',
+                    'descricao' => 'Lista produtos em estoque com filtros por codigo, nome, filial e saldo.',
+                    'params' => ['limit', 'search', 'codigo', 'filial', 'somente_positivo', 'force'],
+                ],
+                [
+                    'action' => 'estoque_produto_buscar',
+                    'descricao' => 'Busca um produto no estoque por codigo ou nome e retorna consolidado por filial.',
+                    'params' => ['codigo', 'nome', 'limit', 'somente_positivo', 'force'],
                 ],
             ],
         ];
@@ -906,6 +930,50 @@ final class TotvsAgentService
             ],
             'centro_fornecedores' => $dataset['centro_fornecedores'],
             'natureza_fornecedores' => $dataset['natureza_fornecedores'],
+        ];
+    }
+
+    public static function estoqueProdutosResumo(array $params): array
+    {
+        $dataset = self::buildEstoqueProdutosDataset($params);
+        return [
+            'filtros' => $dataset['filtros'],
+            'resumo' => $dataset['resumo'],
+            'top_produtos' => array_slice($dataset['produtos'], 0, 10),
+            'top_filiais' => $dataset['filiais'],
+        ];
+    }
+
+    public static function estoqueProdutosLista(array $params): array
+    {
+        $dataset = self::buildEstoqueProdutosDataset($params);
+        $limit = self::resolveLimit($params['limit'] ?? 50, 50, 5000);
+        return [
+            'filtros' => $dataset['filtros'],
+            'total' => count($dataset['produtos']),
+            'items' => self::limitItems($dataset['produtos'], $limit),
+        ];
+    }
+
+    public static function estoqueProdutoBuscar(array $params): array
+    {
+        $codigo = trim((string) ($params['codigo'] ?? ''));
+        $nome = trim((string) ($params['nome'] ?? ''));
+        $search = trim((string) ($params['search'] ?? ''));
+
+        if ($codigo !== '' && $search === '') {
+            $params['search'] = $codigo;
+        } elseif ($nome !== '' && $search === '') {
+            $params['search'] = $nome;
+        }
+
+        $dataset = self::buildEstoqueProdutosDataset($params);
+        $limit = self::resolveLimit($params['limit'] ?? 20, 20, 500);
+
+        return [
+            'filtros' => $dataset['filtros'],
+            'total' => count($dataset['produtos']),
+            'items' => self::limitItems($dataset['produtos'], $limit),
         ];
     }
 
@@ -2138,6 +2206,149 @@ GQL;
         }
         @file_put_contents($cacheFile, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
         return $payload;
+    }
+
+    private static function buildEstoqueProdutosDataset(array $params): array
+    {
+        $rows = self::fetchConsultaRows(TOTVS_CONSULTAS['kpi_estoque'] ?? '000086', !empty($params['force']));
+        $search = self::normalizeText((string) ($params['search'] ?? ''));
+        $codigoFiltro = trim((string) ($params['codigo'] ?? ''));
+        $filialFiltro = trim((string) ($params['filial'] ?? ''));
+        $somentePositivo = self::boolParam($params['somente_positivo'] ?? false);
+
+        $produtos = [];
+        $filiais = [];
+        $quantidadeTotal = 0.0;
+        $valorTotal = 0.0;
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $codigo = trim((string) self::pickFirst($row, ['CODIGO', 'PRODUTO_COD', 'B1_COD', 'B2_COD', 'D2_COD'], ''));
+            $nome = trim((string) self::pickFirst($row, ['PRODUTO', 'DESCRICAO', 'B1_DESC', 'ITEM_DESC'], ''));
+            $filial = trim((string) self::pickFirst($row, ['FILIAL', 'B2_FILIAL', 'FILIAL_CODIGO'], ''));
+            $filialNome = self::resolveFilialName($filial, $row);
+            $armazem = trim((string) self::pickFirst($row, ['ARMAZEM', 'LOCAL', 'B2_LOCAL'], ''));
+            $unidade = trim((string) self::pickFirst($row, ['UNIDADE', 'UM', 'B1_UM'], ''));
+            $quantidade = self::toFloatBr(self::pickFirst($row, ['ESTOQUE', 'SALDO', 'QUANTIDADE', 'QTD', 'B2_QATU'], 0));
+            $custoUnit = self::toFloatBr(self::pickFirst($row, ['CUSTO_UNITARIO', 'CUSTO_MEDIO', 'CUSTO', 'B2_CM1'], 0));
+            $valorEstoque = self::toFloatBr(self::pickFirst($row, ['VALOR_ESTOQUE', 'VALOR_TOTAL', 'TOTAL'], 0));
+
+            if ($valorEstoque <= 0 && $quantidade > 0 && $custoUnit > 0) {
+                $valorEstoque = $quantidade * $custoUnit;
+            }
+
+            if ($somentePositivo && $quantidade <= 0) {
+                continue;
+            }
+
+            if ($codigoFiltro !== '' && !self::textMatchesAny($codigoFiltro, [$codigo])) {
+                continue;
+            }
+
+            if ($filialFiltro !== '' && !self::textMatchesAny($filialFiltro, [$filial, $filialNome])) {
+                continue;
+            }
+
+            if ($search !== '' && !self::normalizedContainsAny($search, [
+                $codigo,
+                $nome,
+                $filial,
+                $filialNome,
+                $armazem,
+            ])) {
+                continue;
+            }
+
+            $key = self::normKey($codigo, $nome, 'Sem produto');
+            if (!isset($produtos[$key])) {
+                $produtos[$key] = [
+                    'codigo' => $codigo,
+                    'nome' => $nome !== '' ? $nome : 'Sem descricao',
+                    'unidade' => $unidade,
+                    'quantidade_total' => 0.0,
+                    'valor_total' => 0.0,
+                    'custo_unitario_medio' => 0.0,
+                    'filiais' => [],
+                    'raw_count' => 0,
+                ];
+            }
+
+            $produtos[$key]['quantidade_total'] += $quantidade;
+            $produtos[$key]['valor_total'] += $valorEstoque;
+            $produtos[$key]['raw_count']++;
+
+            $filialKey = $filial !== '' ? $filial : ($filialNome !== '' ? $filialNome : 'SEM_FILIAL');
+            if (!isset($produtos[$key]['filiais'][$filialKey])) {
+                $produtos[$key]['filiais'][$filialKey] = [
+                    'filial_codigo' => $filial,
+                    'filial_nome' => $filialNome !== '' ? $filialNome : $filial,
+                    'armazem' => $armazem,
+                    'quantidade' => 0.0,
+                    'valor_total' => 0.0,
+                ];
+            }
+            $produtos[$key]['filiais'][$filialKey]['quantidade'] += $quantidade;
+            $produtos[$key]['filiais'][$filialKey]['valor_total'] += $valorEstoque;
+
+            if (!isset($filiais[$filialKey])) {
+                $filiais[$filialKey] = [
+                    'filial_codigo' => $filial,
+                    'filial_nome' => $filialNome !== '' ? $filialNome : $filial,
+                    'quantidade_total' => 0.0,
+                    'valor_total' => 0.0,
+                    'produtos' => [],
+                ];
+            }
+            $filiais[$filialKey]['quantidade_total'] += $quantidade;
+            $filiais[$filialKey]['valor_total'] += $valorEstoque;
+            $filiais[$filialKey]['produtos'][$key] = true;
+
+            $quantidadeTotal += $quantidade;
+            $valorTotal += $valorEstoque;
+        }
+
+        $produtosList = [];
+        foreach ($produtos as $produto) {
+            $produto['filiais'] = array_values($produto['filiais']);
+            usort($produto['filiais'], static fn(array $a, array $b): int => (($b['quantidade'] ?? 0.0) <=> ($a['quantidade'] ?? 0.0)));
+            $produto['custo_unitario_medio'] = ($produto['quantidade_total'] ?? 0.0) > 0
+                ? round(((float) $produto['valor_total']) / ((float) $produto['quantidade_total']), 4)
+                : 0.0;
+            $produto['quantidade_total'] = round((float) $produto['quantidade_total'], 2);
+            $produto['valor_total'] = round((float) $produto['valor_total'], 2);
+            $produtosList[] = $produto;
+        }
+        usort($produtosList, static fn(array $a, array $b): int => (($b['valor_total'] ?? 0.0) <=> ($a['valor_total'] ?? 0.0)));
+
+        $filiaisList = [];
+        foreach ($filiais as $filialItem) {
+            $filialItem['produtos'] = count($filialItem['produtos']);
+            $filialItem['quantidade_total'] = round((float) $filialItem['quantidade_total'], 2);
+            $filialItem['valor_total'] = round((float) $filialItem['valor_total'], 2);
+            $filiaisList[] = $filialItem;
+        }
+        usort($filiaisList, static fn(array $a, array $b): int => (($b['valor_total'] ?? 0.0) <=> ($a['valor_total'] ?? 0.0)));
+
+        return [
+            'filtros' => [
+                'search' => (string) ($params['search'] ?? ''),
+                'codigo' => $codigoFiltro,
+                'filial' => $filialFiltro,
+                'somente_positivo' => $somentePositivo,
+            ],
+            'resumo' => [
+                'total_registros' => count($rows),
+                'total_produtos' => count($produtosList),
+                'total_filiais' => count($filiaisList),
+                'quantidade_total' => round($quantidadeTotal, 2),
+                'valor_total_estimado' => round($valorTotal, 2),
+            ],
+            'produtos' => $produtosList,
+            'filiais' => $filiaisList,
+        ];
     }
 
     private static function buildCadastroDataset(array $params): array
