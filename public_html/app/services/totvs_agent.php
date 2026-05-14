@@ -3783,12 +3783,31 @@ GQL;
             return '';
         }
 
-        if (str_starts_with($digits, '55') && strlen($digits) >= 12) {
+        if (str_starts_with($digits, '55')) {
+            $rest = substr($digits, 2);
+            if (strlen($rest) === 11 && substr($rest, 2, 1) === '9') {
+                return '55' . substr($rest, 0, 2) . substr($rest, 3);
+            }
+            if (strlen($rest) === 9 && str_starts_with($rest, '9')) {
+                return '55' . substr($rest, 1);
+            }
             return $digits;
         }
 
-        if (strlen($digits) === 10 || strlen($digits) === 11) {
+        if (strlen($digits) === 11 && substr($digits, 2, 1) === '9') {
+            return '55' . substr($digits, 0, 2) . substr($digits, 3);
+        }
+
+        if (strlen($digits) === 10) {
             return '55' . $digits;
+        }
+
+        if (strlen($digits) === 9 && str_starts_with($digits, '9')) {
+            return substr($digits, 1);
+        }
+
+        if (strlen($digits) === 8) {
+            return $digits;
         }
 
         return $digits;
