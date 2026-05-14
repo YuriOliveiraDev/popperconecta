@@ -35,6 +35,9 @@ final class TotvsAgentService
             case 'total_inadimplente_por_supervisor':
                 return self::totalInadimplentePorSupervisor($params);
 
+            case 'cobranca_inadimplentes_whatsapp_por_vendedor':
+                return self::cobrancaInadimplentesWhatsappPorVendedor($params);
+
             case 'buscar_cliente_documento':
                 return self::buscarClienteDocumento($params);
 
@@ -163,6 +166,11 @@ final class TotvsAgentService
                     'action' => 'total_inadimplente_por_supervisor',
                     'descricao' => 'Agrupa total inadimplente por supervisor.',
                     'params' => ['limit', 'dias_min_atraso', 'force'],
+                ],
+                [
+                    'action' => 'cobranca_inadimplentes_whatsapp_por_vendedor',
+                    'descricao' => 'Agrupa clientes inadimplentes por vendedor e retorna telefone, link de WhatsApp e mensagem pronta para cobranca.',
+                    'params' => ['vendedor', 'supervisor', 'search', 'dias_min_atraso', 'valor_min', 'limit_clientes', 'somente_com_telefone', 'force'],
                 ],
                 [
                     'action' => 'buscar_cliente_documento',
@@ -447,6 +455,81 @@ final class TotvsAgentService
         return [
             'filtros' => $dataset['filtros'],
             'items' => array_slice($items, 0, self::clampInt($params['limit'] ?? 50, 1, 100)),
+        ];
+    }
+
+    public static function cobrancaInadimplentesWhatsappPorVendedor(array $params): array
+    {
+        $dataset = self::buildInadimplenciaDataset($params);
+        $vendedores = self::buildVendedoresContatoDataset($params);
+        $limitClientes = self::clampInt($params['limit_clientes'] ?? 500, 1, 1000);
+        $somenteComTelefone = self::toBool($params['somente_com_telefone'] ?? true);
+
+        $grupos = [];
+        foreach ($dataset['clientes_filtrados'] as $cliente) {
+            $codigo = trim((string) ($cliente['vendedor_codigo'] ?? ''));
+            $nome = trim((string) ($cliente['vendedor_nome'] ?? ''));
+            $key = $codigo !== '' ? $codigo : ($nome !== '' ? self::normalizeText($nome) : 'SEM_VENDEDOR');
+
+            if (!isset($grupos[$key])) {
+                $contato = $vendedores[$codigo] ?? null;
+                $telefoneOriginal = trim((string) ($contato['telefone'] ?? ''));
+                $telefoneWhatsapp = self::normalizeBrazilPhone($telefoneOriginal);
+
+                $grupos[$key] = [
+                    'vendedor_codigo' => $codigo,
+                    'vendedor_nome' => $nome,
+                    'email' => (string) ($contato['email'] ?? ''),
+                    'telefone' => $telefoneOriginal,
+                    'telefone_whatsapp' => $telefoneWhatsapp,
+                    'status' => (string) ($contato['status'] ?? ''),
+                    'whatsapp_url' => $telefoneWhatsapp !== '' ? 'https://wa.me/' . $telefoneWhatsapp : '',
+                    'whatsapp_disponivel' => $telefoneWhatsapp !== '',
+                    'total_clientes' => 0,
+                    'total_titulos' => 0,
+                    'total_inadimplente' => 0.0,
+                    'clientes' => [],
+                    'mensagem' => '',
+                ];
+            }
+
+            $grupos[$key]['total_clientes']++;
+            $grupos[$key]['total_titulos'] += (int) ($cliente['inad_qtd_titulos'] ?? 0);
+            $grupos[$key]['total_inadimplente'] += (float) ($cliente['inad_total'] ?? 0.0);
+            $grupos[$key]['clientes'][] = [
+                'cliente' => (string) ($cliente['cliente'] ?? ''),
+                'loja' => (string) ($cliente['loja'] ?? ''),
+                'cliente_key' => (string) ($cliente['cliente_key'] ?? ''),
+                'nome' => (string) ($cliente['nome'] ?? ''),
+                'cnpj' => (string) ($cliente['cnpj'] ?? ''),
+                'inad_total' => round((float) ($cliente['inad_total'] ?? 0.0), 2),
+                'inad_qtd_titulos' => (int) ($cliente['inad_qtd_titulos'] ?? 0),
+                'maior_atraso_dias' => (int) ($cliente['maior_atraso_dias'] ?? 0),
+            ];
+        }
+
+        $items = [];
+        foreach ($grupos as $grupo) {
+            if ($somenteComTelefone && !$grupo['whatsapp_disponivel']) {
+                continue;
+            }
+
+            usort($grupo['clientes'], static fn(array $a, array $b): int => (($b['inad_total'] ?? 0.0) <=> ($a['inad_total'] ?? 0.0)));
+            $grupo['clientes'] = array_slice($grupo['clientes'], 0, $limitClientes);
+            $grupo['total_inadimplente'] = round((float) $grupo['total_inadimplente'], 2);
+            $grupo['mensagem'] = self::buildWhatsappCobrancaMessage($grupo, $dataset['filtros']);
+            $items[] = $grupo;
+        }
+
+        usort($items, static fn(array $a, array $b): int => (($b['total_inadimplente'] ?? 0.0) <=> ($a['total_inadimplente'] ?? 0.0)));
+
+        return [
+            'filtros' => array_merge($dataset['filtros'], [
+                'limit_clientes' => $limitClientes,
+                'somente_com_telefone' => $somenteComTelefone,
+            ]),
+            'total_vendedores' => count($items),
+            'items' => $items,
         ];
     }
 
@@ -2433,6 +2516,33 @@ GQL;
         ];
     }
 
+    private static function buildVendedoresContatoDataset(array $params): array
+    {
+        $rows = self::fetchConsultaRows('000080', !empty($params['force']));
+        $vendedores = [];
+
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $codigo = trim((string) self::pickFirst($row, ['COD_VENDEDOR', 'A3_COD', 'CODIGO'], ''));
+            if ($codigo === '') {
+                continue;
+            }
+
+            $vendedores[$codigo] = [
+                'codigo' => $codigo,
+                'nome' => trim((string) self::pickFirst($row, ['NOME_VENDEDOR', 'A3_NOME', 'NOME'], '')),
+                'email' => trim((string) self::pickFirst($row, ['EMAIL', 'E_MAIL'], '')),
+                'telefone' => trim((string) self::pickFirst($row, ['TELEFONE', 'CELULAR', 'FONE'], '')),
+                'status' => trim((string) self::pickFirst($row, ['STATUS'], '')),
+            ];
+        }
+
+        return $vendedores;
+    }
+
     private static function buildFaturamentoDataset(array $params): array
     {
         $rows = self::fetchConsultaRows('000070', !empty($params['force']));
@@ -3654,5 +3764,70 @@ GQL;
         }
 
         return false;
+    }
+
+    private static function toBool($value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        $text = strtolower(trim((string) $value));
+        return in_array($text, ['1', 'true', 'sim', 'yes', 'on'], true);
+    }
+
+    private static function normalizeBrazilPhone(string $phone): string
+    {
+        $digits = self::onlyDigits($phone);
+        if ($digits === '') {
+            return '';
+        }
+
+        if (str_starts_with($digits, '55') && strlen($digits) >= 12) {
+            return $digits;
+        }
+
+        if (strlen($digits) === 10 || strlen($digits) === 11) {
+            return '55' . $digits;
+        }
+
+        return $digits;
+    }
+
+    private static function formatMoneyBr(float $value): string
+    {
+        return 'R$ ' . number_format($value, 2, ',', '.');
+    }
+
+    private static function buildWhatsappCobrancaMessage(array $grupo, array $filtros): string
+    {
+        $nomeVendedor = trim((string) ($grupo['vendedor_nome'] ?? ''));
+        if ($nomeVendedor === '') {
+            $nomeVendedor = trim((string) ($grupo['vendedor_codigo'] ?? 'vendedor'));
+        }
+
+        $diasMin = (int) ($filtros['dias_min_atraso'] ?? 0);
+        $lines = [
+            'Olá, ' . $nomeVendedor . '.',
+            '',
+            'Segue a relacao dos seus clientes inadimplentes no TOTVS.',
+            'Filtro atual: atraso minimo de ' . $diasMin . ' dia(s).',
+            '',
+        ];
+
+        foreach ((array) ($grupo['clientes'] ?? []) as $cliente) {
+            $lines[] = '- ' . trim((string) ($cliente['nome'] ?? 'Cliente sem nome'))
+                . ' | cod ' . trim((string) ($cliente['cliente'] ?? ''))
+                . ' | inad ' . self::formatMoneyBr((float) ($cliente['inad_total'] ?? 0.0))
+                . ' | titulos ' . (int) ($cliente['inad_qtd_titulos'] ?? 0)
+                . ' | atraso max ' . (int) ($cliente['maior_atraso_dias'] ?? 0) . 'd';
+        }
+
+        $lines[] = '';
+        $lines[] = 'Resumo: ' . (int) ($grupo['total_clientes'] ?? 0)
+            . ' cliente(s), ' . (int) ($grupo['total_titulos'] ?? 0)
+            . ' titulo(s), total ' . self::formatMoneyBr((float) ($grupo['total_inadimplente'] ?? 0.0)) . '.';
+
+        return implode("\n", $lines);
     }
 }
