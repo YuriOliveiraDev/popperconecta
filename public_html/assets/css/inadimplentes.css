@@ -280,10 +280,9 @@
 ====================================================== */
 .inad-filters {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: flex-end;
-  overflow-x: auto;
   padding: 10px 0;
 }
 
@@ -310,6 +309,32 @@
   gap: 10px;
   align-items: flex-end;
   flex: 0 0 auto;
+}
+
+.btn-year {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #dbe2ea;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 12px;
+  height: 42px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-year:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn-year.is-active {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
 }
 
 /* ======================================================

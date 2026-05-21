@@ -35,9 +35,6 @@ final class TotvsAgentService
             case 'total_inadimplente_por_supervisor':
                 return self::totalInadimplentePorSupervisor($params);
 
-            case 'cobranca_inadimplentes_whatsapp_por_vendedor':
-                return self::cobrancaInadimplentesWhatsappPorVendedor($params);
-
             case 'buscar_cliente_documento':
                 return self::buscarClienteDocumento($params);
 
@@ -124,15 +121,6 @@ final class TotvsAgentService
 
             case 'documento_entrada_rankings':
                 return self::documentoEntradaRankings($params);
-
-            case 'estoque_produtos_resumo':
-                return self::estoqueProdutosResumo($params);
-
-            case 'estoque_produtos_lista':
-                return self::estoqueProdutosLista($params);
-
-            case 'estoque_produto_buscar':
-                return self::estoqueProdutoBuscar($params);
         }
 
         throw new InvalidArgumentException('Ação inválida para agente TOTVS.');
@@ -166,11 +154,6 @@ final class TotvsAgentService
                     'action' => 'total_inadimplente_por_supervisor',
                     'descricao' => 'Agrupa total inadimplente por supervisor.',
                     'params' => ['limit', 'dias_min_atraso', 'force'],
-                ],
-                [
-                    'action' => 'cobranca_inadimplentes_whatsapp_por_vendedor',
-                    'descricao' => 'Agrupa clientes inadimplentes por vendedor e retorna telefone, link de WhatsApp e mensagem pronta para cobranca.',
-                    'params' => ['vendedor', 'supervisor', 'search', 'dias_min_atraso', 'valor_min', 'limit_clientes', 'somente_com_telefone', 'force'],
                 ],
                 [
                     'action' => 'buscar_cliente_documento',
@@ -317,21 +300,6 @@ final class TotvsAgentService
                     'descricao' => 'Retorna rankings de gastos por centro de custo, natureza e fornecedor nos documentos de entrada. Use date_from/date_to para base por emissao e from/to para base por vencimento.',
                     'params' => ['date_from', 'date_to', 'from', 'to', 'limit', 'force'],
                 ],
-                [
-                    'action' => 'estoque_produtos_resumo',
-                    'descricao' => 'Retorna o resumo geral do estoque de produtos.',
-                    'params' => ['somente_positivo', 'filial', 'search', 'force'],
-                ],
-                [
-                    'action' => 'estoque_produtos_lista',
-                    'descricao' => 'Lista produtos em estoque com filtros por codigo, nome, filial e saldo.',
-                    'params' => ['limit', 'search', 'codigo', 'filial', 'somente_positivo', 'force'],
-                ],
-                [
-                    'action' => 'estoque_produto_buscar',
-                    'descricao' => 'Busca um produto no estoque por codigo ou nome e retorna consolidado por filial.',
-                    'params' => ['codigo', 'nome', 'limit', 'somente_positivo', 'force'],
-                ],
             ],
         ];
     }
@@ -455,81 +423,6 @@ final class TotvsAgentService
         return [
             'filtros' => $dataset['filtros'],
             'items' => array_slice($items, 0, self::clampInt($params['limit'] ?? 50, 1, 100)),
-        ];
-    }
-
-    public static function cobrancaInadimplentesWhatsappPorVendedor(array $params): array
-    {
-        $dataset = self::buildInadimplenciaDataset($params);
-        $vendedores = self::buildVendedoresContatoDataset($params);
-        $limitClientes = self::clampInt($params['limit_clientes'] ?? 500, 1, 1000);
-        $somenteComTelefone = self::toBool($params['somente_com_telefone'] ?? true);
-
-        $grupos = [];
-        foreach ($dataset['clientes_filtrados'] as $cliente) {
-            $codigo = trim((string) ($cliente['vendedor_codigo'] ?? ''));
-            $nome = trim((string) ($cliente['vendedor_nome'] ?? ''));
-            $key = $codigo !== '' ? $codigo : ($nome !== '' ? self::normalizeText($nome) : 'SEM_VENDEDOR');
-
-            if (!isset($grupos[$key])) {
-                $contato = $vendedores[$codigo] ?? null;
-                $telefoneOriginal = trim((string) ($contato['telefone'] ?? ''));
-                $telefoneWhatsapp = self::normalizeBrazilPhone($telefoneOriginal);
-
-                $grupos[$key] = [
-                    'vendedor_codigo' => $codigo,
-                    'vendedor_nome' => $nome,
-                    'email' => (string) ($contato['email'] ?? ''),
-                    'telefone' => $telefoneOriginal,
-                    'telefone_whatsapp' => $telefoneWhatsapp,
-                    'status' => (string) ($contato['status'] ?? ''),
-                    'whatsapp_url' => $telefoneWhatsapp !== '' ? 'https://wa.me/' . $telefoneWhatsapp : '',
-                    'whatsapp_disponivel' => $telefoneWhatsapp !== '',
-                    'total_clientes' => 0,
-                    'total_titulos' => 0,
-                    'total_inadimplente' => 0.0,
-                    'clientes' => [],
-                    'mensagem' => '',
-                ];
-            }
-
-            $grupos[$key]['total_clientes']++;
-            $grupos[$key]['total_titulos'] += (int) ($cliente['inad_qtd_titulos'] ?? 0);
-            $grupos[$key]['total_inadimplente'] += (float) ($cliente['inad_total'] ?? 0.0);
-            $grupos[$key]['clientes'][] = [
-                'cliente' => (string) ($cliente['cliente'] ?? ''),
-                'loja' => (string) ($cliente['loja'] ?? ''),
-                'cliente_key' => (string) ($cliente['cliente_key'] ?? ''),
-                'nome' => (string) ($cliente['nome'] ?? ''),
-                'cnpj' => (string) ($cliente['cnpj'] ?? ''),
-                'inad_total' => round((float) ($cliente['inad_total'] ?? 0.0), 2),
-                'inad_qtd_titulos' => (int) ($cliente['inad_qtd_titulos'] ?? 0),
-                'maior_atraso_dias' => (int) ($cliente['maior_atraso_dias'] ?? 0),
-            ];
-        }
-
-        $items = [];
-        foreach ($grupos as $grupo) {
-            if ($somenteComTelefone && !$grupo['whatsapp_disponivel']) {
-                continue;
-            }
-
-            usort($grupo['clientes'], static fn(array $a, array $b): int => (($b['inad_total'] ?? 0.0) <=> ($a['inad_total'] ?? 0.0)));
-            $grupo['clientes'] = array_slice($grupo['clientes'], 0, $limitClientes);
-            $grupo['total_inadimplente'] = round((float) $grupo['total_inadimplente'], 2);
-            $grupo['mensagem'] = self::buildWhatsappCobrancaMessage($grupo, $dataset['filtros']);
-            $items[] = $grupo;
-        }
-
-        usort($items, static fn(array $a, array $b): int => (($b['total_inadimplente'] ?? 0.0) <=> ($a['total_inadimplente'] ?? 0.0)));
-
-        return [
-            'filtros' => array_merge($dataset['filtros'], [
-                'limit_clientes' => $limitClientes,
-                'somente_com_telefone' => $somenteComTelefone,
-            ]),
-            'total_vendedores' => count($items),
-            'items' => $items,
         ];
     }
 
@@ -666,27 +559,8 @@ final class TotvsAgentService
     {
         $cliente = self::resolveCliente($params);
         $dataset = self::buildFaturamentoDataset($params);
-        $historicoDataset = $dataset['historico_por_cliente'] ?? [];
-        $clienteCodigo = (string) $cliente['cliente'];
-        $clienteLoja = (string) $cliente['loja'];
-        $key = self::clienteKey($clienteCodigo, $clienteLoja);
-        $historico = $historicoDataset[$key] ?? null;
-        if ($historico === null) {
-            $historico = $historicoDataset[self::clienteKey($clienteCodigo, '')] ?? null;
-        }
-        if ($historico === null) {
-            $historico = $historicoDataset[$clienteCodigo] ?? null;
-        }
-        if ($historico === null) {
-            foreach ($historicoDataset as $entryKey => $entry) {
-                $entryKey = (string) $entryKey;
-                if (str_starts_with($entryKey, $clienteCodigo . '|') || $entryKey === $clienteCodigo) {
-                    $historico = $entry;
-                    break;
-                }
-            }
-        }
-        $historico = $historico ?? [
+        $key = self::clienteKey((string) $cliente['cliente'], (string) $cliente['loja']);
+        $historico = $dataset['historico_por_cliente'][$key] ?? [
             'faturamento_total' => 0.0,
             'qtd_pedidos' => 0,
             'qtd_nfs' => 0,
@@ -698,13 +572,7 @@ final class TotvsAgentService
         $limit = self::resolveLimit($params['limit'] ?? 50, 50, 500);
         $comItens = self::boolParam($params['com_itens'] ?? false);
 
-        $compras = self::buildHistoricoNotasComItens($historico['compras'], $limit);
-        if (!$comItens) {
-            foreach ($compras as &$compra) {
-                unset($compra['itens']);
-            }
-            unset($compra);
-        }
+        $comprasLimitadas = self::limitItems($historico['compras'], $limit);
         $response = [
             'filtros' => $dataset['filtros'],
             'cliente' => [
@@ -721,8 +589,15 @@ final class TotvsAgentService
                 'primeira_compra' => $historico['primeira_compra'],
                 'ultima_compra' => $historico['ultima_compra'],
             ],
-            'compras' => $compras,
+            'compras' => $comprasLimitadas,
         ];
+
+        if ($comItens) {
+            $notas = self::buildHistoricoNotasComItens($historico['compras'], $limit);
+            $response['compras_linhas'] = $comprasLimitadas;
+            $response['compras'] = $notas;
+            $response['notas'] = $notas;
+        }
 
         return $response;
     }
@@ -1013,50 +888,6 @@ final class TotvsAgentService
             ],
             'centro_fornecedores' => $dataset['centro_fornecedores'],
             'natureza_fornecedores' => $dataset['natureza_fornecedores'],
-        ];
-    }
-
-    public static function estoqueProdutosResumo(array $params): array
-    {
-        $dataset = self::buildEstoqueProdutosDataset($params);
-        return [
-            'filtros' => $dataset['filtros'],
-            'resumo' => $dataset['resumo'],
-            'top_produtos' => array_slice($dataset['produtos'], 0, 10),
-            'top_filiais' => $dataset['filiais'],
-        ];
-    }
-
-    public static function estoqueProdutosLista(array $params): array
-    {
-        $dataset = self::buildEstoqueProdutosDataset($params);
-        $limit = self::resolveLimit($params['limit'] ?? 50, 50, 5000);
-        return [
-            'filtros' => $dataset['filtros'],
-            'total' => count($dataset['produtos']),
-            'items' => self::limitItems($dataset['produtos'], $limit),
-        ];
-    }
-
-    public static function estoqueProdutoBuscar(array $params): array
-    {
-        $codigo = trim((string) ($params['codigo'] ?? ''));
-        $nome = trim((string) ($params['nome'] ?? ''));
-        $search = trim((string) ($params['search'] ?? ''));
-
-        if ($codigo !== '' && $search === '') {
-            $params['search'] = $codigo;
-        } elseif ($nome !== '' && $search === '') {
-            $params['search'] = $nome;
-        }
-
-        $dataset = self::buildEstoqueProdutosDataset($params);
-        $limit = self::resolveLimit($params['limit'] ?? 20, 20, 500);
-
-        return [
-            'filtros' => $dataset['filtros'],
-            'total' => count($dataset['produtos']),
-            'items' => self::limitItems($dataset['produtos'], $limit),
         ];
     }
 
@@ -1995,24 +1826,9 @@ final class TotvsAgentService
                 return false;
             }
             $dateField = $useEmissaoBase ? 'DT_EMISSAO' : 'DT_VENCIMENTO';
-            $baseDate = (string) ($row[$dateField] ?? $row['DATA'] ?? '');
-            $baseTs = toDateTs($baseDate);
+            $baseTs = toDateTs($row[$dateField] ?? '');
             return $baseTs !== null && $baseTs >= $fromTs && $baseTs <= $toTs;
         }));
-
-        if ($dataBase === 'vencimento') {
-            foreach ($rows as $row) {
-                if (!is_array($row)) {
-                    continue;
-                }
-                if (!empty($row['DT_VENCIMENTO'])) {
-                    break;
-                }
-                if (!empty($row['DATA'])) {
-                    $dataBase = 'data';
-                }
-            }
-        }
 
         $todayTs = strtotime('today');
         $next3Ts = strtotime('+3 days', $todayTs);
@@ -2032,13 +1848,11 @@ final class TotvsAgentService
         $proximos15 = [];
 
         foreach ($itemsFiltered as $row) {
-            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? $row['FORNECEDOR'] ?? $row['COD_FORNECEDOR'] ?? $row['CODIGO'] ?? ''));
-            $valor = (float) ($row['VL_PARCELA'] ?? $row['VALOR'] ?? 0);
-            $natureza = trim((string) ($row['NATUREZA'] ?? $row['DESCRICAO'] ?? 'N/A'));
-            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? $row['CENTRO_CUSTO'] ?? ''));
+            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
+            $valor = (float) ($row['VL_PARCELA'] ?? 0);
+            $natureza = trim((string) ($row['NATUREZA'] ?? 'N/A'));
+            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? ''));
             $ccdNomeado = $ccdRaw !== '' ? nomeSetorCCD($ccdRaw) : 'N/A';
-            $dataDocumento = (string) ($row['DT_EMISSAO'] ?? $row['DT_VENCIMENTO'] ?? $row['DATA'] ?? '');
-            $dataVencimento = (string) ($row['DT_VENCIMENTO'] ?? $row['DATA'] ?? '');
 
             if (!isset($titulosPorFornecedor[$fornNome])) {
                 $titulosPorFornecedor[$fornNome] = ['fornecedor' => $fornNome, 'total' => 0.0, 'qtd' => 0, 'titulos' => []];
@@ -2049,8 +1863,8 @@ final class TotvsAgentService
                 'filial'             => (string) ($row['FILIAL'] ?? ''),
                 'nf_numero'          => (string) ($row['NF_NUMERO'] ?? ''),
                 'serie'              => (string) ($row['SERIE'] ?? ''),
-                'emissao'            => ddmmyyyy($dataDocumento),
-                'vencimento'         => ddmmyyyy($dataVencimento),
+                'emissao'            => ddmmyyyy($row['DT_EMISSAO'] ?? ''),
+                'vencimento'         => ddmmyyyy($row['DT_VENCIMENTO'] ?? ''),
                 'natureza'           => $natureza,
                 'centro_custo'       => $ccdNomeado,
                 'centro_custo_raw'   => $ccdRaw,
@@ -2059,11 +1873,8 @@ final class TotvsAgentService
                 'conta_contabil'     => (string) ($row['CONTA_CONTABIL'] ?? ''),
                 'parcela'            => (string) ($row['PARCELA'] ?? ''),
                 'vl_parcela'         => $valor,
-                'vl_saldo'           => (float) ($row['VL_SALDO'] ?? $row['VALOR'] ?? 0),
-                'vl_total_nf'        => (float) ($row['VL_TOTAL_TITULO'] ?? $row['VALOR'] ?? 0),
-                'codigo'             => (string) ($row['CODIGO'] ?? ''),
-                'loja'               => (string) ($row['LOJA'] ?? ''),
-                'fornecedor'         => $fornNome,
+                'vl_saldo'           => (float) ($row['VL_SALDO'] ?? 0),
+                'vl_total_nf'        => (float) ($row['VL_TOTAL_TITULO'] ?? 0),
             ];
 
             $totalValor += $valor;
@@ -2094,15 +1905,14 @@ final class TotvsAgentService
             if (!is_array($row)) {
                 continue;
             }
-            $vencBase = (string) ($row['DT_VENCIMENTO'] ?? $row['DATA'] ?? '');
-            $vencTs = toDateTs($vencBase);
+            $vencTs = toDateTs($row['DT_VENCIMENTO'] ?? '');
             if ($vencTs === null) {
                 continue;
             }
-            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? $row['FORNECEDOR'] ?? $row['COD_FORNECEDOR'] ?? $row['CODIGO'] ?? ''));
-            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? $row['CENTRO_CUSTO'] ?? '')));
-            $row['vencimento_fmt'] = ddmmyyyy($vencBase);
-            $row['emissao_fmt'] = ddmmyyyy((string) ($row['DT_EMISSAO'] ?? $row['DATA'] ?? ''));
+            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
+            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? '')));
+            $row['vencimento_fmt'] = ddmmyyyy($row['DT_VENCIMENTO'] ?? '');
+            $row['emissao_fmt'] = ddmmyyyy($row['DT_EMISSAO'] ?? '');
             if ($vencTs >= $todayTs && $vencTs <= $next3Ts) {
                 $proximos3[] = $row;
             }
@@ -2159,9 +1969,9 @@ final class TotvsAgentService
             ];
         }
 
-        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos3));
-        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos7));
-        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos15));
+        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos3));
+        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos7));
+        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos15));
 
         return [
             'data_base' => $dataBase,
@@ -2291,149 +2101,6 @@ GQL;
         return $payload;
     }
 
-    private static function buildEstoqueProdutosDataset(array $params): array
-    {
-        $rows = self::fetchConsultaRows(TOTVS_CONSULTAS['kpi_estoque'] ?? '000086', !empty($params['force']));
-        $search = self::normalizeText((string) ($params['search'] ?? ''));
-        $codigoFiltro = trim((string) ($params['codigo'] ?? ''));
-        $filialFiltro = trim((string) ($params['filial'] ?? ''));
-        $somentePositivo = self::boolParam($params['somente_positivo'] ?? false);
-
-        $produtos = [];
-        $filiais = [];
-        $quantidadeTotal = 0.0;
-        $valorTotal = 0.0;
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            $codigo = trim((string) self::pickFirst($row, ['CODIGO', 'PRODUTO_COD', 'B1_COD', 'B2_COD', 'D2_COD'], ''));
-            $nome = trim((string) self::pickFirst($row, ['PRODUTO', 'DESCRICAO', 'B1_DESC', 'ITEM_DESC'], ''));
-            $filial = trim((string) self::pickFirst($row, ['FILIAL', 'B2_FILIAL', 'FILIAL_CODIGO'], ''));
-            $filialNome = self::resolveFilialName($filial, $row);
-            $armazem = trim((string) self::pickFirst($row, ['ARMAZEM', 'LOCAL', 'B2_LOCAL'], ''));
-            $unidade = trim((string) self::pickFirst($row, ['UNIDADE', 'UM', 'B1_UM'], ''));
-            $quantidade = self::toFloatBr(self::pickFirst($row, ['ESTOQUE', 'SALDO', 'QUANTIDADE', 'QTD', 'B2_QATU'], 0));
-            $custoUnit = self::toFloatBr(self::pickFirst($row, ['CUSTO_UNITARIO', 'CUSTO_MEDIO', 'CUSTO', 'B2_CM1'], 0));
-            $valorEstoque = self::toFloatBr(self::pickFirst($row, ['VALOR_ESTOQUE', 'VALOR_TOTAL', 'TOTAL'], 0));
-
-            if ($valorEstoque <= 0 && $quantidade > 0 && $custoUnit > 0) {
-                $valorEstoque = $quantidade * $custoUnit;
-            }
-
-            if ($somentePositivo && $quantidade <= 0) {
-                continue;
-            }
-
-            if ($codigoFiltro !== '' && !self::textMatchesAny($codigoFiltro, [$codigo])) {
-                continue;
-            }
-
-            if ($filialFiltro !== '' && !self::textMatchesAny($filialFiltro, [$filial, $filialNome])) {
-                continue;
-            }
-
-            if ($search !== '' && !self::normalizedContainsAny($search, [
-                $codigo,
-                $nome,
-                $filial,
-                $filialNome,
-                $armazem,
-            ])) {
-                continue;
-            }
-
-            $key = self::normKey($codigo, $nome, 'Sem produto');
-            if (!isset($produtos[$key])) {
-                $produtos[$key] = [
-                    'codigo' => $codigo,
-                    'nome' => $nome !== '' ? $nome : 'Sem descricao',
-                    'unidade' => $unidade,
-                    'quantidade_total' => 0.0,
-                    'valor_total' => 0.0,
-                    'custo_unitario_medio' => 0.0,
-                    'filiais' => [],
-                    'raw_count' => 0,
-                ];
-            }
-
-            $produtos[$key]['quantidade_total'] += $quantidade;
-            $produtos[$key]['valor_total'] += $valorEstoque;
-            $produtos[$key]['raw_count']++;
-
-            $filialKey = $filial !== '' ? $filial : ($filialNome !== '' ? $filialNome : 'SEM_FILIAL');
-            if (!isset($produtos[$key]['filiais'][$filialKey])) {
-                $produtos[$key]['filiais'][$filialKey] = [
-                    'filial_codigo' => $filial,
-                    'filial_nome' => $filialNome !== '' ? $filialNome : $filial,
-                    'armazem' => $armazem,
-                    'quantidade' => 0.0,
-                    'valor_total' => 0.0,
-                ];
-            }
-            $produtos[$key]['filiais'][$filialKey]['quantidade'] += $quantidade;
-            $produtos[$key]['filiais'][$filialKey]['valor_total'] += $valorEstoque;
-
-            if (!isset($filiais[$filialKey])) {
-                $filiais[$filialKey] = [
-                    'filial_codigo' => $filial,
-                    'filial_nome' => $filialNome !== '' ? $filialNome : $filial,
-                    'quantidade_total' => 0.0,
-                    'valor_total' => 0.0,
-                    'produtos' => [],
-                ];
-            }
-            $filiais[$filialKey]['quantidade_total'] += $quantidade;
-            $filiais[$filialKey]['valor_total'] += $valorEstoque;
-            $filiais[$filialKey]['produtos'][$key] = true;
-
-            $quantidadeTotal += $quantidade;
-            $valorTotal += $valorEstoque;
-        }
-
-        $produtosList = [];
-        foreach ($produtos as $produto) {
-            $produto['filiais'] = array_values($produto['filiais']);
-            usort($produto['filiais'], static fn(array $a, array $b): int => (($b['quantidade'] ?? 0.0) <=> ($a['quantidade'] ?? 0.0)));
-            $produto['custo_unitario_medio'] = ($produto['quantidade_total'] ?? 0.0) > 0
-                ? round(((float) $produto['valor_total']) / ((float) $produto['quantidade_total']), 4)
-                : 0.0;
-            $produto['quantidade_total'] = round((float) $produto['quantidade_total'], 2);
-            $produto['valor_total'] = round((float) $produto['valor_total'], 2);
-            $produtosList[] = $produto;
-        }
-        usort($produtosList, static fn(array $a, array $b): int => (($b['valor_total'] ?? 0.0) <=> ($a['valor_total'] ?? 0.0)));
-
-        $filiaisList = [];
-        foreach ($filiais as $filialItem) {
-            $filialItem['produtos'] = count($filialItem['produtos']);
-            $filialItem['quantidade_total'] = round((float) $filialItem['quantidade_total'], 2);
-            $filialItem['valor_total'] = round((float) $filialItem['valor_total'], 2);
-            $filiaisList[] = $filialItem;
-        }
-        usort($filiaisList, static fn(array $a, array $b): int => (($b['valor_total'] ?? 0.0) <=> ($a['valor_total'] ?? 0.0)));
-
-        return [
-            'filtros' => [
-                'search' => (string) ($params['search'] ?? ''),
-                'codigo' => $codigoFiltro,
-                'filial' => $filialFiltro,
-                'somente_positivo' => $somentePositivo,
-            ],
-            'resumo' => [
-                'total_registros' => count($rows),
-                'total_produtos' => count($produtosList),
-                'total_filiais' => count($filiaisList),
-                'quantidade_total' => round($quantidadeTotal, 2),
-                'valor_total_estimado' => round($valorTotal, 2),
-            ],
-            'produtos' => $produtosList,
-            'filiais' => $filiaisList,
-        ];
-    }
-
     private static function buildCadastroDataset(array $params): array
     {
         $cadRows = self::fetchConsultaRows('000073', !empty($params['force']));
@@ -2516,33 +2183,6 @@ GQL;
         ];
     }
 
-    private static function buildVendedoresContatoDataset(array $params): array
-    {
-        $rows = self::fetchConsultaRows('000080', !empty($params['force']));
-        $vendedores = [];
-
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-
-            $codigo = trim((string) self::pickFirst($row, ['COD_VENDEDOR', 'A3_COD', 'CODIGO'], ''));
-            if ($codigo === '') {
-                continue;
-            }
-
-            $vendedores[$codigo] = [
-                'codigo' => $codigo,
-                'nome' => trim((string) self::pickFirst($row, ['NOME_VENDEDOR', 'A3_NOME', 'NOME'], '')),
-                'email' => trim((string) self::pickFirst($row, ['EMAIL', 'E_MAIL'], '')),
-                'telefone' => trim((string) self::pickFirst($row, ['TELEFONE', 'CELULAR', 'FONE'], '')),
-                'status' => trim((string) self::pickFirst($row, ['STATUS'], '')),
-            ];
-        }
-
-        return $vendedores;
-    }
-
     private static function buildFaturamentoDataset(array $params): array
     {
         $rows = self::fetchConsultaRows('000070', !empty($params['force']));
@@ -2551,11 +2191,9 @@ GQL;
         $historicoPorCliente = [];
         $rankingVendedores = [];
         $rankingSupervisores = [];
+        $rowsTotal000070 = is_array($rows) ? count($rows) : 0;
+        $rowsComValorPositivo = 0;
         [$fromTs, $toTs] = self::resolvePeriodoFaturamento($params);
-        $dateFrom = $fromTs ? date('Y-m-d', $fromTs) : '';
-        $dateTo = $toTs ? date('Y-m-d', $toTs) : '';
-        $dateFromCmp = str_replace('-', '', $dateFrom);
-        $dateToCmp = str_replace('-', '', $dateTo);
         $search = self::normalizeText((string) ($params['search'] ?? ''));
         $filterVend = trim((string) ($params['vendedor'] ?? ''));
         $filterSuper = trim((string) ($params['supervisor'] ?? ''));
@@ -2568,25 +2206,19 @@ GQL;
 
             $codigo = trim((string) self::pickFirst($row, ['C5_CLIENTE', 'COD_CLIENTE', 'A1_COD'], ''));
             $loja = trim((string) self::pickFirst($row, ['C5_LOJACLI', 'C5_LOJA', 'LOJA_CLIENTE', 'LOJA'], ''));
-            if ($codigo === '') {
+            if ($codigo === '' || $loja === '') {
                 continue;
             }
 
             $key = self::clienteKey($codigo, $loja);
-            $dataEmissao = self::onlyDigits((string) ($row['EMISAO'] ?? ''));
-            if ($dataEmissao === '' && isset($row['C5_EMISSAO'])) {
-                $dataEmissao = self::onlyDigits((string) $row['C5_EMISSAO']);
-            }
-            if ($dataEmissao === '' && isset($row['D2_EMISSAO'])) {
-                $dataEmissao = self::onlyDigits((string) $row['D2_EMISSAO']);
-            }
+            $dataEmissao = self::onlyDigits((string) self::pickFirst($row, ['EMISAO', 'C5_EMISSAO', 'D2_EMISSAO'], ''));
             $tsEmissao = self::parseYmd($dataEmissao);
-            if ($dataEmissao === '' || ($dateFromCmp !== '' && $dataEmissao < $dateFromCmp) || ($dateToCmp !== '' && $dataEmissao > $dateToCmp)) {
+            $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
+            if ($valor <= 0) {
                 continue;
             }
-            $valor = self::toFloatBr(self::pickFirst($row, ['VALOR', 'TOTAL', 'D2_TOTAL', 'VALOR_TOTAL', 'VALOR_PEDIDO'], 0));
-            $custo = self::toFloatBr(self::pickFirst($row, ['CUSTO', 'D2_CUSTO', 'CUSTO_TOTAL'], 0));
-            if ($valor <= 0) {
+            $rowsComValorPositivo++;
+            if (!self::inRange($tsEmissao, $fromTs, $toTs)) {
                 continue;
             }
 
@@ -2603,7 +2235,6 @@ GQL;
                 'nf' => trim((string) ($row['NF'] ?? '')),
                 'pedido' => trim((string) self::pickFirst($row, ['PEDIDO', 'C5_NUM', 'NUM_PEDIDO'], '')),
                 'valor' => $valor,
-                'custo' => $custo,
                 'filial_codigo' => $filialCodigo,
                 'filial_nome' => $filialNome,
                 'cliente' => trim((string) self::pickFirst($row, ['CLIENTE', 'A1_NOME', 'NOME'], '')),
@@ -2842,6 +2473,10 @@ GQL;
                 'vendedor' => $filterVend,
                 'supervisor' => $filterSuper,
                 'valor_min' => $valorMin,
+            ],
+            'debug' => [
+                'rows_total_000070' => $rowsTotal000070,
+                'rows_com_valor_positivo' => $rowsComValorPositivo,
             ],
         ];
     }
@@ -3265,38 +2900,44 @@ GQL;
             if (!isset($notas[$notaKey])) {
                 $notas[$notaKey] = [
                     'nf' => (string) ($compra['nf'] ?? ''),
-                    'filial' => (string) ($compra['filial_nome'] ?? ''),
-                    'data' => (string) self::formatDateBr((string) ($compra['data'] ?? '')),
-                    'data_ordem' => (string) ($compra['data'] ?? ''),
-                    'valor_total' => 0.0,
+                    'pedido' => (string) ($compra['pedido'] ?? ''),
+                    'data' => (string) ($compra['data'] ?? ''),
+                    'data_fmt' => (string) ($compra['data_fmt'] ?? ''),
+                    'valor' => 0.0,
+                    'filial_codigo' => (string) ($compra['filial_codigo'] ?? ''),
+                    'filial_nome' => (string) ($compra['filial_nome'] ?? ''),
                     'itens' => [],
                 ];
             }
 
-            $notas[$notaKey]['valor_total'] += round((float) ($compra['valor'] ?? 0.0), 2);
+            $notas[$notaKey]['valor'] += round((float) ($compra['valor'] ?? 0.0), 2);
 
             if (($compra['produto_codigo'] ?? '') === '' && ($compra['produto_nome'] ?? '') === '') {
                 continue;
             }
 
+            $quantidade = round((float) ($compra['quantidade'] ?? 0.0), 2);
+            $valorTotal = round((float) ($compra['valor'] ?? 0.0), 2);
+            $valorUnitario = (float) ($compra['valor_unitario'] ?? 0.0);
+            if ($valorUnitario <= 0 && $quantidade > 0) {
+                $valorUnitario = $valorTotal / $quantidade;
+            }
+
             $notas[$notaKey]['itens'][] = [
                 'codigo' => (string) ($compra['produto_codigo'] ?? ''),
-                'produto' => (string) ($compra['produto_nome'] ?? ''),
-                'valor' => round((float) ($compra['valor'] ?? 0.0), 2),
-                'custo' => round((float) ($compra['custo'] ?? 0.0), 2),
+                'descricao' => (string) ($compra['produto_nome'] ?? ''),
+                'quantidade' => $quantidade,
+                'valor_unitario' => round($valorUnitario, 2),
+                'valor_total' => $valorTotal,
             ];
         }
 
         $notas = array_values($notas);
-        usort($notas, static fn(array $a, array $b): int => strcmp(
-            (string) ($b['data_ordem'] ?? ''),
-            (string) ($a['data_ordem'] ?? '')
-        ));
         foreach ($notas as &$nota) {
-            $nota['valor_total'] = round((float) ($nota['valor_total'] ?? 0.0), 2);
-            unset($nota['data_ordem']);
+            $nota['valor'] = round((float) ($nota['valor'] ?? 0.0), 2);
         }
         unset($nota);
+        usort($notas, static fn(array $a, array $b): int => strcmp((string) ($b['data'] ?? ''), (string) ($a['data'] ?? '')));
 
         return self::limitItems($notas, $limit);
     }
@@ -3764,89 +3405,5 @@ GQL;
         }
 
         return false;
-    }
-
-    private static function toBool($value): bool
-    {
-        if (is_bool($value)) {
-            return $value;
-        }
-
-        $text = strtolower(trim((string) $value));
-        return in_array($text, ['1', 'true', 'sim', 'yes', 'on'], true);
-    }
-
-    private static function normalizeBrazilPhone(string $phone): string
-    {
-        $digits = self::onlyDigits($phone);
-        if ($digits === '') {
-            return '';
-        }
-
-        if (str_starts_with($digits, '55')) {
-            $rest = substr($digits, 2);
-            if (strlen($rest) === 11 && substr($rest, 2, 1) === '9') {
-                return '55' . substr($rest, 0, 2) . substr($rest, 3);
-            }
-            if (strlen($rest) === 9 && str_starts_with($rest, '9')) {
-                return '55' . substr($rest, 1);
-            }
-            return $digits;
-        }
-
-        if (strlen($digits) === 11 && substr($digits, 2, 1) === '9') {
-            return '55' . substr($digits, 0, 2) . substr($digits, 3);
-        }
-
-        if (strlen($digits) === 10) {
-            return '55' . $digits;
-        }
-
-        if (strlen($digits) === 9 && str_starts_with($digits, '9')) {
-            return substr($digits, 1);
-        }
-
-        if (strlen($digits) === 8) {
-            return $digits;
-        }
-
-        return $digits;
-    }
-
-    private static function formatMoneyBr(float $value): string
-    {
-        return 'R$ ' . number_format($value, 2, ',', '.');
-    }
-
-    private static function buildWhatsappCobrancaMessage(array $grupo, array $filtros): string
-    {
-        $nomeVendedor = trim((string) ($grupo['vendedor_nome'] ?? ''));
-        if ($nomeVendedor === '') {
-            $nomeVendedor = trim((string) ($grupo['vendedor_codigo'] ?? 'vendedor'));
-        }
-
-        $diasMin = (int) ($filtros['dias_min_atraso'] ?? 0);
-        $lines = [
-            'Olá, ' . $nomeVendedor . '.',
-            '',
-            'Segue a relacao dos seus clientes inadimplentes no TOTVS.',
-            'Filtro atual: atraso minimo de ' . $diasMin . ' dia(s).',
-            '',
-        ];
-
-        foreach ((array) ($grupo['clientes'] ?? []) as $cliente) {
-            $lines[] = '- ' . trim((string) ($cliente['nome'] ?? 'Cliente sem nome'))
-                . ' | cod ' . trim((string) ($cliente['cliente'] ?? ''))
-                . ' | inad ' . self::formatMoneyBr((float) ($cliente['inad_total'] ?? 0.0))
-                . ' | titulos ' . (int) ($cliente['inad_qtd_titulos'] ?? 0)
-                . ' | atraso max ' . (int) ($cliente['maior_atraso_dias'] ?? 0) . 'd';
-        }
-
-        $lines[] = '';
-        $lines[] = 'Resumo: ' . (int) ($grupo['total_clientes'] ?? 0)
-            . ' cliente(s), ' . (int) ($grupo['total_titulos'] ?? 0)
-            . ' titulo(s), total ' . self::formatMoneyBr((float) ($grupo['total_inadimplente'] ?? 0.0)) . '.';
-
-        return implode("\n", $lines);
     }
 }

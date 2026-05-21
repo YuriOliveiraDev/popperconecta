@@ -290,6 +290,12 @@
     });
   }
 
+  function setActiveYearButton(year) {
+    document.querySelectorAll(".btn-year").forEach((btn) => {
+      btn.classList.toggle("is-active", Number(btn.dataset.year) === year);
+    });
+  }
+
   function syncPresetFromPayload(data) {
     const preset = data?.filtros_aplicados?.preset || state.selectedPreset || "6m";
     state.selectedPreset = preset;
@@ -2003,6 +2009,19 @@ return `
       return;
     }
 
+    const yearBtn = e.target.closest(".btn-year");
+    if (yearBtn) {
+      const year = Number(yearBtn.dataset.year);
+      if (!year) return;
+      const fromEl = $("#filterDateFrom");
+      const toEl = $("#filterDateTo");
+      if (fromEl) fromEl.value = `${year}-01-01`;
+      if (toEl) toEl.value = `${year}-12-31`;
+      setActiveYearButton(year);
+      loadData(true).catch(handleLoadError);
+      return;
+    }
+
     const detailBtn = e.target.closest(".btn-detail");
     if (detailBtn) {
       openCliente(detailBtn.dataset.key);
@@ -2033,6 +2052,7 @@ return `
     if (e.target.id === "btnClearFilters") {
       clearTopFilters();
       resetPresetToDefault();
+      setActiveYearButton(0);
       loadData(true).catch(handleLoadError);
       return;
     }
@@ -2126,6 +2146,13 @@ return `
     el.addEventListener("change", triggerFiltroTabela);
   });
   setActivePresetButton(state.selectedPreset);
+
+  // default 2026
+  const _fromEl = $("#filterDateFrom");
+  const _toEl = $("#filterDateTo");
+  if (_fromEl && !_fromEl.value) _fromEl.value = "2026-01-01";
+  if (_toEl && !_toEl.value) _toEl.value = "2026-12-31";
+  setActiveYearButton(2026);
 
   Promise.allSettled([loadVendedores080(), loadData()]).then((results) => {
     const dataResult = results[1];

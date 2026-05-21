@@ -79,6 +79,14 @@ require_once APP_ROOT . '/app/layout/header.php';
             <input type="number" id="filterValorMin" min="0" step="0.01" placeholder="0,00">
         </div>
 
+        <div class="filter-group filter-group-year">
+            <label>Ano rápido</label>
+            <div class="filter-actions">
+                <button class="btn-year" id="btnYear2025" type="button" data-year="2025">2025</button>
+                <button class="btn-year" id="btnYear2026" type="button" data-year="2026">2026</button>
+            </div>
+        </div>
+
         <div class="filter-group filter-group-actions">
             <label>&nbsp;</label>
             <div class="filter-actions">

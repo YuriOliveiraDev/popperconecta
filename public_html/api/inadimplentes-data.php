@@ -711,46 +711,43 @@ try {
             }
         }
 
-        $clientes[$key]['inad_total'] += $saldo;
-        $clientes[$key]['inad_qtd_titulos']++;
-        $clientes[$key]['maior_atraso_dias'] = max($clientes[$key]['maior_atraso_dias'], $diasAtraso);
-
         if ($entraNoPeriodoComparativo) {
+            $clientes[$key]['inad_total'] += $saldo;
+            $clientes[$key]['inad_qtd_titulos']++;
+            $clientes[$key]['maior_atraso_dias'] = max($clientes[$key]['maior_atraso_dias'], $diasAtraso);
             $clientes[$key]['inad_total_periodo_pct'] += $saldo;
             $clientes[$key]['inad_qtd_titulos_periodo_pct']++;
-        }
 
-        $clientes[$key]['titulos'][] = [
-            'filial' => (string) ($row['E1_FILIAL'] ?? ''),
-            'prefixo' => (string) ($row['E1_PREFIXO'] ?? ''),
-            'numero' => (string) ($row['E1_NUM'] ?? ''),
-            'parcela' => (string) ($row['E1_PARCELA'] ?? ''),
-            'tipo' => (string) ($row['E1_TIPO'] ?? ''),
-            'natureza' => (string) ($row['E1_NATUREZ'] ?? ''),
-            'emissao' => $emissao,
-            'emissao_fmt' => fmtDate($emissao),
-            'vencto' => $vencto,
-            'vencto_fmt' => fmtDate($vencto),
-            'baixa' => $baixa,
-            'baixa_fmt' => fmtDate($baixa),
-            'valor' => $valor,
-            'saldo' => $saldo,
-            'dias_atraso' => $diasAtraso,
-            'faixa_atraso' => faixaAtraso($diasAtraso),
-            'forma_pagamento' => $forma,
-            'portador' => (string) ($row['E1_PORTADO'] ?? ''),
-            'nosso_numero' => (string) ($row['E1_NUMBOR'] ?? ''),
-            'titulo_composto' => $titulo,
-        ];
+            $clientes[$key]['titulos'][] = [
+                'filial' => (string) ($row['E1_FILIAL'] ?? ''),
+                'prefixo' => (string) ($row['E1_PREFIXO'] ?? ''),
+                'numero' => (string) ($row['E1_NUM'] ?? ''),
+                'parcela' => (string) ($row['E1_PARCELA'] ?? ''),
+                'tipo' => (string) ($row['E1_TIPO'] ?? ''),
+                'natureza' => (string) ($row['E1_NATUREZ'] ?? ''),
+                'emissao' => $emissao,
+                'emissao_fmt' => fmtDate($emissao),
+                'vencto' => $vencto,
+                'vencto_fmt' => fmtDate($vencto),
+                'baixa' => $baixa,
+                'baixa_fmt' => fmtDate($baixa),
+                'valor' => $valor,
+                'saldo' => $saldo,
+                'dias_atraso' => $diasAtraso,
+                'faixa_atraso' => faixaAtraso($diasAtraso),
+                'forma_pagamento' => $forma,
+                'portador' => (string) ($row['E1_PORTADO'] ?? ''),
+                'nosso_numero' => (string) ($row['E1_NUMBOR'] ?? ''),
+                'titulo_composto' => $titulo,
+            ];
 
-        if ($diasAtraso > 0) {
-            $bucket = faixaAtraso($diasAtraso);
-            if (isset($aging[$bucket])) {
-                $aging[$bucket] += $saldo;
+            if ($diasAtraso > 0) {
+                $bucket = faixaAtraso($diasAtraso);
+                if (isset($aging[$bucket])) {
+                    $aging[$bucket] += $saldo;
+                }
             }
-        }
 
-        if ($entraNoPeriodoComparativo) {
             $periodoKey = buildPeriodoKey($tsVencto, $groupBy);
 
             if (!isset($historicoMap[$periodoKey])) {

@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 require_once $_SERVER['DOCUMENT_ROOT'] . '/bootstrap.php';
+require_login();
 /* =========================================================
    ANTI-CACHE (TV Box / Kiosk)
 ========================================================= */
@@ -59,6 +60,7 @@ header('Expires: 0');
     ]);
 })();
 
+$u = current_user();
 $activePage = 'home';
 
 function h(?string $s): string
