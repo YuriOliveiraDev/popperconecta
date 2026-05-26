@@ -1,0 +1,5 @@
+Options -Indexes
+<Files "queue.json">
+    Order allow,deny
+    Deny from all
+</Files>
