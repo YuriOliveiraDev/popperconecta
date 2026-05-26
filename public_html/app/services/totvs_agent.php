@@ -1825,8 +1825,10 @@ final class TotvsAgentService
             if (!is_array($row)) {
                 return false;
             }
-            $dateField = $useEmissaoBase ? 'DT_EMISSAO' : 'DT_VENCIMENTO';
-            $baseTs = toDateTs($row[$dateField] ?? '');
+            $baseDate = $useEmissaoBase
+                ? ($row['DT_EMISSAO'] ?? $row['DATA'] ?? '')
+                : ($row['DT_VENCIMENTO'] ?? '');
+            $baseTs = toDateTs($baseDate);
             return $baseTs !== null && $baseTs >= $fromTs && $baseTs <= $toTs;
         }));
 
@@ -1848,10 +1850,11 @@ final class TotvsAgentService
         $proximos15 = [];
 
         foreach ($itemsFiltered as $row) {
-            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
-            $valor = (float) ($row['VL_PARCELA'] ?? 0);
-            $natureza = trim((string) ($row['NATUREZA'] ?? 'N/A'));
-            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? ''));
+            $emissao = $row['DT_EMISSAO'] ?? $row['DATA'] ?? '';
+            $fornNome = trim((string) ($row['NOME_FORNECEDOR'] ?? $row['FORNECEDOR'] ?? $row['CODIGO'] ?? $row['COD_FORNECEDOR'] ?? ''));
+            $valor = (float) ($row['VL_PARCELA'] ?? $row['VALOR'] ?? 0);
+            $natureza = trim((string) ($row['NATUREZA'] ?? $row['DESCRICAO'] ?? 'N/A'));
+            $ccdRaw = trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? $row['CENTRO_CUSTO'] ?? ''));
             $ccdNomeado = $ccdRaw !== '' ? nomeSetorCCD($ccdRaw) : 'N/A';
 
             if (!isset($titulosPorFornecedor[$fornNome])) {
@@ -1863,7 +1866,7 @@ final class TotvsAgentService
                 'filial'             => (string) ($row['FILIAL'] ?? ''),
                 'nf_numero'          => (string) ($row['NF_NUMERO'] ?? ''),
                 'serie'              => (string) ($row['SERIE'] ?? ''),
-                'emissao'            => ddmmyyyy($row['DT_EMISSAO'] ?? ''),
+                'emissao'            => ddmmyyyy($emissao),
                 'vencimento'         => ddmmyyyy($row['DT_VENCIMENTO'] ?? ''),
                 'natureza'           => $natureza,
                 'centro_custo'       => $ccdNomeado,
@@ -1909,10 +1912,10 @@ final class TotvsAgentService
             if ($vencTs === null) {
                 continue;
             }
-            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? ($row['COD_FORNECEDOR'] ?? '')));
-            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? '')));
+            $row['fornecedor_nome'] = trim((string) ($row['NOME_FORNECEDOR'] ?? $row['FORNECEDOR'] ?? $row['CODIGO'] ?? $row['COD_FORNECEDOR'] ?? ''));
+            $row['centro_custo_nome'] = nomeSetorCCD(trim((string) ($row['CENTRO_CUSTO_TITULO'] ?? $row['CENTRO_CUSTO'] ?? '')));
             $row['vencimento_fmt'] = ddmmyyyy($row['DT_VENCIMENTO'] ?? '');
-            $row['emissao_fmt'] = ddmmyyyy($row['DT_EMISSAO'] ?? '');
+            $row['emissao_fmt'] = ddmmyyyy($row['DT_EMISSAO'] ?? $row['DATA'] ?? '');
             if ($vencTs >= $todayTs && $vencTs <= $next3Ts) {
                 $proximos3[] = $row;
             }
@@ -1969,9 +1972,9 @@ final class TotvsAgentService
             ];
         }
 
-        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos3));
-        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos7));
-        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? 0), $proximos15));
+        $sumProx3 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos3));
+        $sumProx7 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos7));
+        $sumProx15 = array_sum(array_map(static fn($r) => (float) ($r['VL_PARCELA'] ?? $r['VALOR'] ?? 0), $proximos15));
 
         return [
             'data_base' => $dataBase,
